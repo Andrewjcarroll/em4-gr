@@ -1,1 +1,0 @@
-/usr/bin/c++  -std=c++17 -fopenmp -O3 -DNDEBUG -rdynamic CMakeFiles/genHtables.dir/Hilbert/src/genHTables.cpp.o -o genHtables 
