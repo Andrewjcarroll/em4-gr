@@ -1,0 +1,411 @@
+# ==============================================
+# =========== EMDA PARAMETER SET UP ============
+# ==============================================
+#
+# This file contains the structure for all of the parameters that are used in the EMDA project.
+# This file is used to create the parameters.cpp and parameters.h files while providing information
+# on what each of the different parameters actually do.
+#
+# When ready to run the project, a separate TOML file must be used that contains the parameters
+# that you are actually going to use. This can be of any name at any location, it just has a different
+# format.
+#
+# Note that many of these parameters are *hard coded* in the actual EMDA logic, so they shouldn't be
+# removed. There isn't an easy way to automatically generate where certain parameters fit, because
+# their behavior needs to be defined in the project by hand.
+#
+# Also, some of these parameters can be included in the equation definition Python scripts
+# to be used with the equations. Just make sure that they're defined as parameter variables
+# in the Python script and that they're also included here under the emda namespace header.
+#
+# There are three types of parameters that can be defined in here, "variant", "semivariant",
+# and "invariant". The "variant" parameter type refers to parameters that are declared
+# as externals in the header file, fully declared in the source file, but then are required
+# as input from the user when running the program. The "semivariant" parameters are those
+# that are declared as externals in the header file, fully declared in the source file with
+# defaults, and then allowed to be defined by users through input parameter file. The "invariant"
+# parameter type is declared as a static constant and cannot be modified through an input file
+# (there are very few of these and are mostly used internally and as output information).
+
+# ===
+# === EMDA NAMESPACE PARAMETERS ===
+# These parameters are all under the emda namespace (NMSP)
+[emda-NMSPC]
+    # @brief: Dendro version number, usually 5.0 especially for this project
+    DENDRO_VERSION = {class = "invariant", dtype = "double", default = 5.0, desc="Dendro version number, usually 5.0 especially for this project"}
+
+    EMDA_LAMBDA = {class = "semivariant", dtype = "unsigned int[]", default = [1,1,1,1], size=4, desc="Lambda value parameters, range 0 to 1, only integers"}
+    EMDA_ETA = {class = "semivariant", dtype = "double[]", default = [0.4, 0.4], size=2, desc="Eta values, should be between 0 and 2"}
+    EMDA_ETADAMP = {class = "semivariant", dtype = "double", default = 2.0, min=0.5, max=3.2,desc="Eta damping parameter, fixed to the mass of the spacetime"}
+    EMDA_ALPHA_THEORY = {class = "semivariant", dtype = "double[]", default = [1.0, 1.0], size=2, desc="Alpha values, positive real values"}
+    EMDA_LF = {class = "semivariant", dtype = "double[]", default = [1.0, 0.0], size=2, desc="Alpha_f values, positive real values"}
+
+    EMDA_P_EXPO = {class = "semivariant", dtype = "double", default=-1.0, min=-1.0, max=4.0, desc="The exponent for p. This changes the theory."}
+
+    ALPHA_FLOOR = {class = "invariant", dtype="double", default = 0.1, min = 0.0, max=10.0, desc="Minimum possible value for all points of alpha"}
+
+    # @brief: Element order for the computations
+    EMDA_ELE_ORDER = {class = "semivariant", dtype = "unsigned int", default = 6, min = 0, max = 12, desc="Element order for the computations"}
+
+    # @brief: Padding width for each of the blocks
+    EMDA_PADDING_WIDTH = {class = "semivariant", dtype = "unsigned int", default = "EMDA_ELE_ORDER >> 1u", min = 0, max = 5, desc="Padding width for each of the blocks"}
+
+    # @brief: The number of total variables
+    # TODO: this should probably be handled by the Python script somehow
+    EMDA_NUM_VARS = {class = "invariant", dtype = "unsigned int", default = 36, desc="The number of total variables"}
+
+    # @brief: Number of constraint variables
+    # TODO: this should also probably be handled by the Python script (probably declare these before generating?
+    EMDA_CONSTRAINT_NUM_VARS = {class = "invariant", dtype = "unsigned int", default = 6, desc="Number of constraint variables"}
+
+    # @brief: Number of RK45 stages that should be performed
+    EMDA_RK45_STAGES = {class = "invariant", dtype = "unsigned int", default = 6, desc="Number of RK45 stages that should be performed"}
+
+    # @brief: Number of RK4 stages that should be performed
+    EMDA_RK4_STAGES = {class = "invariant", dtype = "unsigned int", default = 4, desc="Number of RK4 stages that should be performed"}
+
+    # @brief: Number of RK3 stages that should be performed
+    EMDA_RK3_STAGES = {class = "invariant", dtype = "unsigned int", default = 3, desc="Number of RK3 stages that should be performed"}
+
+    # @brief: Adaptive time step update safety factor
+    EMDA_SAFETY_FAC = {class = "invariant", dtype = "double", default = 0.8, desc="Adaptive time step update safety factor"}
+
+    # @brief: Number of internal variables
+    EMDA_NUM_VARS_INTENL = {class = "invariant", dtype = "unsigned int", default = "(EMDA_RK45_STAGES + 1) * EMDA_NUM_VARS", desc="Number of internal variables"}
+
+    # @brief: Minimum black hole domain, to be added to the parameter file for running!
+    EMDA_COMPD_MIN = {class = "semivariant", dtype = "double[]", default = [-50.0, -50.0, -50.0], size = 3, desc="Minimum black hole domain, to be added to the parameter file for running!"}
+
+    # @brief: Maximum black hole domain, to be added to the parameter file for running!
+    EMDA_COMPD_MAX = {class = "semivariant", dtype = "double[]", default = [50.0, 50.0, 50.0], size = 3, desc="Maximum black hole domain, to be added to the parameter file for running!"}
+
+    # @brief: Minimum coordinates of the OCTREE
+    EMDA_OCTREE_MIN = {class = "semivariant", dtype = "double[]", default = [0.0, 0.0, 0.0], size = 3, desc="Minimum coordinates of the OCTREE"}
+
+    # @brief: Maximum coordinates of the OCTREE
+    EMDA_OCTREE_MAX = {class = "semivariant", dtype = "double[]", default = "{(double)(1u << EMDA_MAXDEPTH), (double)(1u << EMDA_MAXDEPTH), (double)(1u << EMDA_MAXDEPTH)}", size = 3, desc="Maximum coordinates of the OCTREE"}
+
+    # @brief: Output frequency for the solution, for saving to VTU file
+    EMDA_IO_OUTPUT_FREQ = {class = "semivariant", dtype = "unsigned int", default = 1000, min = 0, max = 2000, desc="Output frequency for the solution, for saving to VTU file"}
+
+    # @brief: Gravitational wave extraction frequency
+    EMDA_GW_EXTRACT_FREQ = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 2, desc="Gravitational wave extraction frequency"}
+
+    # @brief: Gravitational wave extraction frequency after the merger
+    EMDA_GW_EXTRACT_FREQ_AFTER_MERGER = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Gravitational wave extraction frequency after the merger"}
+
+    # @brief: Timestep output frequency
+    EMDA_TIME_STEP_OUTPUT_FREQ = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Timestep output frequency"}
+
+    # @brief: Frequency for performing remeshing test based on wavelets
+    EMDA_REMESH_TEST_FREQ = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Frequency for performing remeshing test based on wavelets"}
+
+    # @brief: Frequency for performing remeshing test based on wavelets after the merger
+    EMDA_REMESH_TEST_FREQ_AFTER_MERGER = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Frequency for performing remeshing test based on wavelets after the merger"}
+
+    # @brief: Frequency for checkpoint saving
+    EMDA_CHECKPT_FREQ = {class = "semivariant", dtype = "unsigned int", default = 5000, min = 0, max = 10000, desc="Frequency for checkpoint saving"}
+
+    # @brief: Option for restoring from a checkpoint (will restore if set to 1)
+    EMDA_RESTORE_SOLVER = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 1, desc="Option for restoring from a checkpoint (will restore if set to 1)"}
+
+    # @brief: Disable AMR and enable block adaptivity
+    EMDA_ENABLE_BLOCK_ADAPTIVITY = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 1, desc="Disable AMR and enable block adaptivity"}
+
+    # @brief: File prefix for the VTU files that will be saved
+    EMDA_VTU_FILE_PREFIX = {class = "semivariant", dtype = "string", default = "vtu/emda_gr", desc="File prefix for the VTU files that will be saved"}
+
+    # @brief: File prefix for the checkpoint files
+    EMDA_CHKPT_FILE_PREFIX = {class = "semivariant", dtype = "string", default = "cp/emda_cp", desc="File prefix for the checkpoint files"}
+
+    # @brief: File prefix for the intermediate profile files
+    EMDA_PROFILE_FILE_PREFIX = {class = "semivariant", dtype = "string", default = "emda_prof", desc="File prefix for the intermediate profile files"}
+
+    # @brief: Number variables for refinement
+    EMDA_NUM_REFINE_VARS = {class = "semivariant", dtype = "unsigned int", default = 36, min = 0, max = 36, desc="Number variables for refinement"}
+
+    # @brief: The IDs for the refinement variables, this will depend on the enum that's generated from the Python
+    EMDA_REFINE_VARIABLE_INDICES = {class = "semivariant", dtype = "unsigned int[]", default = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], size = 36, desc="The IDs for the refinement variables, this will depend on the enum that's generated from the Python"}
+
+    # @brief: The number of evolution variables to put in the output of the files
+    EMDA_NUM_EVOL_VARS_VTU_OUTPUT = {class = "semivariant", dtype = "unsigned int", default = 14, min = 0, max = 36, desc="The number of evolution variables to put in the output of the files"}
+
+    # @brief: The number of constraint variables written to VTU files
+    EMDA_NUM_CONST_VARS_VTU_OUTPUT = {class = "semivariant", dtype = "unsigned int", default = 1, min = 0, max = 6, desc="The number of constraint variables written to VTU files"}
+
+    # @brief: Evolution variable IDs to be written to the VTU files
+    EMDA_VTU_OUTPUT_EVOL_INDICES = {class = "semivariant", dtype = "unsigned int[]", default = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], size = 36, desc="Evolution variable IDs to be written to the VTU files"}
+
+    # @brief: Constraint variable IDs to be written to the VTU files
+    EMDA_VTU_OUTPUT_CONST_INDICES = {class = "semivariant", dtype = "unsigned int[]", default = [0,1,2,3,4,5], size = 6, desc="Constraint variable IDs to be written to the VTU files"}
+
+    # @brief: Solution output gap (instead of frequency, we can use to output the solution if currentTime > lastIOOutputTime + EMDA_IO_OUTPUT_GAP)
+    # Another comment: VTU file output gap. (Not currently used. Might be usefull in adaptive timestepping)
+    EMDA_IO_OUTPUT_GAP = {class = "semivariant", dtype = "unsigned int", default = 1, min = 0, max = 2, desc="Solution output gap (instead of frequency, we can use to output the solution if currentTime > lastIOOutputTime + EMDA_IO_OUTPUT_GAP)"}
+
+    # @brief: Grain size N/p, Where N number of total octants, p number of active cores
+    EMDA_DENDRO_GRAIN_SZ = {class = "semivariant", dtype = "unsigned int", default = 50, min = 0, max = 100, desc=" Grain size N/p, Where N number of total octants, p number of active cores"}
+
+    # @brief: Dendro coarsening factor, if computed wavelet tol < EMDA_DENDRO_AMR_FAC*EMDA_WAVELET_TOL
+    EMDA_DENDRO_AMR_FAC = {class = "semivariant", dtype = "double", default = 0.1, min = 0.0, max = 0.2, desc="Dendro coarsening factor, if computed wavelet tol < EMDA_DENDRO_AMR_FAC*EMDA_WAVELET_TOL"}
+
+    # @brief: Number of grid iterations untill the grid converges
+    EMDA_INIT_GRID_ITER = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Number of grid iterations untill the grid converges"}
+
+    # @brief: Splitter fix value
+    EMDA_SPLIT_FIX = {class = "semivariant", dtype = "unsigned int", default = 2, min = 0, max = 4, desc="Splitter fix value"}
+
+    # == RK SOLVER PARAMS =
+
+    # @brief: The Courant factor: CFL stability number (specifies how dt=EMDA_CFL_FACTOR*dx)
+    EMDA_CFL_FACTOR = {class = "semivariant", dtype = "double", default = 0.25, min = 0.0, max = 0.5, desc="The Courant factor: CFL stability number (specifies how dt=EMDA_CFL_FACTOR*dx)"}
+
+    # @brief: Simulation time begin
+    EMDA_RK_TIME_BEGIN = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 100, desc="Simulation time begin"}
+
+    # @brief: Simulation time end
+    EMDA_RK_TIME_END = {class = "semivariant", dtype = "unsigned int", default = 800, min = 0, max = 1000, desc="Simulation time end"}
+
+    # @brief: RK method to use (0 -> RK3 , 1 -> RK4, 2 -> RK45)
+    EMDA_RK_TYPE = {class = "semivariant", dtype = "unsigned int", default = 1, min = 0, max = 3, desc="RK method to use (0 -> RK3 , 1 -> RK4, 2 -> RK45)"}
+
+    # @brief: Prefered time step size (this is overwritten with the specified CFL factor, not recommended to use this)
+    EMDA_RK45_TIME_STEP_SIZE = {class = "semivariant", dtype = "double", default = 0.01, min = 0.0, max = 0.02, desc="Prefered time step size (this is overwritten with the specified CFL factor, not recommended to use this)"}
+
+    # @brief: Desired tolerance value for the RK45 method (with adaptive time stepping), NOT CURRENTLY USED
+    EMDA_RK45_DESIRED_TOL = {class = "semivariant", dtype = "double", default = 1e-3, min = 0.0, max = 2e-3, desc="Desired tolerance value for the RK45 method (with adaptive time stepping), NOT CURRENTLY USED"}
+
+    # @brief: The dissipation type to be used
+    DISSIPATION_TYPE = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 0, desc="The dissipation type to be used"}
+
+    # @brief: The dissipation "NC", note this is only called in a comment for "artificial dissipation" which appears to not be defined anywhere
+    # TODO: @david can you please add some comeents for these parameters.
+    EMDA_DISSIPATION_NC = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 1, desc="The dissipation \"NC\", note this is only called in a comment for \"artificial dissipation\" which appears to not be defined anywhere"}
+
+    # @breif: The dissipation "S:, note this is only called in a comment for "artificial dissipation" which appears to not be defined anywhere
+    # TODO: @david can you please add some comeents for these parameters.
+    EMDA_DISSIPATION_S = {class = "semivariant", dtype = "unsigned int", default = 0, min = 10, max = 20, desc="The dissipation \"S\", note this is only called in a comment for \"artificial dissipation\" which appears to not be defined anywhere"}
+
+    # @brief: The TS offset for LTS in EMDA
+    EMDA_LTS_TS_OFFSET = {class = "semivariant", dtype = "unsigned int", default = 0, min = 4, max = 8, desc="The TS offset for LTS in EMDA"}
+
+    # @brief: Global parameter to track if a merged checkpoint file is written.
+    EMDA_MERGED_CHKPT_WRITTEN = {class = "semivariant", dtype = "bool", default = false, desc="Global parameter to track if a merged checkpoint file is written."}
+
+    # == IO Parameters ==
+    # @brief: Tolerance for refinement based on EH
+    EMDA_EH_REFINE_VAL = {class = "semivariant", dtype = "double", default = 0.4, min = 0.0, max = 1.0, desc="Tolerance for refinement based on EH"}
+    # @brief: Tolerance for coarsening based on EH
+    EMDA_EH_COARSEN_VAL = {class = "semivariant", dtype = "double", default = 0.6, min = 0.0, max = 1.2, desc="Tolerance for coarsening based on EH"}
+    # @brief: Whether to output only the z slice in the VTU file
+    EMDA_VTU_Z_SLICE_ONLY = {class = "semivariant", dtype = "bool", default = "true", desc="Whether to output only the z slice in the VTU file"}
+
+    # == LOAD BALANCING & MESH ==
+    # @brief: Variable group size for the asynchronous unzip operation. This is an async communication. (Upper bound should be EMDA_NUM_VARS)
+    EMDA_ASYNC_COMM_K = {class = "semivariant", dtype = "unsigned int", default = 4, min = 0, max = "EMDA_NUM_VARS", desc="Variable group size for the asynchronous unzip operation. This is an async communication. (Upper bound should be EMDA_NUM_VARS)"}
+
+    # @brief: Dendro load imbalance tolerance for flexible partitioning
+    EMDA_LOAD_IMB_TOL = {class = "semivariant", dtype = "double", default = 0.1, min = 0.0, max = 0.2, desc="Dendro load imbalance tolerance for flexible partitioning"}
+
+    # @brief: Dimensionality of the _, (meshing is supported only for 3D)
+    EMDA_DIM = {class = "semivariant", dtype = "unsigned int", default = 3, min = 0, max = 6, desc="Dimensionality of the octree, (meshing is supported only for 3D)"}
+
+    # @brief: Maximum and minimum levels of refinement of the mesh
+    EMDA_MAXDEPTH = {class = "semivariant", dtype = "unsigned int", default = 16, min = 0, max = 32, desc="Maximum and minimum levels of refinement of the mesh"}
+    EMDA_MINDEPTH = {class = "semivariant", dtype = "unsigned int", default = 3, min = 0, max = 16}
+
+    # == WAVELET REFINEMENT ==
+    # @brief: Wavelet tolerance
+    EMDA_WAVELET_TOL = {class = "semivariant", dtype = "double", default = 1e-5, min = 0.0, max = 2e-5, desc="Wavelet tolerance"}
+    # @brief: Wavelet tolerance for GW extraction (after merger)
+    EMDA_GW_REFINE_WTOL = {class = "semivariant", dtype = "double", default = 1e-4, min = 0.0, max = 2e-4, desc="Wavelet tolerance for GW extraction (after merger)"}
+
+    # @brief: Set wavelet tolerance using a function (default 0)
+    EMDA_USE_WAVELET_TOL_FUNCTION = {class = "semivariant", dtype = "unsigned int", default = 3, min = 0, max = 6, desc="Set wavelet tolerance using a function (default 0)"}
+
+    # @brief: The maximum value of the wavelet tolerance
+    EMDA_WAVELET_TOL_MAX = {class = "semivariant", dtype = "double", default = 1e-3, min = 0.0, max = 2e-3, desc="The maximum value of the wavelet tolerance"}
+
+    # @brief: Radius R0 for the wavelet tolerance function
+    EMDA_WAVELET_TOL_FUNCTION_R0 = {class = "semivariant", dtype = "double", default = 30.0, min = 0.0, max = 60.0, desc="Radius R0 for the wavelet tolerance function"}
+
+    # @brief: Radius R1 for the wavelet tolerance function
+    EMDA_WAVELET_TOL_FUNCTION_R1 = {class = "semivariant", dtype = "double", default = 220.0, min = 0.0, max = 440.0, desc="Radius R1 for the wavelet tolerance function"}
+
+    # @brief: Fd intergrid transfer enable or disable
+    EMDA_USE_FD_GRID_TRANSFER = {class = "semivariant", dtype = "bool", default = false, desc="Fd intergrid transfer enable or disable"}
+
+    # @brief: Refinement mode: 0 -> WAMR , 1 -> EH, 2 -> EH_WAMR 3 -> BH_loc based
+    EMDA_REFINEMENT_MODE = {class = "semivariant", dtype = "enum", enum_name="RefinementMode", default = 0, min = 0, max = 3, desc="Refinement mode: 0 -> WAMR , 1 -> EH, 2 -> EH_WAMR 3 -> BH_loc based"}
+
+    ## BLOCK Adaptivity (Not Recommended use AMR) ##
+    EMDA_BLK_MIN_X = {class = "semivariant", dtype = "double", default = -6.0, min = -12.0, max = 0.0}
+    EMDA_BLK_MIN_Y = {class = "semivariant", dtype = "double", default = -6.0, min = -12.0, max = 0.0}
+    EMDA_BLK_MIN_Z = {class = "semivariant", dtype = "double", default = -1.0, min = -12.0, max = 0.0}
+    EMDA_BLK_MAX_X = {class = "semivariant", dtype = "double", default = 6.0, min = 0.0, max = 12.0}
+    EMDA_BLK_MAX_Y = {class = "semivariant", dtype = "double", default = 6.0, min = 0.0, max = 12.0}
+    EMDA_BLK_MAX_Z = {class = "semivariant", dtype = "double", default = 1.0, min = 0.0, max = 12.0}
+
+    # == BSSN Parameters ==
+    # @brief: base value for eta in evolution
+    ETA_CONST = {class = "semivariant", dtype = "double", default = 2.0, min = 0.0, max = 4.0}
+    # eta_R0, radius where eta is damped for evolution
+    ETA_R0 = {class = "semivariant", dtype = "double", default = 30.0, min = 0.0, max = 60.0}
+    # eta damping for evolution
+    ETA_DAMPING = {class = "semivariant", dtype = "double", default = 2.0, min = 0.0, max = 4.0}
+    # eta damping exponent for evolution
+    ETA_DAMPING_EXP = {class = "semivariant", dtype = "double", default = 2.0, min = 0.0, max = 4.0}
+
+    ANG_PAR = {class = "semivariant", dtype = "double", default = 1e-2, min = 0.0, max = 2e-2}
+    # Chi floor value
+    CHI_FLOOR = {class = "semivariant", dtype = "double", default = 1e-4, min = 0.0, max = 2e-4}
+
+    #brief: lambda values for evolution
+    EMDA_TRK0 = {class = "semivariant", dtype = "double", default = 0.0, min = 0.0, max = 1.0}
+    # Kreiss-Oliger dissipation
+    KO_DISS_SIGMA = {class = "semivariant", dtype = "double", default = 4e-1, min = 0.0, max = 8e-1}
+
+    ## ETA as a function parameters ##
+    EMDA_ETA_R0 = {class = "semivariant", dtype = "double", default = 1.31, min = 0.0, max = 3.0}
+
+    ## Select Initial Data #
+    # 0-TwoPuncture Elliptic sol, 1-HAD approximate sol, 2-Kerr-Schild
+    EMDA_ID_TYPE = {class = "semivariant", dtype = "unsigned int", default = 0, min = 0, max = 8}
+
+    # == Black Hole Parameters ==
+    # @brief: Physical coordinates for grid of interest
+    EMDA_GRID_MIN_X = {class = "semivariant", dtype = "double", default = -400.0, min = -500.0, max = 0.0}
+    EMDA_GRID_MAX_X = {class = "semivariant", dtype = "double", default = 400.0, min = 0.0, max = 500.0}
+    EMDA_GRID_MIN_Y = {class = "semivariant", dtype = "double", default = -400.0, min = -500.0, max = 0.0}
+    EMDA_GRID_MAX_Y = {class = "semivariant", dtype = "double", default = 400.0, min = 0.0, max = 500.0}
+    EMDA_GRID_MIN_Z = {class = "semivariant", dtype = "double", default = -400.0, min = -500.0, max = 0.0}
+    EMDA_GRID_MAX_Z = {class = "semivariant", dtype = "double", default = 400.0, min = 0.0, max = 500.0}
+
+    # @brief: AMR radius for the BH location based refinement for the first black hole.
+    EMDA_BH1_AMR_R = {class = "semivariant", dtype = "double", default = 0.07, min = 0.0, max = 0.14, desc="AMR radius for the BH location based refinement for the first black hole."}
+    # @brief: skip grid point distance from bh < EMDA_BH1_CONSTRAINT_R when computing the constraint norms for BH1
+    EMDA_BH1_CONSTRAINT_R = {class = "semivariant", dtype = "unsigned int", default = 5, min = 0, max = 10, desc="Skip grid point distance from bh < EMDA_BH1_CONSTRAINT_R when computing the constraint norms for BH1"}
+    # @brief: Maximum refinement level for BH1
+    EMDA_BH1_MAX_LEV = {class = "variant", dtype = "unsigned int", default = 16, min = 0, max = 24, desc="Maximum refinement level for BH1"}
+
+    # @brief: AMR radius for the BH location based refinement for the second black hole.
+    EMDA_BH2_AMR_R = {class = "semivariant", dtype = "double", default = 1.3, min = 0.0, max = 3.0, desc="AMR radius for the BH location based refinement for the second black hole."}
+    # @brief: Skip grid point distance from bh < EMDA_BH2_CONSTRAINT_R when computing the constraint norms  for BH2
+    EMDA_BH2_CONSTRAINT_R = {class = "semivariant", dtype = "unsigned int", default = 5, min = 0, max = 10, desc="Skip grid point distance from bh < EMDA_BH2_CONSTRAINT_R when computing the constraint norms  for BH2"}
+    # @brief: Maximum refinement level for BH2
+    EMDA_BH2_MAX_LEV = {class = "variant", dtype = "unsigned int", default = 15, min = 0, max = 24, desc="Maximum refinement level for BH2"}
+
+    # @brief: parameters for the eta_damping function
+    EMDA_ETA_POWER = {class = "semivariant", dtype = "double[]", default = [2.0, 2.0], size = 2, desc="parameters for the eta_damping function"}
+
+# NESTED PARAMETERS FOR BLACK HOLE 1
+[emda-NMSPC.EMDA_BH1]
+    MASS = {class = "semivariant",dtype = "double", default = 0.3171512710491704, min = 0.0, max = 0.7}
+    X = {class = "semivariant",dtype = "double", default = 5.3238269436091761, min = -6.0, max = 6.0}
+    Y = {class = "semivariant",dtype = "double", default = 0.0, min = -6.0, max = 6.0}
+    Z = {class = "semivariant",dtype = "double", default = 0.0, min = -6.0, max = 6.0}
+    V_X = {class = "semivariant",dtype = "double", default = -1.7777739959719536e-3, min = -4.0, max = 4.0}
+    V_Y = {class = "semivariant",dtype = "double", default = 0.10049503227336423, min = -4.0, max = 4.0}
+    V_Z = {class = "semivariant",dtype = "double", default = 0.0, min = -4.0, max = 4.0}
+    SPIN = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+    SPIN_THETA = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+    SPIN_PHI = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+
+# NESTED PARAMETERS FOR BLACK HOLE 2
+[emda-NMSPC.EMDA_BH2]
+    MASS = {class = "semivariant",dtype = "double", default = 0.6515011227547999, min = -6.0, max = 6.0}
+    X = {class = "semivariant",dtype = "double", default = -2.6761730563908261, min = -6.0, max = 6.0}
+    Y = {class = "semivariant",dtype = "double", default = 0.0, min = -6.0, max = 6.0}
+    Z = {class = "semivariant",dtype = "double", default = 0.0, min = -6.0, max = 6.0}
+    V_X = {class = "semivariant",dtype = "double", default = -0.0017777739959719536, min = -4.0, max = 0}
+    V_Y = {class = "semivariant",dtype = "double", default = -0.10049503227336423, min = -4.0, max = 4.0}
+    V_Z = {class = "semivariant",dtype = "double", default = 0.0, min = -4.0, max = 4.0}
+    SPIN = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+    SPIN_THETA = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+    SPIN_PHI = {class = "semivariant",dtype = "double", default = 0.0, min = 0.0, max = 3.0}
+
+# XI PARAMETERS - TODO: this needs to change for EMDA
+[emda-NMSPC.EMDA_XI]
+    0 = {class = "semivariant",dtype = "unsigned int", default = 0, min = 0, max = 1}
+    1 = {class = "semivariant",dtype = "unsigned int", default = 0, min = 0, max = 1}
+    2 = {class = "semivariant",dtype = "unsigned int", default = 0, min = 0, max = 1}
+
+# ===========
+# == NON EMDA SPECIFIC == 
+
+# ========
+# TWO PUNCTURE PARAMETERS
+[TPID-NMSPC]
+    FILE_PREFIX = {class = "semivariant", dtype = "string", default = "rit_q2"}
+
+    ## Two Punction Initial Data Parameters ##
+    TP_epsilon = {class = "invariant",dtype = "double", default = 1.0e-6, min = 0, max = 2.0e-6}
+    swap_xz = {class = "invariant",dtype = "int", default = 0, min = -1, max = 1}
+    use_sources = {class = "invariant",dtype = "int", default = 0, min = -1, max = 1}
+    rescale_sources = {class = "invariant",dtype = "int", default = 0, min = -1, max = 1}
+    use_external_initial_guess = {class = "invariant",dtype = "int", default = 0, min = -1, max = 1}
+    do_residuum_debug_output = {class = "invariant",dtype = "int", default = 1, min = 0, max = 2}
+    do_initial_debug_output = {class = "invariant",dtype = "int", default = 1, min = 0, max = 2}
+    multiply_old_lapse = {class = "invariant",dtype = "int", default = 0, min = -1, max = 1}
+    TP_Tiny = {class = "invariant",dtype = "double", default = 1.0e-15, min = 0, max = 2.0e-15}
+    TP_Extend_Radius = {class = "invariant",dtype = "double", default = 0.0, min = -1.0, max = 1.0}
+    Newton_maxit = {class = "invariant",dtype = "int", default = 5, min = 0, max = 10}
+
+    # 1/2 coordinate separation between black holes
+    par_b = {class = "semivariant",dtype = "double", default = 4.0, min = 0, max = 8.0}
+
+    par_m_plus = {class = "semivariant",dtype = "double", default = 0.3171512710491704, min = 0, max = 2.0}
+    par_m_minus = {class = "semivariant",dtype = "double", default = 0.6515011227547999, min = 0, max = 2.0}
+
+    target_M_plus = {class = "semivariant",dtype = "double", default = 0.3171512710491704, min = 0, max = 2.0}
+    target_M_minus = {class = "semivariant",dtype = "double", default = 0.6515011227547999, min = 0, max = 2.0}
+
+    # Momentum
+    par_P_plus = {class = "semivariant",dtype = "double[]", default = [-1.7777739959719536e-3,1.0049503227336423e-1,0.0], size = 3}
+    par_P_minus = {class = "semivariant",dtype = "double[]", default = [1.7777739959719536e-3,-1.0049503227336423e-1,0.0], size = 3}
+
+    # Spin
+    par_S_plus = {class = "semivariant",dtype = "double[]", default = [0.0,0.0,0.0], size = 3}
+    par_S_minus = {class = "semivariant",dtype = "double[]", default = [0.0,0.0,0.0], size = 3}
+
+    center_offset = {class = "semivariant",dtype = "double[]", default = [1.323826943609176,0.0,0.0], size = 3}
+
+    # 0-Use ADM mass and iteratively solve for bare mass, 1-Use bare mass
+    give_bare_mass = {class = "semivariant",dtype = "unsigned int", default = 1, min = 0, max = 1}
+    # Select lapse: 0-antisymmetric, 1-averaged, 2-psi^n, 3-Brownsville
+    initial_lapse = {class = "semivariant",dtype = "int", default = 2, min = 0, max = 3}
+
+    # Grid Setup Method: 0-Taylor expansion, 1-Evaluation
+    grid_setup_method = {class = "semivariant",dtype = "unsigned int", default = 1, min = 0, max = 1}
+
+    # Deprecated
+    solve_momentum_constraint = {class = "semivariant",dtype = "int", default = 1, min = 0, max = 2}
+    verbose = {class = "semivariant",dtype = "unsigned int", default = 1, min = 0, max = 1}
+    adm_tol = {class = "semivariant",dtype = "double", default = 1.0e-10, min = 0, max = 2.0e-10}
+    Newton_tol = {class = "semivariant",dtype = "double", default = 1.0e-10, min = 0, max = 2.0e-10}
+
+    # Exponent n for INITIAL_LAPSE=2, where alpha=psi^n
+    initial_lapse_psi_exponent = {class = "semivariant",dtype = "double", default = -2.0, min = -4.0, max = 4.0}
+
+    # Grid points for spectral grid
+    npoints_A = {class = "semivariant",dtype = "unsigned int", default = 60, min = 0, max = 120}
+    npoints_B = {class = "semivariant",dtype = "unsigned int", default = 60, min = 0, max = 120}
+    npoints_phi = {class = "semivariant",dtype = "unsigned int", default = 60, min = 0, max = 120}
+
+# ======
+# == BLACK HOLE LOCATION PARAMETERS
+[BHLOC-NMSPC]
+    EXTRACTION_VAR_ID = {class = "semivariant",dtype = "unsigned int", default = 0, min = 0, max = 10}
+    EXTRACTION_TOL = {class = "semivariant",dtype = "double", default = 0.3, min = -1.0, max = 1.0}
+
+# ======
+# == Gravitational wave PARAMETERS
+[GW-NMSPC]
+    EMDA_GW_NUM_RADAII = {class = "semivariant",dtype = "unsigned int", default = 6, min = 0, max = 10}
+    EMDA_GW_NUM_LMODES = {class = "semivariant",dtype = "unsigned int", default = 3, min = 0, max = 10}
+    # size should be EMDA_GW_NUM_RADAII
+    EMDA_GW_RADAII = {class = "semivariant",dtype = "unsigned int[]", default = [50,60,70,80,90,100], size = 6}
+    # size should be EMDA_GW_NUM_LMODES
+    EMDA_GW_L_MODES = {class = "semivariant",dtype = "unsigned int[]", default = [2,3,4], size = 3}
+    # @brief: GW output precision in .dat files
+    EMDA_GW_OUTPUT_PRECISION = {class = "invariant",dtype = "unsigned int", default = 10, min = 0, max = 20}

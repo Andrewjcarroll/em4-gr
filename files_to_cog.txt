@@ -1,0 +1,25 @@
+# ============================
+# ==== FILES TO COG ==========
+# ============================
+# == This file lists all of the files in this project that have pieces
+# == that need to be generated and/or preprocessed by "cog" using configurations
+# ============================
+#
+# this is the general relativity definition file
+#include/grDef.h
+
+# RHS set-up for evolution equations:
+solver/src/rhs.cpp
+
+# physcon.cpp is the physical conditions file (deals with psi, ham, and mom)
+#src/physcon.cpp
+
+# and then the KO calculation to be used
+#gencode/solver_rhs_ko_deriv_calc.cpp.inc
+
+# then evolution constraints need to be generated
+#include/system_constraints.h
+
+# we also need to generate the parameters
+#src/parameters.cpp
+#include/parameters.h

@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++17 -fopenmp -O3 -DNDEBUG -rdynamic CMakeFiles/genSFCMatVecTables.dir/Hilbert/src/sfcMatvecTable.cpp.o -o genSFCMatVecTables  -lm 
