@@ -1,3 +1,0 @@
-/home/andrew/Programs/CFD/EM4/em4-gr/build/_deps/xsmm-subbuild/CMakeFiles/xsmm-populate.dir
-/home/andrew/Programs/CFD/EM4/em4-gr/build/_deps/xsmm-subbuild/CMakeFiles/edit_cache.dir
-/home/andrew/Programs/CFD/EM4/em4-gr/build/_deps/xsmm-subbuild/CMakeFiles/rebuild_cache.dir
