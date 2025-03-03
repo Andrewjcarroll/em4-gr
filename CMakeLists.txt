@@ -13,7 +13,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # full project name and the languages used
-project(DendroEM3 C CXX Fortran)
+project(DendroEM4 C CXX Fortran)
 
 # the standard we're using is c++11
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")

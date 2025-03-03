@@ -1,8 +1,8 @@
 # # # # # # # ########################################################################
-# CMAKE CONFIGURATION FILE FOR EM3 SOLVER
+# CMAKE CONFIGURATION FILE FOR EM4 SOLVER
 #
 # This file in particular contains all of the options that apply specificially
-# to the EM3 Solver binary as it is compiled.
+# to the EM4 Solver binary as it is compiled.
 #
 # Note that all options and compiler flags set in the ../CMakeLists.txt file
 # (the one in the root directory of the project) *are carried through* here.
@@ -47,18 +47,18 @@ option(
   "Allows you to save as VTU files all of the variables and their RHS at each time step"
   OFF)
 
-option(EM3_COMPUTE_ANALYTICAL
+option(EM4_COMPUTE_ANALYTICAL
        "Adds the computation of the analytical solution *and* computes the diff"
        ON)
 
-option(EM3_ENABLE_COMPACT_DERIVS
+option(EM4_ENABLE_COMPACT_DERIVS
        "Swaps the RHS functionality to run compact finite differences" ON)
 
-option(EM3_DEBUG_COMPACT_DERIVS
+option(EM4_DEBUG_COMPACT_DERIVS
        "Enables some debug checks (like nan checking) in CFDs" ON)
 
 option(
-  EM3_USE_XSMM_MAT_MUL
+  EM4_USE_XSMM_MAT_MUL
   "Enables the use of XSMM matrix multiplication (requires support in dendrolib)"
   OFF)
 
@@ -147,20 +147,20 @@ if(SOLVER_ENABLE_CUDA)
   add_definitions(-DSOLVER_ENABLE_CUDA)
 endif()
 
-if(EM3_COMPUTE_ANALYTICAL)
-  add_definitions(-DEM3_COMPUTE_ANALYTICAL)
+if(EM4_COMPUTE_ANALYTICAL)
+  add_definitions(-DEM4_COMPUTE_ANALYTICAL)
 endif()
 
-if(EM3_ENABLE_COMPACT_DERIVS)
-  add_definitions(-DEM3_ENABLE_COMPACT_DERIVS)
+if(EM4_ENABLE_COMPACT_DERIVS)
+  add_definitions(-DEM4_ENABLE_COMPACT_DERIVS)
 endif()
 
-if(EM3_DEBUG_COMPACT_DERIVS)
-  add_definitions(-DEM3_DEBUG_COMPACT_DERIVS)
+if(EM4_DEBUG_COMPACT_DERIVS)
+  add_definitions(-DEM4_DEBUG_COMPACT_DERIVS)
 endif()
 
-if(EM3_USE_XSMM_MAT_MUL)
-  add_definitions(-DEM3_USE_XSMM_MAT_MUL)
+if(EM4_USE_XSMM_MAT_MUL)
+  add_definitions(-DEM4_USE_XSMM_MAT_MUL)
 endif()
 
 if(SOLVER_ENABLE_MERGED_BLOCKS)
@@ -238,7 +238,7 @@ target_include_directories(em4Solver PRIVATE ${EXTERNAL_LIB_HEADERS})
 target_link_libraries(em4Solver dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
                       ${GSL_LIBRARIES} m toml11::toml11)
 
-if(EM3_USE_XSMM_MAT_MUL)
+if(EM4_USE_XSMM_MAT_MUL)
   target_link_libraries(em4Solver xsmm)
 endif()
 
@@ -276,7 +276,7 @@ target_include_directories(testCFDS PRIVATE ${EXTERNAL_LIB_HEADERS})
 target_link_libraries(testCFDS dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
                       ${GSL_LIBRARIES} m toml11::toml11)
 
-if(EM3_USE_XSMM_MAT_MUL)
+if(EM4_USE_XSMM_MAT_MUL)
   target_link_libraries(testCFDS xsmm)
 endif()
 
@@ -294,7 +294,7 @@ target_include_directories(cfdGlobal PRIVATE ${EXTERNAL_LIB_HEADERS})
 target_link_libraries(cfdGlobal dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
                       ${GSL_LIBRARIES} m toml11::toml11)
 
-if(EM3_USE_XSMM_MAT_MUL)
+if(EM4_USE_XSMM_MAT_MUL)
   target_link_libraries(cfdGlobal xsmm)
 endif()
 
@@ -343,7 +343,7 @@ target_include_directories(solverScalingTest PRIVATE ${EXTERNAL_LIB_HEADERS})
 target_link_libraries(solverScalingTest dendro5 ${LAPACK_LIBRARIES}
                       ${MPI_LIBRARIES} ${GSL_LIBRARIES} m toml11::toml11)
 
-if(EM3_USE_XSMM_MAT_MUL)
+if(EM4_USE_XSMM_MAT_MUL)
   target_link_libraries(solverScalingTest xsmm)
 endif()
 
