@@ -23,10 +23,6 @@
 #include "parameters.h"
 #include "profile_params.h"
 
-#ifdef EM4_ENABLE_COMPACT_DERIVS
-#include "compact_derivs.h"
-#endif
-
 namespace dsolve {
 SOLVERCtx::SOLVERCtx(ot::Mesh *pMesh) : Ctx() {
     m_uiMesh = pMesh;
@@ -93,24 +89,6 @@ SOLVERCtx::SOLVERCtx(ot::Mesh *pMesh) : Ctx() {
                                     SOLVER_ASYNC_COMM_K);
 
     // then initialize the CFD stuff
-
-#ifdef EM4_ENABLE_COMPACT_DERIVS
-    dendro_cfd::cfd.set_filter_type(dsolve::SOLVER_FILTER_TYPE);
-    dendro_cfd::cfd.set_deriv_type(dsolve::SOLVER_DERIV_TYPE);
-    dendro_cfd::cfd.set_second_deriv_type(dsolve::SOLVER_2ND_DERIV_TYPE);
-    dendro_cfd::cfd.set_padding_size(dsolve::SOLVER_PADDING_WIDTH);
-    dendro_cfd::cfd.set_kim_params(dsolve::SOLVER_KIM_FILTER_KC,
-                                   dsolve::SOLVER_KIM_FILTER_EPS);
-    dendro_cfd::cfd.set_deriv_boundary_type(dsolve::SOLVER_DERIV_CLOSURE_TYPE);
-    dendro_cfd::set_bl_matnum(dsolve::SOLVER_BL_DERIV_MAT_NUM);
-
-    // NOTE: calling this function will reinitialize the entire cfd object.
-    // It should calculate everything!
-    dendro_cfd::cfd.change_dim_size(2 * dsolve::SOLVER_ELE_ORDER + 1);
-    // std::cout << "Reinitialized cfd object with size "
-    //           << 2 * dsolve::SOLVER_ELE_ORDER + 1 << std::endl;
-
-#endif
 
     // set up the appropriate derivs
     dendro_derivs::set_appropriate_derivs(dsolve::SOLVER_PADDING_WIDTH);
@@ -761,8 +739,7 @@ int SOLVERCtx::initialize() {
         // isRefine=this->is_remesh();
         // enforce WARM refinement based on refinement initially
 
-        // TODO: don't refine initially if AMR is off
-        if (max_iter == 0)
+        if (max_iter == 0 || dsolve::SOLVER_ENABLE_BLOCK_ADAPTIVITY)
             isRefine = false;
         else {
             if (dsolve::SOLVER_REFINEMENT_MODE ==
@@ -1075,6 +1052,8 @@ int SOLVERCtx::write_vtu() {
 }
 
 int SOLVERCtx::write_checkpt() {
+    // TEMP: disable checkpointing for memory
+    return 0;
     if (!m_uiMesh->isActive()) return 0;
 
     unsigned int cpIndex;
@@ -1394,8 +1373,8 @@ int SOLVERCtx::restore_checkpt() {
     if (!rank)
         std::cout << " checkpoint at step : " << m_uiTinfo._m_uiStep
                   << "active Comm. sz: " << activeCommSz
-                  << " restore successful: "
-                  << " restored mesh size: " << totalElems << std::endl;
+                  << " restore successful: " << " restored mesh size: "
+                  << totalElems << std::endl;
 
     m_uiIsETSSynced = false;
     return 0;
@@ -1508,6 +1487,49 @@ int SOLVERCtx::terminal_output() {
 
         this->compute_analytical();
 
+        char fName[256];
+        sprintf(fName, "%s_ANALYTICAL_DIFF.csv",
+                dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str());
+
+        // write the header
+        if (!(m_uiMesh->getMPIRankGlobal())) {
+            if (this->m_uiTinfo._m_uiStep == 0) {
+                std::ofstream fileDiff;
+                fileDiff.open(fName, std::ofstream::app);
+                std::cout << "header..." << std::endl;
+                fileDiff << "Timestep,Time,";
+                for (unsigned int i = 0;
+                     i < dsolve::SOLVER_NUM_CONSOLE_OUTPUT_VARS; i++) {
+                    unsigned int v = dsolve::SOLVER_CONSOLE_OUTPUT_VARS[i];
+                    fileDiff << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_MIN,";
+                    fileDiff << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_MAX,";
+                    fileDiff << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_L2,";
+                    fileDiff
+                        << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_RMSE,";
+                    fileDiff
+                        << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_NRMSE,";
+                    fileDiff << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF_MAE,";
+                }
+
+#ifdef SOLVER_COMPUTE_CONSTRAINTS
+                for (unsigned int i = 0;
+                     i < dsolve::SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS; i++) {
+                    unsigned int v =
+                        dsolve::SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[i];
+                    fileDiff << std::string(SOLVER_VAR_CONSTRAINT_NAMES[v])
+                             << "_MIN,"
+                             << std::string(SOLVER_VAR_CONSTRAINT_NAMES[v])
+                             << "_MAX,"
+                             << std::string(SOLVER_VAR_CONSTRAINT_NAMES[v])
+                             << "_L2,";
+                }
+#endif
+
+                fileDiff << std::endl;
+                fileDiff.close();
+            }
+        }
+
         DendroScalar *zippedUpAnalyticalDiff[SOLVER_NUM_VARS];
         m_var[VL::CPU_ANALYTIC_DIFF].to_2d(zippedUpAnalyticalDiff);
 
@@ -1527,12 +1549,50 @@ int SOLVERCtx::terminal_output() {
                 (m_uiMesh->getNumLocalMeshNodes()),
                 m_uiMesh->getMPICommunicator());
 
-            if (!(m_uiMesh->getMPIRank())) {
+            double rmse = normRMSE(
+                &zippedUpAnalyticalDiff[v][m_uiMesh->getNodeLocalBegin()],
+                (m_uiMesh->getNumLocalMeshNodes()),
+                m_uiMesh->getMPICommunicator());
+
+            double nrmse = normNRMSE(
+                &zippedUpAnalyticalDiff[v][m_uiMesh->getNodeLocalBegin()],
+                &zippedUp[v][m_uiMesh->getNodeLocalBegin()],
+                (m_uiMesh->getNumLocalMeshNodes()),
+                m_uiMesh->getMPICommunicator());
+
+            double mae = normMAE(
+                &zippedUpAnalyticalDiff[v][m_uiMesh->getNodeLocalBegin()],
+                (m_uiMesh->getNumLocalMeshNodes()),
+                m_uiMesh->getMPICommunicator());
+
+            if (!(m_uiMesh->getMPIRankGlobal())) {
                 std::cout << "\t[var]:  " << std::setw(12)
                           << std::string(SOLVER_VAR_NAMES[v]) + "_DIFF";
-                std::cout << " (min, max, l2) : \t ( " << l_min << ", " << l_max
-                          << ", " << l2_norm << ") " << std::endl;
+                std::cout << " (min, max, l2, rmse, nrmse, mae) : \t ( "
+                          << l_min << ", " << l_max << ", " << l2_norm << ", "
+                          << rmse << ", " << nrmse << ", " << mae << ") "
+                          << std::endl;
+
+                // write to file
+                std::ofstream fileDiff;
+                fileDiff.open(fName, std::ofstream::app);
+
+                if (i == 0) {
+                    fileDiff << this->m_uiTinfo._m_uiStep << ","
+                             << this->m_uiTinfo._m_uiT << ",";
+                }
+
+                fileDiff << l_min << "," << l_max << "," << l2_norm << ","
+                         << rmse << "," << nrmse << "," << mae << ",";
+                fileDiff.close();
             }
+        }
+
+        if (!(m_uiMesh->getMPIRankGlobal())) {
+            std::ofstream fileDiff;
+            fileDiff.open(fName, std::ofstream::app);
+            fileDiff << std::endl;
+            fileDiff.close();
         }
 
 #endif
@@ -1565,6 +1625,18 @@ int SOLVERCtx::terminal_output() {
                           << std::string(SOLVER_VAR_CONSTRAINT_NAMES[v]);
                 std::cout << " (min, max, l2) : \t ( " << l_min << ", " << l_max
                           << ", " << l2_norm << ") " << std::endl;
+
+                // write to file
+                std::ofstream fileDiff;
+                fileDiff.open(fName, std::ofstream::app);
+
+                if (i == 0) {
+                    fileDiff << this->m_uiTinfo._m_uiStep << ","
+                             << this->m_uiTinfo._m_uiT << ",";
+                }
+
+                fileDiff << l_min << "," << l_max << "," << l2_norm << ",";
+                fileDiff.close();
             }
         }
 

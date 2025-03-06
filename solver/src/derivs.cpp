@@ -79,7 +79,26 @@ void set_appropriate_derivs(const unsigned pw) {
 #endif
 
 #ifdef SOLVER_USE_6TH_ORDER_DERIVS
-    if (pw == 3) {
+    if (pw == 2) {
+        // std::cout << "4th Order Derivatives set, detected padding width of 2"
+        //           << std::endl;
+        dendro_derivs::deriv_x = deriv42_x_pw2;
+        dendro_derivs::deriv_y = deriv42_y_pw2;
+        dendro_derivs::deriv_z = deriv42_z_pw2;
+
+        dendro_derivs::deriv_xx = deriv42_xx_pw2;
+        dendro_derivs::deriv_yy = deriv42_yy_pw2;
+        dendro_derivs::deriv_zz = deriv42_zz_pw2;
+
+        dendro_derivs::ko_deriv_x = ko_deriv21_x;
+        dendro_derivs::ko_deriv_y = ko_deriv21_y;
+        dendro_derivs::ko_deriv_z = ko_deriv21_z;
+        std::cout << "WARNING!!!::: AS A TEMPORARY MEASURE, 4TH ORDER "
+                     "DERIVATIVES AND KO_DERIVS HAVE BEEN ENABLED! 6TH ORDER "
+                     "DERIVS WAS ASKED FOR, BUT ELE4 WAS PROVIDED! THIS SHOULD "
+                     "NOT MAKE IT INTO PRODUCTION RUNS!!!"
+                  << std::endl;
+    } else if (pw == 3) {
         // std::cout << "6th Order Derivatives set, detected padding width of 3"
         //           << std::endl;
         dendro_derivs::deriv_x = deriv644_x;

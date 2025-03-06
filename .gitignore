@@ -1,2 +1,13 @@
+__pycache__/
+.vscode/
 build/
-build/
+.python-version
+gencode_BACKUP/
+
+CMakeCache.txt
+cmake.check_cache
+
+.cache/
+temp_pars/
+
+L2_error/

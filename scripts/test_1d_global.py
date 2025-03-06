@@ -46,10 +46,13 @@ def deriv_1st_x_2nd(u, dx, padding_width=3, bflag=0):
 
     # inside bounds
     dxdxu[xstart + 1 : xend - 1] = (
-        -1.0 * u[xstart : xend - 2]
-        # + 0.0 * u[ystart:yend, xstart:xend]
-        + 1.0 * u[xstart + 2 : xend]
-    ) / (2 * dx)
+        (
+            -1.0 * u[xstart : xend - 2]
+            # + 0.0 * u[ystart:yend, xstart:xend]
+            + 1.0 * u[xstart + 2 : xend]
+        )
+        / (2 * dx)
+    )
 
     if bflag & 1:
         dxdxu[xstart] = (-1.0 * u[xstart] + 1.0 * u[xstart + 1]) / (dx)
@@ -976,11 +979,7 @@ def deriv_data(x):
 
 def deriv_data(x):
     return (
-        (2 * LAMBDA1 * x**2 - 1)
-        * 8
-        * AMPLITUDE
-        * LAMBDA1**2
-        * np.exp(-LAMBDA1 * x**2)
+        (2 * LAMBDA1 * x**2 - 1) * 8 * AMPLITUDE * LAMBDA1**2 * np.exp(-LAMBDA1 * x**2)
     )
 
 
@@ -1091,18 +1090,18 @@ all_x, var_arr, dx_arr = p1o4_x_vec(blks)
 
 # axs.scatter(all_x, var_arr)
 
-if 0:
+if 1:
     plt.figure()
     plt.scatter(all_x, np.zeros_like(all_x), color=[1.0, 0.5, 0.5])
     plt.title("Checking grid")
 
     fig = plt.figure(figsize=(8, 7))
-    plt.matshow(P, cmap="RdYlBu", fignum=fig.number)  # , clim=(0, 1.0))
+    plt.matshow(P, cmap="RdYlBu")  # , clim=(0, 1.0))
     plt.colorbar()
     plt.title("P")
 
     fig = plt.figure(figsize=(8, 7))
-    plt.matshow(Q, cmap="RdYlBu", fignum=fig.number)  # , clim=(0, 1.0))
+    plt.matshow(Q, cmap="RdYlBu")  # , clim=(0, 1.0))
     plt.colorbar()
     plt.title("Q")
 
@@ -1168,10 +1167,11 @@ if pw > 2:
         R_main_closure, R_left, R_right, R_both
     )
 
-fig = plt.figure(figsize=(8, 7))
-plt.matshow(R_main, cmap="RdYlBu", fignum=fig.number, clim=(-1.0, 1.0))
-plt.colorbar()
-plt.title("R_main")
+if 0:
+    fig = plt.figure(figsize=(8, 7))
+    plt.matshow(R_main, cmap="RdYlBu", fignum=fig.number, clim=(-1.0, 1.0))
+    plt.colorbar()
+    plt.title("R_main")
 
 if pw > 2:
     fig = plt.figure(figsize=(8, 7))

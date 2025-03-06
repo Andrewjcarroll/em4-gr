@@ -39,7 +39,7 @@ void initDataFuncToPhysCoords(const double xx1, const double yy1,
         default:
             std::cout << "Unknown ID type: " << dsolve::SOLVER_ID_TYPE
                       << std::endl;
-            exit(0);
+            exit(0); 
             break;
     }
 }
@@ -132,8 +132,6 @@ void analyticalSolEM4_BLOCK(double **uZipAnalyticVars,
     const double *B2 = &uZipVars[VAR::U_B2][offset];
     const double *Phi = &uZipVars[VAR::U_PHI][offset];
     const double *Psi = &uZipVars[VAR::U_PSI][offset];
-
-
     // the analytic variables
     double *E0_a = &uZipAnalyticVars[VAR::U_E0][offset];
     double *E1_a = &uZipAnalyticVars[VAR::U_E1][offset];
@@ -192,7 +190,6 @@ void analyticalSolEM4_BLOCK(double **uZipAnalyticVars,
                 B1_adiff[pp] = B1_a[pp] - B1[pp];
                 B2_adiff[pp] = B2_a[pp] - B2[pp];
                 Phi_adiff[pp] = Phi_a[pp] - Phi[pp];
-                Psi_adiff[pp] = Psi_a[pp] - Psi[pp];
             }
         }
     }
@@ -214,72 +211,75 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
     }
 
     const double amp1 = dsolve::EM4_ID_AMP1;
-        const double lambda1 = dsolve::EM4_ID_LAMBDA1;
+    const double lambda1 = dsolve::EM4_ID_LAMBDA1;
 
-        double B0,B1,B2, E0,E1,E2, Phi,Psi ;
-        double rho_e, J0,J1,J2;
-        double r,tmp_Ephiup, tmp_Br_up, tmp_Btheta_up ;
+    double B0, B1, B2, E0, E1, E2;
+    double rho_e, J0, J1, J2;
+    double r, tmp_Ephiup, tmp_Br_up, tmp_Btheta_up;
 
-        r = sqrt( x*x + y*y + z*z ) ;
-        if ( r < 1.e-8 ) { r=1.e-8 ; }
+    r = sqrt(x * x + y * y + z * z);
+    if (r < 1.e-8) {
+        r = 1.e-8;
+    }
 
-        tmp_Br_up = - 2.0 * lambda1
-                          * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
-                              + (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
-                    + (   exp( - lambda1*(t-r)*(t-r) )
-                        - exp( - lambda1*(t+r)*(t+r) ) ) / (r*r*r)
-                   ;
-        tmp_Br_up *= 2.0 * amp1 ;  
+    tmp_Br_up = -2.0 * lambda1 *
+                    ((t - r) * exp(-lambda1 * (t - r) * (t - r)) +
+                     (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
+                    (r * r) +
+                (exp(-lambda1 * (t - r) * (t - r)) -
+                 exp(-lambda1 * (t + r) * (t + r))) /
+                    (r * r * r);
+    tmp_Br_up *= 2.0 * amp1;
 
-        tmp_Btheta_up = - 2.0*lambda1
-                             * (   exp( - lambda1*(t-r)*(t-r) )
-                                 - exp( - lambda1*(t+r)*(t+r) ) ) / r
-                        + 4.0*lambda1*lambda1
-                             * (   (t-r)*(t-r)*exp( - lambda1*(t-r)*(t-r) )
-                                 - (t+r)*(t+r)*exp( - lambda1*(t+r)*(t+r) ) ) 
-                             / r
-                        - 2.0*lambda1
-                             * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
-                                 + (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
-                       + (   exp( - lambda1*(t-r)*(t-r) )
-                           - exp( - lambda1*(t+r)*(t+r) ) ) / (r*r*r)
-                   ;
-        tmp_Btheta_up *= amp1 ;  
+    tmp_Btheta_up =
+        -2.0 * lambda1 *
+            (exp(-lambda1 * (t - r) * (t - r)) -
+             exp(-lambda1 * (t + r) * (t + r))) /
+            r +
+        4.0 * lambda1 * lambda1 *
+            ((t - r) * (t - r) * exp(-lambda1 * (t - r) * (t - r)) -
+             (t + r) * (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
+            r -
+        2.0 * lambda1 *
+            ((t - r) * exp(-lambda1 * (t - r) * (t - r)) +
+             (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
+            (r * r) +
+        (exp(-lambda1 * (t - r) * (t - r)) -
+         exp(-lambda1 * (t + r) * (t + r))) /
+            (r * r * r);
+    tmp_Btheta_up *= amp1;
 
-        tmp_Ephiup =   2.0*amp1*lambda1
-                          * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
-                              - (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
-                     + 2.0*amp1*lambda1
-                          * (   exp( - lambda1*(t-r)*(t-r) )
-                              + exp( - lambda1*(t+r)*(t+r) ) ) / r
-                     - 4.0*amp1*lambda1*lambda1
-                          * (   (t-r)*(t-r)*exp( - lambda1*(t-r)*(t-r) )
-                              + (t+r)*(t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / r
-                   ;
+    tmp_Ephiup = 2.0 * amp1 * lambda1 *
+                     ((t - r) * exp(-lambda1 * (t - r) * (t - r)) -
+                      (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
+                     (r * r) +
+                 2.0 * amp1 * lambda1 *
+                     (exp(-lambda1 * (t - r) * (t - r)) +
+                      exp(-lambda1 * (t + r) * (t + r))) /
+                     r -
+                 4.0 * amp1 * lambda1 * lambda1 *
+                     ((t - r) * (t - r) * exp(-lambda1 * (t - r) * (t - r)) +
+                      (t + r) * (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
+                     r;
 
-        E0 = - y * tmp_Ephiup / r ;
-        E1 =   x * tmp_Ephiup / r ;
-        E2 = 0.0 ;
+    E0 = -y * tmp_Ephiup / r;
+    E1 = x * tmp_Ephiup / r;
+    E2 = 0.0;
 
-        B0 = x*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
-        B1 = y*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
-        B2 = ( z*z * tmp_Br_up - (x*x+y*y) * tmp_Btheta_up ) / (r*r) ;
+    B0 = x * z * (tmp_Br_up + tmp_Btheta_up) / (r * r);
+    B1 = y * z * (tmp_Br_up + tmp_Btheta_up) / (r * r);
+    B2 = (z * z * tmp_Br_up - (x * x + y * y) * tmp_Btheta_up) / (r * r);
 
-        Phi = 0.0 ;
-        Psi = 0.0 ;
+    J0 = 0.0;
+    J1 = 0.0;
+    J2 = 0.0;
 
-        J0 = 0.0 ;
-        J1 = 0.0 ;
-        J2 = 0.0 ;
-
-        var[VAR::U_E0] = E0 ;
-        var[VAR::U_E1] = E1 ;
-        var[VAR::U_E2] = E2 ;
-        var[VAR::U_B0] = B0 ;
-        var[VAR::U_B1] = B1 ;
-        var[VAR::U_B2] = B2 ;
-        var[VAR::U_PHI] = Phi ;
-        var[VAR::U_PSI] = Psi ;
+    var[VAR::U_E0] = E0;
+    var[VAR::U_E1] = E1;
+    var[VAR::U_E2] = E2;
+    var[VAR::U_B0] = B0;
+    var[VAR::U_B1] = B1;
+    var[VAR::U_B2] = B2;
 }
 
 void blockAdaptiveOctree(std::vector<ot::TreeNode> &tmpNodes,
@@ -455,51 +455,23 @@ void allocate_deriv_workspace(const ot::Mesh *pMesh, unsigned int s_fac) {
 
     // then get the largest block size from the mesh
     const std::vector<ot::Block> &blkList = pMesh->getLocalBlockList();
-#if EM4_ENABLE_COMPACT_DERIVS
-    std::vector<unsigned int> unique_block_sizes;
-    unique_block_sizes.reserve(blkList.size());
-#endif
     unsigned int max_blk_sz = 0;
     for (unsigned int i = 0; i < blkList.size(); i++) {
         unsigned int blk_sz = blkList[i].getAllocationSzX() *
                               blkList[i].getAllocationSzY() *
                               blkList[i].getAllocationSzZ();
         if (blk_sz > max_blk_sz) max_blk_sz = blk_sz;
-
-#if EM4_ENABLE_COMPACT_DERIVS
-        unique_block_sizes.push_back(blkList[i].getAllocationSzX());
-        unique_block_sizes.push_back(blkList[i].getAllocationSzY());
-        unique_block_sizes.push_back(blkList[i].getAllocationSzZ());
-#endif
     }
 
     // make sure the derivatives are deallocated? seems unnecessary since
     // it's done earlier?
     deallocate_deriv_workspace();
 
-#ifdef EM4_ENABLE_COMPACT_DERIVS
-    // use this opportunity to tell the CFD object just how big things are here!
-    dendro_cfd::cfd.initialize_cfd_3dblock_workspace(max_blk_sz);
-#endif
-
     // allocate the new memory
     dsolve::SOLVER_DERIV_WORKSPACE =
         new double[s_fac * max_blk_sz * dsolve::SOLVER_NUM_DERIVATIVES];
 
 #ifdef EM4_ENABLE_COMPACT_DERIVS
-    // OLD CODE:
-    // then we want to make sure we've got the unique sizes set up
-    std::sort(unique_block_sizes.begin(), unique_block_sizes.end());
-    std::vector<unsigned int>::iterator it;
-    it = std::unique(unique_block_sizes.begin(), unique_block_sizes.end());
-    unique_block_sizes.resize(distance(unique_block_sizes.begin(), it));
-
-    // iterate through them
-    for (unsigned int i = 0; i < unique_block_sizes.size(); i++) {
-        dendro_cfd::cfd.add_cfd_matrix_to_storage(unique_block_sizes[i]);
-        // std::cout << "adding size: " << unique_block_sizes[i] << " to cfd"
-        //           << std::endl;
-    }
 
 #ifdef DENDRO_USE_NEW_DERIVS
     // make sure the maximum block size is properly set
@@ -515,11 +487,6 @@ void deallocate_deriv_workspace() {
         delete[] dsolve::SOLVER_DERIV_WORKSPACE;
         dsolve::SOLVER_DERIV_WORKSPACE = nullptr;
     }
-
-#ifdef EM4_ENABLE_COMPACT_DERIVS
-    // use this opportunity to tell the CFD object just how big things are here!
-    dendro_cfd::cfd.delete_cfd_3dblock_workspace();
-#endif
 }
 
 ot::Mesh *weakScalingReMesh(ot::Mesh *pMesh, unsigned int target_npes) {

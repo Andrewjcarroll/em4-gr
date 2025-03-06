@@ -1,5 +1,5 @@
 # ===========================================
-# ==== PARAMETER FILE FOR PROJECT: EM3
+# ==== PARAMETER FILE FOR PROJECT: EM4
 # ===========================================
 #
 # This file contains all of the configurable parameters for running this Dendro project.
@@ -29,15 +29,15 @@ SOLVER_DERIV_SECOND_COEFFS = []
 
 # @brief: File prefix for the VTU files that will be saved, can take entire file path to be used as well
 # param type: semivariant | data type: string | default: vtu/emda_gr 
-"dsolve::SOLVER_VTU_FILE_PREFIX" = "vtu/em3_gr"
+"dsolve::SOLVER_VTU_FILE_PREFIX" = "vtu/em4_gr"
 
 # @brief: File prefix for the checkpoint files, can take entire file path to be used as well
 # param type: semivariant | data type: string | default: cp/emda_cp 
-"dsolve::SOLVER_CHKPT_FILE_PREFIX" = "cp/em3_cp"
+"dsolve::SOLVER_CHKPT_FILE_PREFIX" = "cp/em4_cp"
 
 # @brief: File prefix for the intermediate profile files, can take entire file path to be used as well
 # param type: semivariant | data type: string | default: emda_prof 
-"dsolve::SOLVER_PROFILE_FILE_PREFIX" = "em3_prof"
+"dsolve::SOLVER_PROFILE_FILE_PREFIX" = "em4_prof"
 
 # @brief: The number of evolution variables to put in the output of the files
 #         Note that it will use up to this many variables of the "SOLVER_VTU_OUTPUT_EVOL_INDICES", this value
@@ -110,11 +110,11 @@ SOLVER_DERIV_SECOND_COEFFS = []
 
 # @brief: Initial Data Amplitude 1
 # param type: semivariant | data type: double | default: 1.0
-"dsolve::EM3_ID_AMP1" = 5.0
+"dsolve::EM4_ID_AMP1" = 5.0
 
 # @brief: Initial Data Lambda 1
 # param type: semivariant | data type: double | default: 1.0
-"dsolve::EM3_ID_LAMBDA1" = 0.05
+"dsolve::EM4_ID_LAMBDA1" = 0.05
 
 
 # ========== SOLVER PARAMETERS ============

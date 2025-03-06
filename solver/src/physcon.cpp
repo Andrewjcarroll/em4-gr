@@ -89,7 +89,7 @@ void physical_constraints(double **uZipConVars, const double **uZipVars,
     ]]]*/
     // clang-format on
 
-    // ADDED PHYSCON FROM EM3 CODE -AJC
+    // ADDED PHYSCON FROM EM4 CODE -AJC
     double *divE = &uZipConVars[VAR_CONSTRAINT::C_DIVE][offset];
     double *divB = &uZipConVars[VAR_CONSTRAINT::C_DIVB][offset];
 
@@ -262,8 +262,6 @@ void physical_constraints_compact_derivs(double **uZipConVars,
                                          const unsigned int &bflag) {
     // wait_for_debugger();
 
-    using namespace dendro_cfd;
-
     const unsigned int nx = sz[0];
     const unsigned int ny = sz[1];
     const unsigned int nz = sz[2];
@@ -315,7 +313,7 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     ]]]*/
     // clang-format on
 
-    // ADDED PHYSCON FROM EM3 CODE -AJC
+    // ADDED PHYSCON FROM EM4 CODE -AJC
     double *divE = &uZipConVars[VAR_CONSTRAINT::C_DIVE][offset];
     double *divB = &uZipConVars[VAR_CONSTRAINT::C_DIVB][offset];
 
@@ -326,28 +324,11 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     double *B0 = &uZipVars[VAR::U_B0][offset];
     double *B1 = &uZipVars[VAR::U_B1][offset];
     double *B2 = &uZipVars[VAR::U_B2][offset];
-
     double *Phi = &uZipVars[VAR::U_PHI][offset];
     double *Psi = &uZipVars[VAR::U_PSI][offset];
-
     //[[[end]]]
 
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
-
-#ifndef DENDRO_USE_NEW_DERIVS
-    if (bflag != 0) {
-        cfd.clear_boundary_padding_nans(E0, sz, bflag);
-        cfd.clear_boundary_padding_nans(E1, sz, bflag);
-        cfd.clear_boundary_padding_nans(E2, sz, bflag);
-
-        cfd.clear_boundary_padding_nans(B0, sz, bflag);
-        cfd.clear_boundary_padding_nans(B1, sz, bflag);
-        cfd.clear_boundary_padding_nans(B2, sz, bflag);
-
-        cfd.clear_boundary_padding_nans(Phi, sz, bflag);
-        cfd.clear_boundary_padding_nans(Psi, sz, bflag);
-    }
-#endif
 
     // clang-format off
     /*[[[cog
@@ -436,8 +417,6 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     //[[[end]]]
     //
 
-#ifdef DENDRO_USE_NEW_DERIVS
-
     SOLVER_DERIVS->grad_x(grad_0_E0, E0, hx, sz, bflag);
     SOLVER_DERIVS->grad_y(grad_1_E1, E1, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_E2, E2, hz, sz, bflag);
@@ -445,26 +424,6 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     SOLVER_DERIVS->grad_x(grad_0_B0, B0, hx, sz, bflag);
     SOLVER_DERIVS->grad_y(grad_1_B1, B1, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_B2, B2, hz, sz, bflag);
-
-#else
-    if (dsolve::SOLVER_DERIV_TYPE == dendro_cfd::CFD_NONE) {
-        dendro_derivs::deriv_x(grad_0_E0, E0, hx, sz, bflag);
-        dendro_derivs::deriv_y(grad_1_E1, E1, hy, sz, bflag);
-        dendro_derivs::deriv_z(grad_2_E2, E2, hz, sz, bflag);
-
-        dendro_derivs::deriv_x(grad_0_B0, B0, hx, sz, bflag);
-        dendro_derivs::deriv_y(grad_1_B1, B1, hy, sz, bflag);
-        dendro_derivs::deriv_z(grad_2_B2, B2, hz, sz, bflag);
-    } else {
-        cfd.cfd_x(grad_0_E0, E0, hx, sz, bflag);
-        cfd.cfd_y(grad_1_E1, E1, hy, sz, bflag);
-        cfd.cfd_z(grad_2_E2, E2, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_B0, B0, hx, sz, bflag);
-        cfd.cfd_y(grad_1_B1, B1, hy, sz, bflag);
-        cfd.cfd_z(grad_2_B2, B2, hz, sz, bflag);
-    }
-#endif
 
     double *rho_e = deriv_base + 9 * BLK_SZ;
 

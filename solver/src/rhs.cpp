@@ -1,6 +1,5 @@
 #include "rhs.h"
 
-#include "compact_derivs.h"
 #include "debugger_tools.h"
 #include "hadrhs.h"
 #include "parameters.h"
@@ -33,7 +32,7 @@ void solverRHS(double **uzipVarsRHS, double **uZipVars,
     unsigned int bflag;
     double dx, dy, dz;
     double kappa_1 = 0.1 ; 
-    double kappa_2 = 0.1 ;   
+    double kappa_2 = 0.1 ; 
     const Point pt_min(dsolve::SOLVER_COMPD_MIN[0], dsolve::SOLVER_COMPD_MIN[1],
                        dsolve::SOLVER_COMPD_MIN[2]);
     const Point pt_max(dsolve::SOLVER_COMPD_MAX[0], dsolve::SOLVER_COMPD_MAX[1],
@@ -89,7 +88,6 @@ void solverRHS(double **uzipVarsRHS, const double **uZipVars,
     unsigned int sz[3];
     unsigned int bflag;
     double dx, dy, dz;
-  
     const Point pt_min(dsolve::SOLVER_COMPD_MIN[0], dsolve::SOLVER_COMPD_MIN[1],
                        dsolve::SOLVER_COMPD_MIN[2]);
     const Point pt_max(dsolve::SOLVER_COMPD_MAX[0], dsolve::SOLVER_COMPD_MAX[1],
@@ -270,6 +268,7 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
     const double *B2 = &uZipVars[VAR::U_B2][offset];
     const double *Phi = &uZipVars[VAR::U_PHI][offset];
     const double *Psi = &uZipVars[VAR::U_PSI][offset];
+
     //EVOLUTION VARIABLE EXTRACTION RHS -AJC
     double *E_rhs0 = &unzipVarsRHS[VAR::U_E0][offset];
     double *E_rhs1 = &unzipVarsRHS[VAR::U_E1][offset];
@@ -285,8 +284,6 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
     const unsigned int nx = sz[0];
     const unsigned int ny = sz[1];
     const unsigned int nz = sz[2];
-
-
 
     const double hx = (pmax[0] - pmin[0]) / (nx - 1);
     const double hy = (pmax[1] - pmin[1]) / (ny - 1);
@@ -484,10 +481,9 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
-                                    pmin, pmax, 2.0, 0.0, sz, bflag);
+                                   pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
-                                        pmin, pmax, 2.0, 0.0, sz, bflag);
-
+                                   pmin, pmax, 2.0, 0.0, sz, bflag);
 
         //[[[end]]]
 
@@ -528,7 +524,6 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
                     sigma * (grad_0_B1[pp] + grad_1_B1[pp] + grad_2_B1[pp]);
                 B_rhs2[pp] +=
                     sigma * (grad_0_B2[pp] + grad_1_B2[pp] + grad_2_B2[pp]);
-
                 Phi_rhs[pp] +=
                     sigma * (grad_0_Phi[pp] + grad_1_Phi[pp] + grad_2_Phi[pp]);
                 Psi_rhs[pp] +=
@@ -576,7 +571,6 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     // NOTE: this has been cleaned up slightly to remove the code generation.
     // if the function above changes, be sure to reflect the changes here
     //
-    using namespace dendro_cfd;
 
     // EVOLUTION VARIABLE EXTRACTION NOT RHS -AJC
     double *E0 = &uZipVars[VAR::U_E0][offset];
@@ -597,26 +591,6 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     double *Phi_rhs = &unzipVarsRHS[VAR::U_PHI][offset];
     double *Psi_rhs = &unzipVarsRHS[VAR::U_PSI][offset];
 
-#ifndef DENDRO_USE_NEW_DERIVS
-    // NOTE: in the padding regions in blocks at the boundaries, the memory is
-    // unallocated, which means there can be nans. These nans "poison" the
-    // derivatives since anything times a nan (even zero!) returns a nan. An
-    // entire *ROW* or *COLUMN* of our output derivatives can get filled with
-    // nans after just one computation! Calling this function removes any nans
-    // in the boundary.
-    if (bflag != 0) {
-        cfd.clear_boundary_padding_nans(E0, sz, bflag);
-        cfd.clear_boundary_padding_nans(E1, sz, bflag);
-        cfd.clear_boundary_padding_nans(E2, sz, bflag);
-
-        cfd.clear_boundary_padding_nans(B0, sz, bflag);
-        cfd.clear_boundary_padding_nans(B1, sz, bflag);
-        cfd.clear_boundary_padding_nans(B2, sz, bflag);
-
-        cfd.clear_boundary_padding_nans(Phi, sz, bflag);
-        cfd.clear_boundary_padding_nans(Psi, sz, bflag);
-    }
-#endif
 
     mem::memory_pool<double> *__mem_pool = &SOLVER_MEM_POOL;
 
@@ -647,40 +621,6 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
 
 #include "../gencode/solver_rhs_deriv_memalloc.cpp.inc"
 
-#ifdef DENDRO_USE_NEW_DERIVS
-    SOLVER_DERIVS->grad_x(grad_0_E0, E0, hx, sz, bflag);
-    SOLVER_DERIVS->grad_y(grad_1_E0, E0, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_E0, E0, hz, sz, bflag);  // needed
-
-    SOLVER_DERIVS->grad_x(grad_0_E1, E1, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_E1, E1, hy, sz, bflag);
-    SOLVER_DERIVS->grad_z(grad_2_E1, E1, hz, sz, bflag);  // needed
-
-    SOLVER_DERIVS->grad_x(grad_0_E2, E2, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_E2, E2, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_E2, E2, hz, sz, bflag);
-
-    SOLVER_DERIVS->grad_x(grad_0_B0, B0, hx, sz, bflag);
-    SOLVER_DERIVS->grad_y(grad_1_B0, B0, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_B0, B0, hz, sz, bflag);  // needed
-
-    SOLVER_DERIVS->grad_x(grad_0_B1, B1, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_B1, B1, hy, sz, bflag);
-    SOLVER_DERIVS->grad_z(grad_2_B1, B1, hz, sz, bflag);  // needed
-
-    SOLVER_DERIVS->grad_x(grad_0_B2, B2, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_B2, B2, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_B2, B2, hz, sz, bflag);
-
-    SOLVER_DERIVS->grad_x(grad_0_Phi, B2, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_Phi, B2, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_Phi, B2, hz, sz, bflag);
-
-    SOLVER_DERIVS->grad_x(grad_0_Psi, B2, hx, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_Psi, B2, hy, sz, bflag);  // needed
-    SOLVER_DERIVS->grad_z(grad_2_Psi, B2, hz, sz, bflag);
-#else
-
     // store a pointer to the variables that will be sent into our derivatives
     // if we're not filtering there's no reason to change it
     double *E0_cpy = (double *)E0;
@@ -693,11 +633,12 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     double *Psi_cpy = (double *)Psi;
 
     // make sure we only trigger this filtering if it's a filter designed for it
-    if (dsolve::SOLVER_FILTER_TYPE != dendro_cfd::FILT_NONE ||
-        dsolve::SOLVER_FILTER_TYPE != dendro_cfd::FILT_KO_DISS ||
-        dsolve::SOLVER_FILTER_TYPE != dendro_cfd::EXPLCT_KO) {
-        // first we need to update the pointer that feeds into the derivative
-        // calculation
+    if (SOLVER_DERIVS->do_filter_before()) {
+        // for each of the variables, we'll copy it over to the memory stored
+        // for it in the copy then it will be filtered. The filtered variables
+        // will then feed ONLY into the derivatives. We might want to use the
+        // "cpy" version for the RHS computations eventually to see if it helps,
+        // but at the very least the derivatives will get the filtered version.
         E0_cpy = E_rhs0;
         E1_cpy = E_rhs1;
         E2_cpy = E_rhs2;
@@ -707,123 +648,60 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
         Phi_cpy = Phi_rhs;
         Psi_cpy = Psi_rhs;
 
-        // for each of the variables, we'll copy it over to the memory stored
-        // for it in the copy then it will be filtered. The filtered variables
-        // will then feed ONLY into the derivatives. We might want to use the
-        // "cpy" version for the RHS computations eventually to see if it helps,
-        // but at the very least the derivatives will get the filtered version.
-
-        // NOTE: grad_0_E0 is just a workspace, that's why it's reused
-        std::copy_n(E0, nx * ny * nz, E0_cpy);
-        cfd.filter_cfd_x(E0_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(E0_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(E0_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(E1, nx * ny * nz, E1_cpy);
-        cfd.filter_cfd_x(E1_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(E1_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(E1_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(E2, nx * ny * nz, E2_cpy);
-        cfd.filter_cfd_x(E2_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(E2_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(E2_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(B0, nx * ny * nz, B0_cpy);
-        cfd.filter_cfd_x(B0_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(B0_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(B0_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(B1, nx * ny * nz, B1_cpy);
-        cfd.filter_cfd_x(B1_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(B1_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(B1_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(B2, nx * ny * nz, B2_cpy);
-        cfd.filter_cfd_x(B2_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(B2_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(B2_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(Phi, nx * ny * nz, Phi_cpy);
-        cfd.filter_cfd_x(Phi_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(Phi_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(Phi_cpy, grad_0_E0, hz, sz, bflag);
-
-        std::copy_n(Psi, nx * ny * nz, Phi_cpy);
-        cfd.filter_cfd_x(Psi_cpy, grad_0_E0, hx, sz, bflag);
-        cfd.filter_cfd_y(Psi_cpy, grad_0_E0, hy, sz, bflag);
-        cfd.filter_cfd_z(Psi_cpy, grad_0_E0, hz, sz, bflag);
+        // NOTE: the filter function will check if input and output are the same
+        // pointer, if they are it'll do the filtering in place, otherwise it
+        // will copy the output over and *then* apply to the copy
+        SOLVER_DERIVS->filter(E0, E0_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(E1, E1_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(E2, E2_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(E0, E0_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(B1, B1_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(B2, B2_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(Phi, Phi_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(Psi, Psi_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+                              1.0, sz, bflag);
     }
 
-    if (dsolve::SOLVER_DERIV_TYPE == dendro_cfd::CFD_NONE) {
-        dendro_derivs::deriv_x(grad_0_E0, E0_cpy, hx, sz, bflag);
-        dendro_derivs::deriv_y(grad_1_E0, E0_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_E0, E0_cpy, hz, sz, bflag);  // needed
+    // calculate the derivatives, on the copies if necessary
+    SOLVER_DERIVS->grad_x(grad_0_E0, E0_cpy, hx, sz, bflag);
+    SOLVER_DERIVS->grad_y(grad_1_E0, E0_cpy, hy, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_z(grad_2_E0, E0_cpy, hz, sz, bflag);  // needed
 
-        dendro_derivs::deriv_x(grad_0_E1, E1_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_E1, E1_cpy, hy, sz, bflag);
-        dendro_derivs::deriv_z(grad_2_E1, E1_cpy, hz, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_x(grad_0_E1, E1_cpy, hx, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_y(grad_1_E1, E1_cpy, hy, sz, bflag);
+    SOLVER_DERIVS->grad_z(grad_2_E1, E1_cpy, hz, sz, bflag);  // needed
 
-        dendro_derivs::deriv_x(grad_0_E2, E2_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_E2, E2_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_E2, E2_cpy, hz, sz, bflag);
+    SOLVER_DERIVS->grad_x(grad_0_E2, E2_cpy, hx, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_y(grad_1_E2, E2_cpy, hy, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_z(grad_2_E2, E2_cpy, hz, sz, bflag);
 
-        dendro_derivs::deriv_x(grad_0_B0, B0_cpy, hx, sz, bflag);
-        dendro_derivs::deriv_y(grad_1_B0, B0_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_B0, B0_cpy, hz, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_x(grad_0_B0, B0_cpy, hx, sz, bflag);
+    SOLVER_DERIVS->grad_y(grad_1_B0, B0_cpy, hy, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_z(grad_2_B0, B0_cpy, hz, sz, bflag);  // needed
 
-        dendro_derivs::deriv_x(grad_0_B1, B1_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_B1, B1_cpy, hy, sz, bflag);
-        dendro_derivs::deriv_z(grad_2_B1, B1_cpy, hz, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_x(grad_0_B1, B1_cpy, hx, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_y(grad_1_B1, B1_cpy, hy, sz, bflag);
+    SOLVER_DERIVS->grad_z(grad_2_B1, B1_cpy, hz, sz, bflag);  // needed
 
-        dendro_derivs::deriv_x(grad_0_B2, B2_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_B2, B2_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_B2, B2_cpy, hz, sz, bflag);
+    SOLVER_DERIVS->grad_x(grad_0_B2, B2_cpy, hx, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_y(grad_1_B2, B2_cpy, hy, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_z(grad_2_B2, B2_cpy, hz, sz, bflag);
 
-        dendro_derivs::deriv_x(grad_0_Phi, Phi_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_Phi, Phi_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_Phi, Phi_cpy, hz, sz, bflag);
+    SOLVER_DERIVS->grad_x(grad_0_Phi, Phi_cpy, hx, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_y(grad_1_Phi, Phi_cpy, hy, sz, bflag);  // needed
+    SOLVER_DERIVS->grad_z(grad_2_Phi, Phi_cpy, hz, sz, bflag);
 
-        dendro_derivs::deriv_x(grad_0_Psi, Psi_cpy, hx, sz, bflag);  // needed
-        dendro_derivs::deriv_y(grad_1_Psi, Psi_cpy, hy, sz, bflag);  // needed
-        dendro_derivs::deriv_z(grad_2_Psi, Psi_cpy, hz, sz, bflag);
+    SOLVER_DERIVS->grad_x(grad_0_Psi, Psi_cpy, hx, sz, bflag);
+    SOLVER_DERIVS->grad_y(grad_1_Psi, Psi_cpy, hy, sz, bflag);
+    SOLVER_DERIVS->grad_z(grad_2_Psi, Psi_cpy, hz, sz, bflag);
 
-    } else {
-        cfd.cfd_x(grad_0_E0, E0_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_E0, E0_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_E0, E0_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_E1, E1_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_E1, E1_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_E1, E1_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_E2, E2_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_E2, E2_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_E2, E2_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_B0, B0_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_B0, B0_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_B0, B0_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_B1, B1_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_B1, B1_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_B1, B1_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_B2, B2_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_B2, B2_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_B2, B2_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_Phi, Phi_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_Phi, Phi_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_Phi, Phi_cpy, hz, sz, bflag);
-
-        cfd.cfd_x(grad_0_Psi, Psi_cpy, hx, sz, bflag);
-        cfd.cfd_y(grad_1_Psi, Psi_cpy, hy, sz, bflag);
-        cfd.cfd_z(grad_2_Psi, Psi_cpy, hz, sz, bflag)
-    }
-// after this point we no longer care about E0_cpy because we just needed it
-// for our derivative inputs
-#endif
 
     dsolve::timer::t_deriv.stop();
 
@@ -857,11 +735,13 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                 const double y = pmin[1] + j * hy;
                 const double z = pmin[2] + k * hz;
 
+                const unsigned int pp = i + nx * (j + ny * k);
+                const double r_coord = sqrt(x * x + y * y + z * z);
+
                 double kappa_1 = 0.1 ; 
                 double kappa_2 = 0.1 ;   
 
-                const unsigned int pp = i + nx * (j + ny * k);
-                const double r_coord = sqrt(x * x + y * y + z * z);
+
 
                 // NOTE: (for now) we are not sending in the filtered E's and
                 // B's if they're used. (They're not! But it's good to note!)
@@ -887,18 +767,17 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
-                                    pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Phi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
-                                        pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Phi, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
+                                   pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Psi, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
+                                   pmin, pmax, 2.0, 0.0, sz, bflag);
 
         //[[[end]]]
 
         dsolve::timer::t_bdyc.stop();
     }
 
-    if (dsolve::SOLVER_FILTER_TYPE == dendro_cfd::FILT_KO_DISS ||
-        dsolve::SOLVER_FILTER_TYPE == dendro_cfd::EXPLCT_KO) {
+    if (!SOLVER_DERIVS->do_filter_before()) {
         dsolve::timer::t_deriv.start();
         // TODO: include more types of build options
 
@@ -910,36 +789,21 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
 
         const double sigma = KO_DISS_SIGMA;
 
-        for (unsigned int k = PW; k < nz - PW; k++) {
-            for (unsigned int j = PW; j < ny - PW; j++) {
-#ifdef SOLVER_ENABLE_AVX
-#ifdef __INTEL_COMPILER
-#pragma vector vectorlength(__RHS_AVX_SIMD_LEN__) vecremainder
-#pragma ivdep
-#endif
-#endif
-                for (unsigned int i = PW; i < nx - PW; i++) {
-                    const unsigned int pp = i + nx * (j + ny * k);
-                    E_rhs0[pp] +=
-                        sigma * (grad_0_E0[pp] + grad_1_E0[pp] + grad_2_E0[pp]);
-                    E_rhs1[pp] +=
-                        sigma * (grad_0_E1[pp] + grad_1_E1[pp] + grad_2_E1[pp]);
-                    E_rhs2[pp] +=
-                        sigma * (grad_0_E2[pp] + grad_1_E2[pp] + grad_2_E2[pp]);
+        SOLVER_DERIVS->filter(E0, E_rhs0, grad_0_E0, grad_1_E0, grad_2_E0, hx,
+                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(E1, E_rhs1, grad_0_E1, grad_1_E1, grad_2_E1, hx,
+                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(E2, E_rhs2, grad_0_E2, grad_1_E2, grad_2_E2, hx,
+                              hy, hz, sigma, sz, bflag);
 
-                    B_rhs0[pp] +=
-                        sigma * (grad_0_B0[pp] + grad_1_B0[pp] + grad_2_B0[pp]);
-                    B_rhs1[pp] +=
-                        sigma * (grad_0_B1[pp] + grad_1_B1[pp] + grad_2_B1[pp]);
-                    B_rhs2[pp] +=
-                        sigma * (grad_0_B2[pp] + grad_1_B2[pp] + grad_2_B2[pp]);
-                    Phi_rhs[pp] +=
-                        sigma * (grad_0_Phi[pp] + grad_1_Phi[pp] + grad_2_Phi[pp]);
-                    Psi_rhs[pp] +=
-                        sigma * (grad_0_Psi[pp] + grad_1_Psi[pp] + grad_2_Psi[pp]);
-                }
-            }
-        }
+        SOLVER_DERIVS->filter(B0, B_rhs0, grad_0_B0, grad_1_B0, grad_2_B0, hx,
+                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(B1, B_rhs1, grad_0_B1, grad_1_B1, grad_2_B1, hx,
+                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(B2, B_rhs2, grad_0_B2, grad_1_B2, grad_2_B2, hx,
+                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(Phi, Phi_rhs, grad_0_Phi, grad_1_Phi, grad_2_Phi, hx,
+                              hy, hz, sigma, sz, bflag);
 
         dsolve::timer::t_rhs.stop();
     }

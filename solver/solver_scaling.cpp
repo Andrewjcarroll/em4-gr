@@ -12,7 +12,7 @@
 #include "rkSolver.h"
 #include "solver_main.h"
 
-int em4_run_driver(MPI_Comm comm, unsigned int num_step, unsigned int warm_up,
+int em3_run_driver(MPI_Comm comm, unsigned int num_step, unsigned int warm_up,
                    std::ostream& outfile, unsigned int ts_mode) {
     int rank, npes;
     MPI_Comm_rank(comm, &rank);
@@ -451,11 +451,7 @@ int main(int argc, char** argv) {
         outfile
             << "============================================================"
             << std::endl;
-        outfile << "    RUN USES: derivType: " << dsolve::SOLVER_DERIV_TYPE;
-        outfile << " deriv2ndType: " << dsolve::SOLVER_2ND_DERIV_TYPE
-                << " filterType: " << dsolve::SOLVER_FILTER_TYPE
-                << " closureType: " << dsolve::SOLVER_DERIV_CLOSURE_TYPE
-                << " element order: " << dsolve::SOLVER_ELE_ORDER << std::endl;
+        outfile << " element order: " << dsolve::SOLVER_ELE_ORDER << std::endl;
         outfile << "  Compiled with: ";
 
 #ifdef SOLVER_USE_4TH_ORDER_DERIVS
@@ -472,7 +468,7 @@ int main(int argc, char** argv) {
             << std::endl;
     }
 
-    em4_run_driver(comm, NUM_STEPS, NUM_WARM_UP, outfile, 1);
+    em3_run_driver(comm, NUM_STEPS, NUM_WARM_UP, outfile, 1);
 
     if (!rank) outfile.close();
 
@@ -501,7 +497,7 @@ int main(int argc, char** argv) {
     if (!rank) outfile.open(fname, std::ios_base::app);
     MPI_Barrier(comm_ws);
 
-    em4_run_driver(comm_ws, NUM_STEPS, NUM_WARM_UP, outfile, 1);
+    em3_run_driver(comm_ws, NUM_STEPS, NUM_WARM_UP, outfile, 1);
 
     MPI_Barrier(comm_ws);
     if (!rank) outfile.close();

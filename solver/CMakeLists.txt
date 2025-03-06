@@ -180,7 +180,7 @@ set(CUSTOM_SOLVER_INC
     ${CMAKE_SOURCE_DIR}/solver/include/system_constraints.h
     ${CMAKE_SOURCE_DIR}/solver/include/dataUtils.h
     ${CMAKE_SOURCE_DIR}/solver/include/solverCtx.h
-    ${CMAKE_SOURCE_DIR}/solver/include/compact_derivs.h)
+    )
 
 set(CUSTOM_SOLVER_SRC
     src/debugger_tools.cpp
@@ -194,7 +194,7 @@ set(CUSTOM_SOLVER_SRC
     src/system_constraints.cpp
     src/dataUtils.cpp
     src/solverCtx.cpp
-    src/compact_derivs.cpp)
+    )
 
 set(SOURCE_FILES solver_main.cpp ${CUSTOM_SOLVER_INC} ${CUSTOM_SOLVER_SRC})
 add_executable(em4Solver ${SOURCE_FILES})
@@ -238,65 +238,6 @@ target_include_directories(em4Solver PRIVATE ${EXTERNAL_LIB_HEADERS})
 target_link_libraries(em4Solver dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
                       ${GSL_LIBRARIES} m toml11::toml11)
 
-if(EM4_USE_XSMM_MAT_MUL)
-  target_link_libraries(em4Solver xsmm)
-endif()
-
-set(SOURCE_FILES test_cfd_profiling.cpp src/derivs.cpp src/compact_derivs.cpp
-                 include/derivs.h include/compact_derivs.h)
-add_executable(testCFDS ${SOURCE_FILES})
-target_include_directories(testCFDS PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(testCFDS PRIVATE ${CMAKE_SOURCE_DIR}/solver)
-target_include_directories(testCFDS PRIVATE ${CMAKE_SOURCE_DIR}/solver/include)
-target_include_directories(testCFDS PRIVATE ${DENDRO_dendrolib_SRC})
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/test/include)
-target_include_directories(
-  testCFDS PRIVATE ${DENDRO_dendrolib_SRC}/examples/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/ODE/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/FEM/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/vtk/include)
-target_include_directories(testCFDS
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(testCFDS
-                           PRIVATE ${CMAKE_DOURCE_DIR}/dendrolib/IO/zlib/inc)
-
-# also the toml library with the git submodule
-target_include_directories(testCFDS PRIVATE ${EXTERNAL_LIB_HEADERS})
-# then don't forget to link the libraries!!!!
-target_link_libraries(testCFDS dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
-                      ${GSL_LIBRARIES} m toml11::toml11)
-
-if(EM4_USE_XSMM_MAT_MUL)
-  target_link_libraries(testCFDS xsmm)
-endif()
-
-# SOLVER FOR GLOBAL TESTS
-set(SOURCE_FILES test_cfd_global.cpp src/derivs.cpp src/compact_derivs.cpp
-                 include/derivs.h include/compact_derivs.h)
-add_executable(cfdGlobal ${SOURCE_FILES})
-target_include_directories(cfdGlobal PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(cfdGlobal PRIVATE ${CMAKE_SOURCE_DIR}/solver)
-target_include_directories(cfdGlobal PRIVATE ${CMAKE_SOURCE_DIR}/solver/include)
-
-# also the toml library with the git submodule
-target_include_directories(cfdGlobal PRIVATE ${EXTERNAL_LIB_HEADERS})
-# then don't forget to link the libraries!!!!
-target_link_libraries(cfdGlobal dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
-                      ${GSL_LIBRARIES} m toml11::toml11)
-
-if(EM4_USE_XSMM_MAT_MUL)
-  target_link_libraries(cfdGlobal xsmm)
-endif()
 
 # SCALING SOURCES
 

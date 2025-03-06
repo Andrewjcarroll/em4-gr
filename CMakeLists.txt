@@ -1,4 +1,3 @@
-# ##############################################################################
 # CMAKE CONFIGURATION FILE FOR ENTIRE PROJECT
 #
 # This file in particular contains all of the options that apply to all aspects
@@ -7,7 +6,6 @@
 #
 # Note that all options and compiler flags set here will propagate to other
 # directories such as src/ and dendro/
-# ##############################################################################
 
 # NOTE: cmake minimum is now set to 3.1
 cmake_minimum_required(VERSION 3.1)
@@ -313,12 +311,10 @@ FetchContent_MakeAvailable(toml11)
 
 add_subdirectory(lib)
 
-# add_subdirectory(dendrolib)
-# set(DENDRO_dendrolib_DIR dendrolib)
-
 # # TEMP: this links things to the development versions of dendrolib
 add_subdirectory(../dendrolib_dfvk dendrolib)
-set(DENDRO_dendrolib_DIR ../dendrolib_dfvk)
+set(DENDRO_dendrolib_DIR /home/andrewc/Programs/CFD/EM4/dendrolib_dfvk)
 
 # then the subdirectory for the actual source of the project
 add_subdirectory(solver)
+
