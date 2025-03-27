@@ -191,7 +191,7 @@ void physical_constraints(double **uZipConVars, const double **uZipVars,
 #include "../gencode/solver_physcon_deriv_calc.cpp.inc"
     // clang-format on
     //[[[end]]]
-    double *rho_e = deriv_base + 9 * BLK_SZ;
+    double *rho_e = deriv_base + 24 * BLK_SZ;
 
     // TODO: Why is Rho_e set to 0? Is this supposed to do something different?
     for (unsigned int m = 0; m < n; m++) {
@@ -425,7 +425,7 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     SOLVER_DERIVS->grad_y(grad_1_B1, B1, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_B2, B2, hz, sz, bflag);
 
-    double *rho_e = deriv_base + 9 * BLK_SZ;
+    double *rho_e = deriv_base + 24 * BLK_SZ;
 
     // TODO: Why is Rho_e set to 0? Is this supposed to do something different?
     for (unsigned int m = 0; m < n; m++) {
