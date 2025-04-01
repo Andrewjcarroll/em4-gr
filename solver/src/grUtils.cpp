@@ -213,73 +213,72 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
     const double amp1 = dsolve::EM4_ID_AMP1;
     const double lambda1 = dsolve::EM4_ID_LAMBDA1;
 
-    double B0, B1, B2, E0, E1, E2;
-    double rho_e, J0, J1, J2;
-    double r, tmp_Ephiup, tmp_Br_up, tmp_Btheta_up;
+    double B0,B1,B2, E0,E1,E2, Phi,Psi ;
+    double rho_e, J0,J1,J2;
+    double r,tmp_Ephiup, tmp_Br_up, tmp_Btheta_up ;
 
-    r = sqrt(x * x + y * y + z * z);
-    if (r < 1.e-8) {
-        r = 1.e-8;
-    }
+    r = sqrt( x*x + y*y + z*z ) ;
+    if ( r < 1.e-8 ) { r=1.e-8 ; }
 
-    tmp_Br_up = -2.0 * lambda1 *
-                    ((t - r) * exp(-lambda1 * (t - r) * (t - r)) +
-                     (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
-                    (r * r) +
-                (exp(-lambda1 * (t - r) * (t - r)) -
-                 exp(-lambda1 * (t + r) * (t + r))) /
-                    (r * r * r);
-    tmp_Br_up *= 2.0 * amp1;
+    tmp_Br_up = - 2.0 * lambda1
+                      * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
+                          + (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
+                + (   exp( - lambda1*(t-r)*(t-r) )
+                    - exp( - lambda1*(t+r)*(t+r) ) ) / (r*r*r)
+               ;
+    tmp_Br_up *= 2.0 * amp1 ;  
 
-    tmp_Btheta_up =
-        -2.0 * lambda1 *
-            (exp(-lambda1 * (t - r) * (t - r)) -
-             exp(-lambda1 * (t + r) * (t + r))) /
-            r +
-        4.0 * lambda1 * lambda1 *
-            ((t - r) * (t - r) * exp(-lambda1 * (t - r) * (t - r)) -
-             (t + r) * (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
-            r -
-        2.0 * lambda1 *
-            ((t - r) * exp(-lambda1 * (t - r) * (t - r)) +
-             (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
-            (r * r) +
-        (exp(-lambda1 * (t - r) * (t - r)) -
-         exp(-lambda1 * (t + r) * (t + r))) /
-            (r * r * r);
-    tmp_Btheta_up *= amp1;
+    tmp_Btheta_up = - 2.0*lambda1
+                         * (   exp( - lambda1*(t-r)*(t-r) )
+                             - exp( - lambda1*(t+r)*(t+r) ) ) / r
+                    + 4.0*lambda1*lambda1
+                         * (   (t-r)*(t-r)*exp( - lambda1*(t-r)*(t-r) )
+                             - (t+r)*(t+r)*exp( - lambda1*(t+r)*(t+r) ) ) 
+                         / r
+                    - 2.0*lambda1
+                         * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
+                             + (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
+                   + (   exp( - lambda1*(t-r)*(t-r) )
+                       - exp( - lambda1*(t+r)*(t+r) ) ) / (r*r*r)
+               ;
+    tmp_Btheta_up *= amp1 ;  
 
-    tmp_Ephiup = 2.0 * amp1 * lambda1 *
-                     ((t - r) * exp(-lambda1 * (t - r) * (t - r)) -
-                      (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
-                     (r * r) +
-                 2.0 * amp1 * lambda1 *
-                     (exp(-lambda1 * (t - r) * (t - r)) +
-                      exp(-lambda1 * (t + r) * (t + r))) /
-                     r -
-                 4.0 * amp1 * lambda1 * lambda1 *
-                     ((t - r) * (t - r) * exp(-lambda1 * (t - r) * (t - r)) +
-                      (t + r) * (t + r) * exp(-lambda1 * (t + r) * (t + r))) /
-                     r;
+    tmp_Ephiup =   2.0*amp1*lambda1
+                      * (   (t-r)*exp( - lambda1*(t-r)*(t-r) )
+                          - (t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / (r*r)
+                 + 2.0*amp1*lambda1
+                      * (   exp( - lambda1*(t-r)*(t-r) )
+                          + exp( - lambda1*(t+r)*(t+r) ) ) / r
+                 - 4.0*amp1*lambda1*lambda1
+                      * (   (t-r)*(t-r)*exp( - lambda1*(t-r)*(t-r) )
+                          + (t+r)*(t+r)*exp( - lambda1*(t+r)*(t+r) ) ) / r
+               ;
 
-    E0 = -y * tmp_Ephiup / r;
-    E1 = x * tmp_Ephiup / r;
-    E2 = 0.0;
+    E0 = - y * tmp_Ephiup / r ;
+    E1 =   x * tmp_Ephiup / r ;
+    E2 = 0.0 ;
 
-    B0 = x * z * (tmp_Br_up + tmp_Btheta_up) / (r * r);
-    B1 = y * z * (tmp_Br_up + tmp_Btheta_up) / (r * r);
-    B2 = (z * z * tmp_Br_up - (x * x + y * y) * tmp_Btheta_up) / (r * r);
+    B0 = x*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
+    B1 = y*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
+    B2 = ( z*z * tmp_Br_up - (x*x+y*y) * tmp_Btheta_up ) / (r*r) ;
 
-    J0 = 0.0;
-    J1 = 0.0;
-    J2 = 0.0;
+    Phi = 0.0 ;
+    Psi = 0.0 ;
 
-    var[VAR::U_E0] = E0;
-    var[VAR::U_E1] = E1;
-    var[VAR::U_E2] = E2;
-    var[VAR::U_B0] = B0;
-    var[VAR::U_B1] = B1;
-    var[VAR::U_B2] = B2;
+    J0 = 0.0 ;
+    J1 = 0.0 ;
+    J2 = 0.0 ;
+
+    var[VAR::U_E0] = E0 ;
+    var[VAR::U_E1] = E1 ;
+    var[VAR::U_E2] = E2 ;
+    var[VAR::U_B0] = B0 ;
+    var[VAR::U_B1] = B1 ;
+    var[VAR::U_B2] = B2 ;
+    var[VAR::U_PHI] = Phi ;
+    var[VAR::U_PSI] = Psi ;
+
+
 }
 
 void blockAdaptiveOctree(std::vector<ot::TreeNode> &tmpNodes,

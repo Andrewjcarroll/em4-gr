@@ -480,6 +480,7 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
+
         asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
@@ -767,9 +768,9 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Phi, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
+        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Psi, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
+        asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
 
         //[[[end]]]
