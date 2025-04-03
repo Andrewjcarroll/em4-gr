@@ -805,6 +805,8 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                               hy, hz, sigma, sz, bflag);
         SOLVER_DERIVS->filter(Phi, Phi_rhs, grad_0_Phi, grad_1_Phi, grad_2_Phi, hx,
                               hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(Psi, Psi_rhs, grad_0_Psi, grad_1_Psi, grad_2_Psi, hx,
+                              hy, hz, sigma, sz, bflag);
 
         dsolve::timer::t_rhs.stop();
     }
