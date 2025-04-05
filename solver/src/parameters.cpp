@@ -71,8 +71,8 @@ double SOLVER_OCTREE_MAX[3] = {(double)(1u << SOLVER_MAXDEPTH),
                                (double)(1u << SOLVER_MAXDEPTH)};
 unsigned int SOLVER_IO_OUTPUT_FREQ = 1000;
 unsigned int SOLVER_TIME_STEP_OUTPUT_FREQ = 10;
-unsigned int SOLVER_NUM_CONSOLE_OUTPUT_VARS = 6;
-unsigned int SOLVER_CONSOLE_OUTPUT_VARS[6] = {0, 1, 2, 3, 4, 5};
+unsigned int SOLVER_NUM_CONSOLE_OUTPUT_VARS = 8;
+unsigned int SOLVER_CONSOLE_OUTPUT_VARS[8] = {0, 1, 2, 3, 4, 5,6,7};
 unsigned int SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS = 2;
 unsigned int SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[2] = {0, 1};
 
