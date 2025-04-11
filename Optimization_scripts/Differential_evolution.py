@@ -13,7 +13,7 @@ LOG_CSV = os.path.join(LOG_DIR, "optimization_log.csv")
 MPI_CMD = ["mpirun", "-np", "24", "em4Solver", PARAM_FILE]
 
 COEFF_BOUNDS = [(0.0, 0.0), (-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)]
-ENABLED_ERRORS = ["C_DIVB"]  # or use ["*"] to include all 
+ENABLED_ERRORS = ["C_DIVB"]  # or use ["*"]
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -213,4 +213,5 @@ if __name__ == "__main__":
     print("\n✅ Optimization complete!")
     print(f"🔧 Best Coefficients: {[round(c, 6) for c in result.x]}")
     print(f"📉 Minimum Log-Sum Avg Error: {result.fun:.6e}")
+
 
