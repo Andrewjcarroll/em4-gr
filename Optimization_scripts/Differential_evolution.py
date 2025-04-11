@@ -2,6 +2,7 @@ import subprocess
 import csv
 import os
 import re
+import math
 from scipy.optimize import differential_evolution
 
 # === CONFIGURATION ===
@@ -9,15 +10,11 @@ PARAM_FILE = "em4_simplified.param.toml"
 LOG_FILE = "outputdata.txt"
 LOG_DIR = "logs"
 LOG_CSV = os.path.join(LOG_DIR, "optimization_log.csv")
-MPI_CMD = ["mpirun", "-np", "128", "em4Solver", PARAM_FILE]
+MPI_CMD = ["mpirun", "-np", "24", "em4Solver", PARAM_FILE]
 
-# Coeff bounds: [(min0, max0), (min1, max1), ...]
 COEFF_BOUNDS = [(0.0, 0.0), (-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)]
+ENABLED_ERRORS = ["C_DIVB"]  # or use ["*"] to include all 
 
-# Toggle which errors to include in optimization:
-ENABLED_ERRORS = ["B1_DIFF", "C_DIVE", "E0_DIFF", "C_DIVB"]  # or use ["*"]
-
-# === SETUP ===
 os.makedirs(LOG_DIR, exist_ok=True)
 
 def update_param_file(coeffs):
@@ -36,6 +33,7 @@ def update_param_file(coeffs):
         f.writelines(new_lines)
     print(f"🔧 Updated {PARAM_FILE} with coefficients [{coeff_str}]")
 
+
 def run_simulation(coeffs):
     print(f"🚀 Running simulation... Logging to {LOG_FILE}")
     if os.path.exists(LOG_FILE):
@@ -47,7 +45,8 @@ def run_simulation(coeffs):
             raise subprocess.CalledProcessError(result.returncode, MPI_CMD)
     print("✅ Simulation complete.")
 
-# === REGEX PATTERNS ===
+
+# === REGEX ===
 rmse_pattern = re.compile(
     r'\[var\]:\s+(\w+_DIFF)\s+\(min, max, l2, rmse, nrmse, mae\)\s*:\s*\([^,]+,\s*[^,]+,\s*[^,]+,\s*([-\d.eE+]+)'
 )
@@ -56,7 +55,8 @@ div_pattern = re.compile(
 )
 step_pattern = re.compile(r"Current Step:\s+(\d+)\s+Current time:")
 
-def parse_average_metric(verbose=True):
+
+def parse_logsum_metric(verbose=True):
     if not os.path.exists(LOG_FILE):
         raise FileNotFoundError(f"{LOG_FILE} not found.")
 
@@ -68,6 +68,8 @@ def parse_average_metric(verbose=True):
 
     current_step = None
     step_errors = {}
+    ignored_zeros = 0
+
     for line in lines:
         step_match = step_pattern.search(line)
         if step_match:
@@ -84,7 +86,10 @@ def parse_average_metric(verbose=True):
             if use_all or varname in enabled_set:
                 try:
                     val = float(rmse_match.group(2))
-                    step_errors[current_step].append(abs(val))
+                    if val > 0.0:
+                        step_errors[current_step].append(val)
+                    else:
+                        ignored_zeros += 1
                 except ValueError:
                     continue
 
@@ -94,25 +99,38 @@ def parse_average_metric(verbose=True):
             if use_all or varname in enabled_set:
                 try:
                     val = float(div_match.group(2))
-                    step_errors[current_step].append(abs(val))
+                    if val > 0.0:
+                        step_errors[current_step].append(val)
+                    else:
+                        ignored_zeros += 1
                 except ValueError:
                     continue
 
     if not step_errors:
         raise RuntimeError("No RMSE or constraint values found in the log.")
 
-    step_metrics = {step: sum(vals) for step, vals in step_errors.items()}
-    total_error = sum(step_metrics.values())
+    step_metrics = {
+        step: sum(math.log(val) for val in vals)
+        for step, vals in step_errors.items()
+        if vals
+    }
+
     num_steps = len(step_metrics)
-    average_error = total_error / num_steps
+    if num_steps == 0:
+        raise RuntimeError("All errors were zero — nothing to optimize.")
+
+    average_logsum = sum(step_metrics.values()) / num_steps
 
     if verbose:
         print(f"✅ Parsed {num_steps} steps")
+        if ignored_zeros > 0:
+            print(f"⚠️ Ignored {ignored_zeros} zero error values")
         for step, val in sorted(step_metrics.items()):
-            print(f"   Step {step:3d}: Total Error = {val:.6e}")
-        print(f"📊 Average Error Across All Steps = {average_error:.6e}")
+            print(f"   Step {step:3d}: Log-Sum Error = {val:.6e}")
+        print(f"📊 Average Log-Sum Error Across Steps = {average_logsum:.6e}")
 
-    return average_error, step_metrics, num_steps
+    return average_logsum, step_metrics, num_steps
+
 
 def parse_last_step():
     if not os.path.exists(LOG_FILE):
@@ -129,15 +147,17 @@ def parse_last_step():
                     continue
     return last_step
 
+
 def log_result(coeffs, metric):
     write_header = not os.path.exists(LOG_CSV)
     with open(LOG_CSV, "a", newline="") as f:
         writer = csv.writer(f)
         if write_header:
-            writer.writerow(["Coeff_0", "Coeff_1", "Coeff_2", "Coeff_3", "Avg_Error"])
+            writer.writerow(["Coeff_0", "Coeff_1", "Coeff_2", "Coeff_3", "LogSum_Avg_Error"])
         writer.writerow([*coeffs, metric])
     coeff_str = ", ".join(f"{v:.6f}" for v in coeffs)
-    print(f"🗘️ Logged: [{coeff_str}], Avg Error = {metric:.6e}")
+    print(f"🗘️ Logged: [{coeff_str}], LogSum Avg Error = {metric:.6e}")
+
 
 def objective(x):
     coeffs = x.tolist()
@@ -145,8 +165,8 @@ def objective(x):
     try:
         update_param_file(coeffs)
         run_simulation(coeffs)
-        metric, step_metrics, num_steps = parse_average_metric()
-        print(f"📊 Average Error over {num_steps} steps = {metric:.6e}")
+        metric, step_metrics, num_steps = parse_logsum_metric()
+        print(f"📊 LogSum Avg Error over {num_steps} steps = {metric:.6e}")
         log_result(coeffs, metric)
         return metric
 
@@ -165,10 +185,11 @@ def objective(x):
         metric = 1e6 - last_step * 1e3
     else:
         print("⚠️ Simulation failed before any time steps were completed.")
-        metric = float("inf")
+        metric = 1e9
 
     log_result(coeffs, metric)
-    return metric
+    return min(metric, 1e9)
+
 
 # === MAIN ===
 if __name__ == "__main__":
@@ -191,4 +212,5 @@ if __name__ == "__main__":
 
     print("\n✅ Optimization complete!")
     print(f"🔧 Best Coefficients: {[round(c, 6) for c in result.x]}")
-    print(f"📉 Minimum Average Error: {result.fun:.6e}")
+    print(f"📉 Minimum Log-Sum Avg Error: {result.fun:.6e}")
+
