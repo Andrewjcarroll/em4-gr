@@ -22,6 +22,11 @@ SOLVER_DERIVTYPE_SECOND = "E6"
 SOLVER_DERIV_FIRST_COEFFS = []
 SOLVER_DERIV_SECOND_COEFFS = []
 
+SOLVER_INMATFILT_FIRST = "none"
+SOLVER_INMATFILT_SECOND = "none"
+SOLVER_INMATFILT_FIRST_COEFFS = [0.5]
+SOLVER_INMATFILT_SECOND_COEFFS = [0.5]
+
 
 # ========
 # === FILE SAVING AND BASIC INFORMATION PARAMETERS
@@ -54,7 +59,7 @@ SOLVER_DERIV_SECOND_COEFFS = []
 # @brief: Evolution variable IDs to be written to the VTU files
 #         For what these IDs refer to see include/grDef.h and see the VAR enum, the list there is ordered starting from 0
 # param type: semivariant | data type: unsigned int[] | default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35] 
-"dsolve::SOLVER_VTU_OUTPUT_EVOL_INDICES" = [0, 1, 2, 3, 4, 5] 
+"dsolve::SOLVER_VTU_OUTPUT_EVOL_INDICES" = [0, 1, 2, 3, 4, 5]
 
 # @brief: Constraint variable IDs to be written to the VTU files
 #         For what these IDs refer to see include/grDef.h and see the VAR_CONSTRAINT enum, the list there is ordered starting from 0
@@ -63,7 +68,7 @@ SOLVER_DERIV_SECOND_COEFFS = []
 
 # @brief: Whether to output only the z slice in the VTU file
 # param type: semivariant | data type: bool | default: true 
-"dsolve::SOLVER_VTU_Z_SLICE_ONLY" = true 
+"dsolve::SOLVER_VTU_Z_SLICE_ONLY" = true
 
 # @brief: Output frequency for the solution, for saving to VTU file
 #         This value is every X number of time steps, not at individual times. For shorter runs, this should be smaller
@@ -83,12 +88,12 @@ SOLVER_DERIV_SECOND_COEFFS = []
 # @brief: The variables that should be shown in the output in the terminal at each time step above. Follow the format
 # similar to VTU OUTPUT.
 "dsolve::SOLVER_NUM_CONSOLE_OUTPUT_VARS" = 6
-"dsolve::SOLVER_CONSOLE_OUTPUT_VARS" = [0, 1, 2, 3, 4, 5] 
+"dsolve::SOLVER_CONSOLE_OUTPUT_VARS" = [0, 1, 2, 3, 4, 5]
 
 # @brief: The constraints that should be shown in the output in the terminal at each time step above. Follow the format
 # similar to VTU OUTPUT.
 "dsolve::SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS" = 2
-"dsolve::SOLVER_CONSOLE_OUTPUT_CONSTRAINTS" = [0, 1] 
+"dsolve::SOLVER_CONSOLE_OUTPUT_CONSTRAINTS" = [0, 1]
 
 
 # @brief: Frequency for checkpoint saving
@@ -199,7 +204,7 @@ SOLVER_DERIV_SECOND_COEFFS = []
 
 # @brief: Time to end the simulation, this is in real "seconds", not number of iterations
 # param type: semivariant | data type: unsigned int | default: 800 | min: 0 | max: 1000
-"dsolve::SOLVER_RK_TIME_END" = 1.5
+"dsolve::SOLVER_RK_TIME_END" = 30.0
 
 # @brief: Runge Kutta method to use (0 -> RK3 , 1 -> RK4, 2 -> RK45), note that this only applies for old solver
 # param type: semivariant | data type: unsigned int | default: 1 | min: 0 | max: 3
@@ -238,7 +243,7 @@ SOLVER_DERIV_SECOND_COEFFS = []
 # @brief: The IDs for the refinement variables
 #         For what these IDs refer to see include/grDef.h and see the VAR enum, the list there is ordered starting from 0
 # param type: semivariant | data type: unsigned int[] | default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35] 
-"dsolve::SOLVER_REFINE_VARIABLE_INDICES" = [0, 1, 2, 3, 4, 5] 
+"dsolve::SOLVER_REFINE_VARIABLE_INDICES" = [0, 1, 2, 3, 4, 5]
 
 # @brief: Element order for the computations
 # param type: semivariant | data type: unsigned int | default: 6 | min: 0 | max: 12

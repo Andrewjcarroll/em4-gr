@@ -44,106 +44,111 @@ dendro_cfd::BoundaryType SOLVER_DERIV_CLOSURE_TYPE =
 
 unsigned int SOLVER_ENABLE_BLOCK_ADAPTIVITY = 0;
 
-unsigned int SOLVER_FILTER_FREQ = 10;
+unsigned int SOLVER_FILTER_FREQ             = 10;
 
-unsigned int SOLVER_BL_DERIV_MAT_NUM = 0;
+unsigned int SOLVER_BL_DERIV_MAT_NUM        = 0;
 
-double SOLVER_KIM_FILTER_KC = 0.88 * M_PI;
-double SOLVER_KIM_FILTER_EPS = 0.25;
+double SOLVER_KIM_FILTER_KC                 = 0.88 * M_PI;
+double SOLVER_KIM_FILTER_EPS                = 0.25;
 
-double EM4_NOISE_AMPLITUDE = 0.0;
-double EM4_ID_AMP1 = 5.0;
-double EM4_ID_LAMBDA1 = 0.05;
+double EM4_NOISE_AMPLITUDE                  = 0.0;
+double EM4_ID_AMP1                          = 5.0;
+double EM4_ID_LAMBDA1                       = 0.05;
 
-double SOLVER_ETA_CONST = 2.0;
-double SOLVER_ETA_DAMPING_EXP = 2.0;
-double SOLVER_ETA_R0 = 30.0;
+double SOLVER_ETA_CONST                     = 2.0;
+double SOLVER_ETA_DAMPING_EXP               = 2.0;
+double SOLVER_ETA_R0                        = 30.0;
 
-unsigned int SOLVER_PROFILE_OUTPUT_FREQ = 1;
+unsigned int SOLVER_PROFILE_OUTPUT_FREQ     = 1;
 
-unsigned int SOLVER_ELE_ORDER = 6;
-unsigned int SOLVER_PADDING_WIDTH = SOLVER_ELE_ORDER >> 1u;
-double SOLVER_COMPD_MIN[3] = {-50.0, -50.0, -50.0};
-double SOLVER_COMPD_MAX[3] = {50.0, 50.0, 50.0};
-double SOLVER_OCTREE_MIN[3] = {0.0, 0.0, 0.0};
-double SOLVER_OCTREE_MAX[3] = {(double)(1u << SOLVER_MAXDEPTH),
-                               (double)(1u << SOLVER_MAXDEPTH),
-                               (double)(1u << SOLVER_MAXDEPTH)};
-unsigned int SOLVER_IO_OUTPUT_FREQ = 1000;
-unsigned int SOLVER_TIME_STEP_OUTPUT_FREQ = 10;
+unsigned int SOLVER_ELE_ORDER               = 6;
+unsigned int SOLVER_PADDING_WIDTH           = SOLVER_ELE_ORDER >> 1u;
+double SOLVER_COMPD_MIN[3]                  = {-50.0, -50.0, -50.0};
+double SOLVER_COMPD_MAX[3]                  = {50.0, 50.0, 50.0};
+double SOLVER_OCTREE_MIN[3]                 = {0.0, 0.0, 0.0};
+double SOLVER_OCTREE_MAX[3]                 = {(double)(1u << SOLVER_MAXDEPTH),
+                                               (double)(1u << SOLVER_MAXDEPTH),
+                                               (double)(1u << SOLVER_MAXDEPTH)};
+unsigned int SOLVER_IO_OUTPUT_FREQ          = 1000;
+unsigned int SOLVER_TIME_STEP_OUTPUT_FREQ   = 10;
 unsigned int SOLVER_NUM_CONSOLE_OUTPUT_VARS = 6;
-unsigned int SOLVER_CONSOLE_OUTPUT_VARS[6] = {0, 1, 2, 3, 4, 5};
+unsigned int SOLVER_CONSOLE_OUTPUT_VARS[6]  = {0, 1, 2, 3, 4, 5};
 unsigned int SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS = 2;
-unsigned int SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[2] = {0, 1};
+unsigned int SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[2]  = {0, 1};
 
-unsigned int SOLVER_REMESH_TEST_FREQ = 10;
-unsigned int SOLVER_CHECKPT_FREQ = 5000;
-unsigned int SOLVER_RESTORE_SOLVER = 0;
-std::string SOLVER_VTU_FILE_PREFIX = "vtu/solver_gr";
-std::string SOLVER_CHKPT_FILE_PREFIX = "cp/solver_cp";
-std::string SOLVER_PROFILE_FILE_PREFIX = "solver_prof";
-unsigned int SOLVER_NUM_REFINE_VARS = 8;
-unsigned int SOLVER_REFINE_VARIABLE_INDICES[8] = {0, 1, 2, 3, 4, 5,6,7};
-unsigned int SOLVER_NUM_EVOL_VARS_VTU_OUTPUT = 14;
-unsigned int SOLVER_NUM_CONST_VARS_VTU_OUTPUT = 1;
-unsigned int SOLVER_VTU_OUTPUT_EVOL_INDICES[8] = {0, 1, 2, 3, 4, 5,6,7};
-unsigned int SOLVER_VTU_OUTPUT_CONST_INDICES[2] = {0, 1};
-unsigned int SOLVER_IO_OUTPUT_GAP = 1;
-unsigned int SOLVER_DENDRO_GRAIN_SZ = 50;
-double SOLVER_DENDRO_AMR_FAC = 0.1;
-unsigned int SOLVER_INIT_GRID_ITER = 10;
-bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME = true;
-unsigned int SOLVER_SPLIT_FIX = 2;
-double SOLVER_CFL_FACTOR = 0.25;
-unsigned int SOLVER_RK_TIME_BEGIN = 0;
-double SOLVER_RK_TIME_END = 800;
-unsigned int SOLVER_RK_TYPE = 1;
-double SOLVER_RK45_TIME_STEP_SIZE = 0.01;
-double SOLVER_RK45_DESIRED_TOL = 0.001;
-unsigned int DISSIPATION_TYPE = 0;
-unsigned int SOLVER_DISSIPATION_NC = 0;
-unsigned int SOLVER_DISSIPATION_S = 0;
-unsigned int SOLVER_LTS_TS_OFFSET = 0;
-bool SOLVER_VTU_Z_SLICE_ONLY = true;
-unsigned int SOLVER_ASYNC_COMM_K = 4;
-double SOLVER_LOAD_IMB_TOL = 0.1;
-unsigned int SOLVER_DIM = 3;
-unsigned int SOLVER_MAXDEPTH = 16;
-unsigned int SOLVER_MINDEPTH = 3;
-double SOLVER_WAVELET_TOL = 1e-05;
-unsigned int SOLVER_USE_WAVELET_TOL_FUNCTION = 3;
-double SOLVER_WAVELET_TOL_MAX = 0.001;
-double SOLVER_WAVELET_TOL_FUNCTION_R0 = 30.0;
-double SOLVER_WAVELET_TOL_FUNCTION_R1 = 220.0;
-bool SOLVER_USE_FD_GRID_TRANSFER = false;
-RefinementMode SOLVER_REFINEMENT_MODE = static_cast<RefinementMode>(0);
-double SOLVER_BLK_MIN_X = -6.0;
-double SOLVER_BLK_MIN_Y = -6.0;
-double SOLVER_BLK_MIN_Z = -1.0;
-double SOLVER_BLK_MAX_X = 6.0;
-double SOLVER_BLK_MAX_Y = 6.0;
-double SOLVER_BLK_MAX_Z = 1.0;
-double KO_DISS_SIGMA = 0.4;
-unsigned int SOLVER_ID_TYPE = 0;
-double SOLVER_GRID_MIN_X = -400.0;
-double SOLVER_GRID_MAX_X = 400.0;
-double SOLVER_GRID_MIN_Y = -400.0;
-double SOLVER_GRID_MAX_Y = 400.0;
-double SOLVER_GRID_MIN_Z = -400.0;
-double SOLVER_GRID_MAX_Z = 400.0;
+unsigned int SOLVER_REMESH_TEST_FREQ               = 10;
+unsigned int SOLVER_CHECKPT_FREQ                   = 5000;
+unsigned int SOLVER_RESTORE_SOLVER                 = 0;
+std::string SOLVER_VTU_FILE_PREFIX                 = "vtu/solver_gr";
+std::string SOLVER_CHKPT_FILE_PREFIX               = "cp/solver_cp";
+std::string SOLVER_PROFILE_FILE_PREFIX             = "solver_prof";
+unsigned int SOLVER_NUM_REFINE_VARS                = 8;
+unsigned int SOLVER_REFINE_VARIABLE_INDICES[8]     = {0, 1, 2, 3, 4, 5, 6, 7};
+unsigned int SOLVER_NUM_EVOL_VARS_VTU_OUTPUT       = 14;
+unsigned int SOLVER_NUM_CONST_VARS_VTU_OUTPUT      = 1;
+unsigned int SOLVER_VTU_OUTPUT_EVOL_INDICES[8]     = {0, 1, 2, 3, 4, 5, 6, 7};
+unsigned int SOLVER_VTU_OUTPUT_CONST_INDICES[2]    = {0, 1};
+unsigned int SOLVER_IO_OUTPUT_GAP                  = 1;
+unsigned int SOLVER_DENDRO_GRAIN_SZ                = 50;
+double SOLVER_DENDRO_AMR_FAC                       = 0.1;
+unsigned int SOLVER_INIT_GRID_ITER                 = 10;
+bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME       = true;
+unsigned int SOLVER_SPLIT_FIX                      = 2;
+double SOLVER_CFL_FACTOR                           = 0.25;
+unsigned int SOLVER_RK_TIME_BEGIN                  = 0;
+double SOLVER_RK_TIME_END                          = 800;
+unsigned int SOLVER_RK_TYPE                        = 1;
+double SOLVER_RK45_TIME_STEP_SIZE                  = 0.01;
+double SOLVER_RK45_DESIRED_TOL                     = 0.001;
+unsigned int DISSIPATION_TYPE                      = 0;
+unsigned int SOLVER_DISSIPATION_NC                 = 0;
+unsigned int SOLVER_DISSIPATION_S                  = 0;
+unsigned int SOLVER_LTS_TS_OFFSET                  = 0;
+bool SOLVER_VTU_Z_SLICE_ONLY                       = true;
+unsigned int SOLVER_ASYNC_COMM_K                   = 4;
+double SOLVER_LOAD_IMB_TOL                         = 0.1;
+unsigned int SOLVER_DIM                            = 3;
+unsigned int SOLVER_MAXDEPTH                       = 16;
+unsigned int SOLVER_MINDEPTH                       = 3;
+double SOLVER_WAVELET_TOL                          = 1e-05;
+unsigned int SOLVER_USE_WAVELET_TOL_FUNCTION       = 3;
+double SOLVER_WAVELET_TOL_MAX                      = 0.001;
+double SOLVER_WAVELET_TOL_FUNCTION_R0              = 30.0;
+double SOLVER_WAVELET_TOL_FUNCTION_R1              = 220.0;
+bool SOLVER_USE_FD_GRID_TRANSFER                   = false;
+RefinementMode SOLVER_REFINEMENT_MODE          = static_cast<RefinementMode>(0);
+double SOLVER_BLK_MIN_X                        = -6.0;
+double SOLVER_BLK_MIN_Y                        = -6.0;
+double SOLVER_BLK_MIN_Z                        = -1.0;
+double SOLVER_BLK_MAX_X                        = 6.0;
+double SOLVER_BLK_MAX_Y                        = 6.0;
+double SOLVER_BLK_MAX_Z                        = 1.0;
+double KO_DISS_SIGMA                           = 0.4;
+unsigned int SOLVER_ID_TYPE                    = 0;
+double SOLVER_GRID_MIN_X                       = -400.0;
+double SOLVER_GRID_MAX_X                       = 400.0;
+double SOLVER_GRID_MIN_Y                       = -400.0;
+double SOLVER_GRID_MAX_Y                       = 400.0;
+double SOLVER_GRID_MIN_Z                       = -400.0;
+double SOLVER_GRID_MAX_Z                       = 400.0;
 
-double SOLVER_CURRENT_RK_COORD_TIME = 0;
-unsigned int SOLVER_CURRENT_RK_STEP = 0;
+double SOLVER_CURRENT_RK_COORD_TIME            = 0;
+unsigned int SOLVER_CURRENT_RK_STEP            = 0;
 
 // NECESSARY ALLOCATION/START FOR DERIV WORKSPACE
-double* SOLVER_DERIV_WORKSPACE = nullptr;
+double* SOLVER_DERIV_WORKSPACE                 = nullptr;
 
-std::string SOLVER_DERIVTYPE_FIRST = "E6";
-std::string SOLVER_DERIVTYPE_SECOND = "E6";
-std::vector<double> SOLVER_DERIV_FIRST_COEFFS = {};
+std::string SOLVER_DERIVTYPE_FIRST             = "E6";
+std::string SOLVER_DERIVTYPE_SECOND            = "E6";
+std::vector<double> SOLVER_DERIV_FIRST_COEFFS  = {};
 std::vector<double> SOLVER_DERIV_SECOND_COEFFS = {};
-unsigned int SOLVER_DERIV_FIRST_MATID = 1;
-unsigned int SOLVER_DERIV_SECOND_MATID = 1;
+unsigned int SOLVER_DERIV_FIRST_MATID          = 1;
+unsigned int SOLVER_DERIV_SECOND_MATID         = 1;
+
+std::string SOLVER_INMATFILT_FIRST             = "none";
+std::string SOLVER_INMATFILT_SECOND            = "none";
+std::vector<double> SOLVER_INMATFILT_FIRST_COEFFS              = {};
+std::vector<double> SOLVER_INMATFILT_SECOND_COEFFS             = {};
 
 // default initialization
 // this *MUST* be initialized
@@ -753,14 +758,32 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
             file["SOLVER_DERIV_SECOND_MATID"].as_integer();
     }
 
-    // COMPD_MIN and COMPD_MAX should be the same as the grid
-    dsolve::SOLVER_COMPD_MIN[0] = dsolve::SOLVER_GRID_MIN_X;
-    dsolve::SOLVER_COMPD_MIN[1] = dsolve::SOLVER_GRID_MIN_Y;
-    dsolve::SOLVER_COMPD_MIN[2] = dsolve::SOLVER_GRID_MIN_Z;
+    if (file.contains("SOLVER_INMATFILT_FIRST")) {
+        SOLVER_INMATFILT_FIRST = file["SOLVER_INMATFILT_FIRST"].as_string();
+    }
 
-    dsolve::SOLVER_COMPD_MAX[0] = dsolve::SOLVER_GRID_MAX_X;
-    dsolve::SOLVER_COMPD_MAX[1] = dsolve::SOLVER_GRID_MAX_Y;
-    dsolve::SOLVER_COMPD_MAX[2] = dsolve::SOLVER_GRID_MAX_Z;
+    if (file.contains("SOLVER_INMATFILT_SECOND")) {
+        SOLVER_INMATFILT_SECOND = file["SOLVER_INMATFILT_SECOND"].as_string();
+    }
+
+    if (file.contains("SOLVER_INMATFILT_FIRST_COEFFS")) {
+        SOLVER_INMATFILT_FIRST_COEFFS = toml::find<std::vector<double>>(
+            file, "SOLVER_INMATFILT_FIRST_COEFFS");
+    }
+
+    if (file.contains("SOLVER_INMATFILT_SECOND_COEFFS")) {
+        SOLVER_INMATFILT_SECOND_COEFFS = toml::find<std::vector<double>>(
+            file, "SOLVER_INMATFILT_SECOND_COEFFS");
+    }
+
+    // COMPD_MIN and COMPD_MAX should be the same as the grid
+    dsolve::SOLVER_COMPD_MIN[0]  = dsolve::SOLVER_GRID_MIN_X;
+    dsolve::SOLVER_COMPD_MIN[1]  = dsolve::SOLVER_GRID_MIN_Y;
+    dsolve::SOLVER_COMPD_MIN[2]  = dsolve::SOLVER_GRID_MIN_Z;
+
+    dsolve::SOLVER_COMPD_MAX[0]  = dsolve::SOLVER_GRID_MAX_X;
+    dsolve::SOLVER_COMPD_MAX[1]  = dsolve::SOLVER_GRID_MAX_Y;
+    dsolve::SOLVER_COMPD_MAX[2]  = dsolve::SOLVER_GRID_MAX_Z;
 
     dsolve::SOLVER_OCTREE_MAX[0] = (double)(1u << dsolve::SOLVER_MAXDEPTH);
     dsolve::SOLVER_OCTREE_MAX[1] = (double)(1u << dsolve::SOLVER_MAXDEPTH);
@@ -771,11 +794,14 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     dsolve::SOLVER_PADDING_WIDTH = dsolve::SOLVER_ELE_ORDER >> 1u;
 
-    // establish the dendro derivatives class, this should always be built
+    // establish the dendro derivatives class, this should always be built,
+    // should also establish KO of the "proper" order automatically
     SOLVER_DERIVS = std::make_unique<dendroderivs::DendroDerivatives>(
         SOLVER_DERIVTYPE_FIRST, SOLVER_DERIVTYPE_SECOND, SOLVER_ELE_ORDER,
         SOLVER_DERIV_FIRST_COEFFS, SOLVER_DERIV_SECOND_COEFFS,
-        SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID);
+        SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID,
+        SOLVER_INMATFILT_FIRST, SOLVER_INMATFILT_SECOND,
+        SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS);
 
     // TODO: COMPD_MIN, COMPD_MAX should be GRID_MIN and GRID_MAX, not settable
     // by user
