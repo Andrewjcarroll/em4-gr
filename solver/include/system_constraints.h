@@ -22,27 +22,12 @@ using namespace dsolve;
  *----------------------------------------------------------------------*/
 inline void enforce_system_constraints(double **uiVar,
                                        const unsigned int node) {
-    // clang-format off
-    /*[[[cog
-    import cog
-    import sys
-    import importlib.util
-    import dendrosym
-
-    cog.outl('// clang-format on')
-
-    # the following lines will import any module directly from
-    spec = importlib.util.spec_from_file_location("dendroconf", CONFIG_FILE_PATH)
-    dendroconf = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = dendroconf
-    spec.loader.exec_module(dendroconf)
-
-    cog.outl('//// SOLVER CONSTRAINTS')
-    cog.outl(dendroconf.dendroConfigs.generate_evolution_constraints())
-
-    ]]]*/
-    // clang-format on
-    //[[[end]]]
+//If the Divergence of B gets too large we will kill the run to save resources:
+double Divergence_B = uiVar[VAR_CONSTRAINT::C_DIVB][node];
+if(abs(Divergence_B)>10.0){
+    std::cout <<"The divergence has gotten too large DIVB = "<<Divergence_B << std::endl;
+    exit(0);
+}
 }
 
 #endif
