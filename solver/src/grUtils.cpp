@@ -197,6 +197,7 @@ void analyticalSolEM4_BLOCK(double **uZipAnalyticVars,
 }
 
 // added analytic calculation for the dipole pulse -AJC
+// added analytic calculation for the dipole pulse -AJC
 void analyticalSolEM4(const double xx, const double yy, const double zz,
                       const double t, double *var, bool varsAreGrid) {
     double x, y, z;
@@ -260,8 +261,12 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
 
     B0 = x*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
     B1 = y*z * ( tmp_Br_up + tmp_Btheta_up ) / (r*r) ;
-    B2 = ( z*z * tmp_Br_up - (x*x+y*y) * tmp_Btheta_up ) / (r*r) ;
-
+   if (r < 1.e-4) {
+    B2 = (16.0 * amp1 *pow(lambda1, 2) * t * (3.0 - 2.0 * lambda1 * pow(t, 2))) /
+         (3.0 * exp(lambda1 *pow(t, 2)));
+} else {
+    B2 = (z * z * tmp_Br_up - (x * x + y * y) * tmp_Btheta_up) / (r * r);
+}
     Phi = 0.0 ;
     Psi = 0.0 ;
 
