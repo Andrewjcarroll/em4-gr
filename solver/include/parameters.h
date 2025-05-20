@@ -140,7 +140,7 @@ extern unsigned int SOLVER_IO_OUTPUT_FREQ;
 extern unsigned int SOLVER_TIME_STEP_OUTPUT_FREQ;
 
 extern unsigned int SOLVER_NUM_CONSOLE_OUTPUT_VARS;
-extern unsigned int SOLVER_CONSOLE_OUTPUT_VARS[6];
+extern unsigned int SOLVER_CONSOLE_OUTPUT_VARS[8];
 
 extern unsigned int SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS;
 extern unsigned int SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[2];
