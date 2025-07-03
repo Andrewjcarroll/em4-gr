@@ -144,7 +144,7 @@ std::vector<double> SOLVER_DERIV_FIRST_COEFFS  = {};
 std::vector<double> SOLVER_DERIV_SECOND_COEFFS = {};
 unsigned int SOLVER_DERIV_FIRST_MATID          = 1;
 unsigned int SOLVER_DERIV_SECOND_MATID         = 1;
-
+ 
 std::string SOLVER_INMATFILT_FIRST             = "none";
 std::string SOLVER_INMATFILT_SECOND            = "none";
 std::vector<double> SOLVER_INMATFILT_FIRST_COEFFS              = {};
