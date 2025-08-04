@@ -490,7 +490,7 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL")) {
         if (0.0 > file["dsolve::SOLVER_WAVELET_TOL"].as_floating() ||
-            1e-04 < file["dsolve::SOLVER_WAVELET_TOL"].as_floating()) {
+            1.0 < file["dsolve::SOLVER_WAVELET_TOL"].as_floating()) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_WAVELET_TOL")"
                       << std::endl;
             exit(-1);
