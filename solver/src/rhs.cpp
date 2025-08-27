@@ -658,7 +658,7 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                               1.0, sz, bflag);
         SOLVER_DERIVS->filter(E2, E2_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
                               1.0, sz, bflag);
-        SOLVER_DERIVS->filter(E0, E0_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
+        SOLVER_DERIVS->filter(B0, B0_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
                               1.0, sz, bflag);
         SOLVER_DERIVS->filter(B1, B1_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
                               1.0, sz, bflag);
