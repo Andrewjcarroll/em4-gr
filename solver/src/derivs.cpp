@@ -126,11 +126,26 @@ void set_appropriate_derivs(const unsigned pw) {
 
         dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
         dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
+        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;}
+    else if (pw == 5) {
+        // std::cout << "6th Order Derivatives set, detected padding width of 3"
+        //           << std::endl;
+        dendro_derivs::deriv_x = deriv644_x_pw4;
+        dendro_derivs::deriv_y = deriv644_y_pw4;
+        dendro_derivs::deriv_z = deriv644_z_pw4;
+
+        dendro_derivs::deriv_xx = deriv42_xx_pw4;
+        dendro_derivs::deriv_yy = deriv42_yy_pw4;
+        dendro_derivs::deriv_zz = deriv42_zz_pw4;
+
+        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
+        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
         dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
-    } else {
+    }
+     else {
         throw std::runtime_error(
             "There is currently no support for 6th order derivatives with a "
-            "padding region that is not 3 or 4!");
+            "padding region that is not 3 4 or 5!");
     }
 
 #endif
@@ -150,10 +165,24 @@ void set_appropriate_derivs(const unsigned pw) {
         dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
         dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
 
-    } else {
+    } 
+        if (pw == 5) {
+        dendro_derivs::deriv_x = deriv8642_x;
+        dendro_derivs::deriv_y = deriv8642_y;
+        dendro_derivs::deriv_z = deriv8642_x;
+
+        dendro_derivs::deriv_xx = deriv8642_xx;
+        dendro_derivs::deriv_yy = deriv8642_yy;
+        dendro_derivs::deriv_zz = deriv8642_zz;
+
+        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
+        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
+        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
+
+    }else {
         throw std::runtime_error(
             "There is currently no support for 8th order derivatives with a "
-            "padding region that is not 4!");
+            "padding region that is not 4 or 5!");
     }
 #endif
 }
