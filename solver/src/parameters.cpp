@@ -4,6 +4,7 @@
 #include "compact_derivs.h"
 #include "derivatives.h"
 #include "parUtils.h"
+#define PRPL "\033[95m"
 
 /**
  * Global parameters used across the program
@@ -1055,7 +1056,49 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
         sout << "\tdsolve::SOLVER_GRID_MAX_Z: " << dsolve::SOLVER_GRID_MAX_Z
              << std::endl;
         sout << "\tDERIVS USE: " << SOLVER_DERIVS->toString() << std::endl;
+        sout << "[FILTER] type=" << dendro_cfd::FILT_TYPE_NAMES[SOLVER_FILTER_TYPE + 1]
+              << " KO_sigma=" << KO_DISS_SIGMA;
+        sout << YLW << "\t DERIVS: " << SOLVER_DERIVS->toString() << NRM
+             << std::endl;
+
+        sout << PRPL << "\t SOLVER_DERIVTYPE_FIRST:  " << SOLVER_DERIVTYPE_FIRST
+             << std::endl;
+        sout << PRPL << "\t SOLVER_DERIVTYPE_SECOND: " << SOLVER_DERIVTYPE_SECOND
+             << std::endl;
+
+        sout << PRPL << "\t SOLVER_DERIV_FIRST_COEFFS:  ";
+        for (const auto& val : SOLVER_DERIV_FIRST_COEFFS) sout << val << " ";
+        sout << std::endl;
+
+        sout << PRPL << "\t SOLVER_DERIV_SECOND_COEFFS: ";
+        for (const auto& val : SOLVER_DERIV_SECOND_COEFFS) sout << val << " ";
+        sout << std::endl;
+
+        sout << PRPL << "\t SOLVER_DERIV_FIRST_MATID:  " << SOLVER_DERIV_FIRST_MATID
+             << std::endl;
+        sout << PRPL
+             << "\t SOLVER_DERIV_SECOND_MATID: " << SOLVER_DERIV_SECOND_MATID
+             << std::endl;
+
+        sout << PRPL << "\t SOLVER_INMATFILT_FIRST:  " << SOLVER_INMATFILT_FIRST
+             << std::endl;
+        sout << PRPL << "\t SOLVER_INMATFILT_SECOND: " << SOLVER_INMATFILT_SECOND
+             << std::endl;
+
+        sout << PRPL << "\t SOLVER_INMATFILT_FIRST_COEFFS:  ";
+        for (const auto& val : SOLVER_INMATFILT_FIRST_COEFFS) sout << val << " ";
+        sout << NRM << std::endl;
+
+        sout << PRPL << "\t SOLVER_INMATFILT_SECOND_COEFFS: ";
+        for (const auto& val : SOLVER_INMATFILT_SECOND_COEFFS) sout << val << " ";
+        sout << NRM << std::endl;
+    // sout << "[INMAT] first=" << SOLVER_INMATFILT_FIRST
+    //           << " coeffs=" << join_vec(SOLVER_INMATFILT_FIRST_COEFFS) << "\n";
+    // sout << "[INMAT] second=" << SOLVER_INMATFILT_SECOND
+    //           << " coeffs=" << join_vec(SOLVER_INMATFILT_SECOND_COEFFS) << "\n";
     }
+
+
 }
 }  // namespace dsolve
 
