@@ -771,7 +771,7 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
 
     const char separator = ' ';
     const int nameWidth = 30;
-    const int numWidth = 10;
+    const int numWidth = 16;
 
     char fName[256];
     std::ofstream outfile;
@@ -813,13 +813,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "step";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "min(s)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "mean(s)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "max(s)" << std::endl;
 
     t_stat = total_runtime.seconds;
@@ -828,13 +828,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "+runtime(s)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_f2o.seconds;
@@ -843,13 +843,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << " ++f2o";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_cons.seconds;
@@ -858,13 +858,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << " ++construction";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_rkSolve.seconds;
@@ -873,13 +873,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << " ++rkSolve";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_bal.seconds;
@@ -888,13 +888,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --2:1 balance";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_mesh.seconds;
@@ -903,13 +903,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --mesh";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_rkStep.seconds;
@@ -918,13 +918,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --rkstep";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ghostEx_sync.seconds;
@@ -933,13 +933,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --ghostExchge.";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_unzip_sync.seconds;
@@ -948,13 +948,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_unzip_async.seconds;
@@ -963,13 +963,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++unzip_async";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
 #ifdef ENABLE_DENDRO_PROFILE_COUNTERS
@@ -979,13 +979,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_internal";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_async_external.seconds;
@@ -994,13 +994,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_external";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_async_comm.seconds;
@@ -1009,13 +1009,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_comm (comm) ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 #endif
 
@@ -1025,13 +1025,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --deriv ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_rhs.seconds;
@@ -1040,13 +1040,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --compute_rhs ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_bdyc.seconds;
@@ -1055,13 +1055,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --boundary con ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_zip.seconds;
@@ -1070,13 +1070,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --zip";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ioVtu.seconds;
@@ -1085,13 +1085,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --vtu";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ioCheckPoint.seconds;
@@ -1100,13 +1100,13 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --checkpoint";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     if (!rank) outfile.close();
@@ -1136,7 +1136,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
 
     const char separator = ' ';
     const int nameWidth = 30;
-    const int numWidth = 10;
+    const int numWidth = 16;
 
     char fName[256];
     std::ofstream outfile;
@@ -1204,13 +1204,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "step";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "min(#)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "mean(#)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "max(#)" << std::endl;
 
     t_stat = ghostElements;
@@ -1219,13 +1219,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "ghost Elements";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = localElements;
@@ -1234,13 +1234,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "local Elements";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = ghostNodes;
@@ -1249,13 +1249,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "ghost Nodes";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = localNodes;
@@ -1264,13 +1264,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "local Nodes";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = pMesh->getGhostExcgTotalSendNodeCount();
@@ -1279,13 +1279,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "send Nodes";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = pMesh->getGhostExcgTotalRecvNodeCount();
@@ -1294,13 +1294,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "recv Nodes";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     if (!rank)
@@ -1312,13 +1312,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "step";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "min(s)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "mean(s)";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << "max(s)" << std::endl;
 
     /* t_stat=total_runtime.seconds;
@@ -1326,7 +1326,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<"+runtime(s)"; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
 
@@ -1336,7 +1336,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<" ++f2o"; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
 
@@ -1346,7 +1346,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<" ++construction"; if(!rank)outfile << std::left
     << std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
 
@@ -1356,7 +1356,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<" ++rkSolve"; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;*/
 
@@ -1367,13 +1367,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++2:1 balance";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_mesh.snap;
@@ -1382,13 +1382,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++mesh";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_rkStep.snap;
@@ -1397,13 +1397,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++rkstep";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ghostEx_sync.snap;
@@ -1412,13 +1412,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++ghostExchge.";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_unzip_sync.snap;
@@ -1427,13 +1427,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++unzip_sync";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_unzip_async.snap;
@@ -1442,13 +1442,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++unzip_async";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
 #ifdef ENABLE_DENDRO_PROFILE_COUNTERS
@@ -1459,13 +1459,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_comm_wait (comm) ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_nodalval.snap;
@@ -1474,13 +1474,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_nodalVal";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_f_c1.snap;
@@ -1489,13 +1489,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --t_unzip_sync_f_c1";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_f_c2.snap;
@@ -1504,13 +1504,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --t_unzip_sync_f_c2";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_f_c3.snap;
@@ -1519,13 +1519,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --t_unzip_sync_f_c3";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_cpy.snap;
@@ -1534,13 +1534,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --t_unzip_sync_cpy";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_internal.snap;
@@ -1549,13 +1549,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_internal";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[0].snap;
@@ -1564,13 +1564,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_left";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[1].snap;
@@ -1579,13 +1579,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_right";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[2].snap;
@@ -1594,13 +1594,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_down";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[3].snap;
@@ -1609,13 +1609,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_up";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[4].snap;
@@ -1624,13 +1624,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_back";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_face[5].snap;
@@ -1639,13 +1639,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_face_front";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_edge.snap;
@@ -1654,13 +1654,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_edge";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_sync_vtex.snap;
@@ -1669,13 +1669,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_sync_vtex";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = dendro::timer::t_unzip_p2c.snap;
@@ -1684,13 +1684,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  --unzip_p2c";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 #endif
 
@@ -1701,7 +1701,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<"  --unzip_internal"; if(!rank)outfile <<
     std::left << std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
 
@@ -1710,7 +1710,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<"  --unzip_external"; if(!rank)outfile <<
     std::left << std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
 
@@ -1720,7 +1720,7 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
     if(!rank)outfile << std::left << std::setw(nameWidth) <<
     std::setfill(separator) <<"  --unzip_comm (comm) "; if(!rank)outfile <<
     std::left << std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[0];
-    if(!rank)outfile << std::left << std::setw(nameWidth) <<
+    if(!rank)outfile << std::left << std::setw(numWidth) <<
     std::setfill(separator)<<t_stat_g[1]; if(!rank)outfile << std::left <<
     std::setw(nameWidth) << std::setfill(separator)<<t_stat_g[2]<<std::endl;
     #endif
@@ -1731,13 +1731,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++isReMesh";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_gridTransfer.snap;
@@ -1746,13 +1746,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++gridTransfer";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_deriv.snap;
@@ -1761,13 +1761,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++deriv ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_rhs.snap;
@@ -1776,13 +1776,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++compute_rhs ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     //    t_stat = t_rhs_a.snap;
@@ -1943,13 +1943,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++boundary con ";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_zip.snap;
@@ -1958,13 +1958,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++zip";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ioVtu.snap;
@@ -1973,13 +1973,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++vtu";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     t_stat = t_ioCheckPoint.snap;
@@ -1988,13 +1988,13 @@ void profileInfoIntermediate(const char *filePrefix, const ot::Mesh *pMesh,
         outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
                 << "  ++checkpoint";
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[0];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[1];
     if (!rank)
-        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
     if (!rank) outfile.close();

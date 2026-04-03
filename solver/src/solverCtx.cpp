@@ -18,6 +18,20 @@
 
 #include "dendro.h"
 #include "derivs.h"
+
+// Suppress DVector template instantiations in this (non-CUDA) TU.
+// The CUDA-aware versions are explicitly instantiated in EM4CtxGPU.cu.
+// Without this, the compiler may inline non-CUDA code paths (e.g. calloc
+// instead of cudaMallocHost) into these templates, causing alloc/free
+// mismatches at runtime when mixed with the CUDA destroy_vector.
+#ifdef WITH_CUDA
+extern template void ot::DVector<DendroScalar, unsigned int>::create_vector(
+    const ot::Mesh*, ot::DVEC_TYPE, ot::DVEC_LOC, unsigned int, bool);
+extern template void
+ot::DVector<DendroScalar, unsigned int>::destroy_vector();
+extern template void ot::DVector<DendroScalar, unsigned int>::grid_transfer(
+    ot::Mesh*, const ot::Mesh*, ot::DVector<DendroScalar, unsigned int>&);
+#endif
 #include "grDef.h"
 #include "grUtils.h"
 #include "meshUtils.h"

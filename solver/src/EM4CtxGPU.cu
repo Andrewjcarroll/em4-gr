@@ -1,12 +1,162 @@
 #include <cmath>
+#include <fstream>
+#include <iomanip>
 
 #include "EM4CtxGPU.cuh"
 #include "device_utils.cuh"
 #include "em4_params_cu.h"
+#include "gpu_profile_params.cuh"
 #include "grUtils.h"
 #include "meshUtils.h"
 #include "oct2vtk.h"
 
+// ========================================================================
+// GPU Profiling Timer Definitions
+// ========================================================================
+namespace dsolve {
+
+#ifdef EM4_ENABLE_PROFILING
+namespace gpu_timer {
+
+gpu_profiler_t t_h2d;
+gpu_profiler_t t_d2h;
+gpu_profiler_t t_unzip;
+gpu_profiler_t t_deriv_x;
+gpu_profiler_t t_deriv_y;
+gpu_profiler_t t_deriv_z;
+gpu_profiler_t t_rhs_kernel;
+gpu_profiler_t t_zip;
+
+void initGPUTimers() {
+    t_h2d.create();
+    t_d2h.create();
+    t_unzip.create();
+    t_deriv_x.create();
+    t_deriv_y.create();
+    t_deriv_z.create();
+    t_rhs_kernel.create();
+    t_zip.create();
+}
+
+void destroyGPUTimers() {
+    t_h2d.destroy();
+    t_d2h.destroy();
+    t_unzip.destroy();
+    t_deriv_x.destroy();
+    t_deriv_y.destroy();
+    t_deriv_z.destroy();
+    t_rhs_kernel.destroy();
+    t_zip.destroy();
+}
+
+void resetGPUTimers() {
+    t_h2d.clear();
+    t_d2h.clear();
+    t_unzip.clear();
+    t_deriv_x.clear();
+    t_deriv_y.clear();
+    t_deriv_z.clear();
+    t_rhs_kernel.clear();
+    t_zip.clear();
+}
+
+void profileInfoGPU(const char* filePrefix, const ot::Mesh* pMesh) {
+    MPI_Comm comm = pMesh->getMPIGlobalCommunicator();
+    int rank, npes;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &npes);
+
+    const char separator = ' ';
+    const int nameWidth  = 30;
+
+    char fName[256];
+    std::ofstream outfile;
+    bool openFailed = false;
+
+    if (!rank) {
+        sprintf(fName, "%s_final.prof", filePrefix);
+        outfile.open(fName, std::ios::app);
+        if (outfile.fail()) {
+            std::cout << fName << " file open failed (GPU append)" << std::endl;
+            openFailed = true;
+        }
+        if (!openFailed) {
+            outfile << "\n========== GPU Kernel Timers (event-based ms) "
+                       "===========\n";
+            outfile << std::left << std::setw(nameWidth)
+                    << std::setfill(separator) << "timer";
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << "min(ms)";
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << "mean(ms)";
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << "max(ms)";
+            outfile << std::left << std::setw(10) << std::setfill(separator)
+                    << "calls" << std::endl;
+        }
+    }
+
+    par::Mpi_Bcast(&openFailed, 1, 0, comm);
+    if (openFailed) return;
+
+    auto report = [&](const char* label, const gpu_profiler_t& t) {
+        float ms_local     = t.ms;
+        long long nc_local = t.num_calls;
+
+        float ms_min = 0, ms_sum = 0, ms_max = 0;
+        long long nc_sum = 0;
+
+        MPI_Reduce(&ms_local, &ms_min, 1, MPI_FLOAT, MPI_MIN, 0, comm);
+        MPI_Reduce(&ms_local, &ms_sum, 1, MPI_FLOAT, MPI_SUM, 0, comm);
+        MPI_Reduce(&ms_local, &ms_max, 1, MPI_FLOAT, MPI_MAX, 0, comm);
+        MPI_Reduce(&nc_local, &nc_sum, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
+
+        if (!rank) {
+            float ms_mean     = ms_sum / static_cast<float>(npes);
+            long long nc_mean = nc_sum / npes;
+            outfile << std::left << std::setw(nameWidth)
+                    << std::setfill(separator) << label;
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << std::fixed << std::setprecision(4) << ms_min;
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << ms_mean;
+            outfile << std::left << std::setw(12) << std::setfill(separator)
+                    << ms_max;
+            outfile << std::defaultfloat;
+            outfile << std::left << std::setw(10) << std::setfill(separator)
+                    << nc_mean << std::endl;
+        }
+    };
+
+    report("  H2D transfer", t_h2d);
+    report("  D2H transfer", t_d2h);
+    report("  unzip (GPU)", t_unzip);
+    report("  deriv_x kernel", t_deriv_x);
+    report("  deriv_y kernel", t_deriv_y);
+    report("  deriv_z kernel", t_deriv_z);
+    report("  rhs kernel", t_rhs_kernel);
+    report("  zip (GPU)", t_zip);
+
+    if (!rank) {
+        float total_local = t_unzip.ms + t_deriv_x.ms + t_deriv_y.ms +
+                            t_deriv_z.ms + t_rhs_kernel.ms + t_zip.ms;
+        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+                << "  [GPU compute total]";
+        outfile << std::left << std::setw(12) << std::setfill(separator)
+                << std::fixed << std::setprecision(4) << total_local;
+        outfile << std::endl;
+        outfile.close();
+    }
+}
+
+}  // namespace gpu_timer
+#endif  // EM4_ENABLE_PROFILING
+
+}  // namespace dsolve
+
+// ========================================================================
+// EM4 CUDA Context Implementation
+// ========================================================================
 namespace cuda {
 
 // GPU Constants (Definitions for symbols declared extern in em4_params_cu.h)
@@ -426,6 +576,10 @@ EM4CtxGPU::EM4CtxGPU(ot::Mesh* pMesh)
     m_mesh_cpu  = device::MeshGPU();
     m_dptr_mesh = m_mesh_cpu.alloc_mesh_on_device(m_uiMesh);
 
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::initGPUTimers();
+#endif
+
     m_var[VL::CPU_EV].create_vector(m_uiMesh, ot::DVEC_TYPE::OCT_SHARED_NODES,
                                     ot::DVEC_LOC::HOST, dsolve::SOLVER_NUM_VARS,
                                     true);
@@ -590,15 +744,27 @@ EM4CtxGPU::~EM4CtxGPU() {
     GPUDevice::device_free(m_dptr_deriv_base);
     GPUDevice::device_free(m_dptr_deriv_evars);
     GPUDevice::host_free(m_deriv_evars);
+
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::destroyGPUTimers();
+#endif
 }
 
 int EM4CtxGPU::host_to_device_sync() {
     if (!m_uiMesh->isActive()) return 0;
+
     DVec& m_evar      = m_var[VL::CPU_EV];
     DVec& m_dptr_evar = m_var[VL::GPU_EV];
 
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::t_h2d.start();
+#endif
     GPUDevice::host_to_device(m_evar.get_vec_ptr(), m_dptr_evar.get_vec_ptr(),
                               m_evar.get_size());
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::t_h2d.stop();
+    dsolve::gpu_timer::t_h2d.sync();
+#endif
 
     return 0;
 }
@@ -608,8 +774,16 @@ int EM4CtxGPU::device_to_host_sync() {
 
     DVec& m_evar      = m_var[VL::CPU_EV];
     DVec& m_dptr_evar = m_var[VL::GPU_EV];
+
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::t_d2h.start();
+#endif
     GPUDevice::device_to_host(m_evar.get_vec_ptr(), m_dptr_evar.get_vec_ptr(),
                               m_evar.get_size());
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::t_d2h.stop();
+    dsolve::gpu_timer::t_d2h.sync();
+#endif
 
     return 0;
 }
@@ -834,32 +1008,56 @@ int EM4CtxGPU::rhs(DVec* in, DVec* out, unsigned int sz, DendroScalar time) {
         dim3 grid_z  = dim3(nx / pencils, ny, numblocks);
         dim3 block_z = dim3(pencils, nz, 1);
 
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_deriv_x.start();
+#endif
         launch_dir_x_deriv_kernel<3, pencils, pen_sz,
                                   DEVICE_RHS_BATCHED_GRAIN_SZ>
             <<<grid_x, block_x, 0, 0>>>(m_dptr_mesh, m_dptr_uz_i.get_vec_ptr(),
                                         m_dptr_deriv_evars,
                                         m_mesh_cpu.m_blk_list, block_begin);
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_deriv_x.stop();
+        dsolve::gpu_timer::t_deriv_x.sync();
+        dsolve::gpu_timer::t_deriv_y.start();
+#endif
 
         launch_dir_y_deriv_kernel<3, pencils, pen_sz,
                                   DEVICE_RHS_BATCHED_GRAIN_SZ>
             <<<grid_y, block_y, 0, 0>>>(m_dptr_mesh, m_dptr_uz_i.get_vec_ptr(),
                                         m_dptr_deriv_evars,
                                         m_mesh_cpu.m_blk_list, block_begin);
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_deriv_y.stop();
+        dsolve::gpu_timer::t_deriv_y.sync();
+        dsolve::gpu_timer::t_deriv_z.start();
+#endif
 
         launch_dir_z_deriv_kernel<3, pencils, pen_sz,
                                   DEVICE_RHS_BATCHED_GRAIN_SZ>
             <<<grid_z, block_z, 0, 0>>>(m_dptr_mesh, m_dptr_uz_i.get_vec_ptr(),
                                         m_dptr_deriv_evars,
                                         m_mesh_cpu.m_blk_list, block_begin);
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_deriv_z.stop();
+        dsolve::gpu_timer::t_deriv_z.sync();
+#endif
 
         dim3 grid_rhs  = dim3(nx / 32 + 1, ny / 8 + 1, numblocks);
         dim3 block_rhs = dim3(32, 8, 1);
 
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_rhs_kernel.start();
+#endif
         launch_rhs<3, pencils, pen_sz, DEVICE_RHS_BATCHED_GRAIN_SZ>
             <<<grid_x, block_x, 0, 0>>>(
                 m_dptr_mesh, m_dptr_uz_o.get_vec_ptr(),
                 m_dptr_uz_i.get_vec_ptr(), m_dptr_deriv_evars,
                 m_mesh_cpu.m_blk_list, block_begin, params);
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::t_rhs_kernel.stop();
+        dsolve::gpu_timer::t_rhs_kernel.sync();
+#endif
 
         GPUDevice::check_last_error();
         GPUDevice::device_synchronize();
@@ -1064,12 +1262,9 @@ int EM4CtxGPU::grid_transfer(const ot::Mesh* m_new) {
     device::alloc_mpi_ctx<DendroScalar>(m_new, m_mpi_ctx_device,
                                         dsolve::SOLVER_NUM_VARS,
                                         dsolve::SOLVER_ASYNC_COMM_K);
-    // printf("igt ended\n");
 
-    // m_var[VL::CPU_EV_DG].destroy_vector();
     m_var[VL::CPU_EV_UZ].destroy_vector();
 
-    // m_var[VL::GPU_EV_DG].destroy_vector();
     m_var[VL::GPU_EV].destroy_vector();
     m_var[VL::GPU_EV_UZ_IN].destroy_vector();
     m_var[VL::GPU_EV_UZ_OUT].destroy_vector();
@@ -1093,7 +1288,7 @@ int EM4CtxGPU::grid_transfer(const ot::Mesh* m_new) {
 #endif
 
     this->host_to_device_sync();
-    // printf("hto d ended\n");
+
     m_uiIsETSSynced = false;
 
 #ifdef EM4_ENABLE_PROFILING
@@ -1148,9 +1343,26 @@ void EM4CtxGPU::write_grid_summary_data() {
         }
     }
 }
-int EM4CtxGPU::finalize() { return 0; }
+int EM4CtxGPU::finalize() {
+#ifdef EM4_ENABLE_PROFILING
+    dsolve::gpu_timer::profileInfoGPU(
+        dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(), m_uiMesh);
+#endif
+    return 0;
+}
 
 DVec& EM4CtxGPU::get_evolution_vars() { return m_var[GPU_EV]; }
 DVec& EM4CtxGPU::get_evolution_vars_cpu() { return m_var[CPU_EV]; }
 
 }  // namespace cuda
+
+// Explicit template instantiations for DVector methods compiled by nvcc.
+// This ensures the CUDA-aware versions (using cudaMallocHost/cudaFreeHost)
+// win the linker race over non-CUDA versions from .cpp translation units,
+// preventing alloc/free mismatches (e.g. calloc'd pointer freed with
+// cudaFreeHost).
+template void ot::DVector<DendroScalar, unsigned int>::create_vector(
+    const ot::Mesh*, ot::DVEC_TYPE, ot::DVEC_LOC, unsigned int, bool);
+template void ot::DVector<DendroScalar, unsigned int>::destroy_vector();
+template void ot::DVector<DendroScalar, unsigned int>::grid_transfer(
+    ot::Mesh*, const ot::Mesh*, ot::DVector<DendroScalar, unsigned int>&);

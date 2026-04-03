@@ -32,6 +32,7 @@ option(SOLVER_ENABLE_VTU_CONSTRAINT_OUTPUT
        "Writes constraint output to VTU file" ON)
 option(SOLVER_ETA_FUNCTION "Use function as ETA damping" OFF)
 option(SOLVER_ENABLE_CUDA "Enable RHS computation with GPU acceleration" OFF)
+option(EM4_ENABLE_PROFILING "Enable CPU/GPU solver profiling timers" ON)
 option(SOLVER_USE_4TH_ORDER_DERIVS
        "Use 4th order derivative stencil calculations" OFF)
 option(SOLVER_USE_6TH_ORDER_DERIVS
@@ -146,6 +147,10 @@ endif()
 # if(SOLVER_ENABLE_CUDA)
 #   add_definitions(-DSOLVER_ENABLE_CUDA)
 # endif()
+
+if(EM4_ENABLE_PROFILING)
+  add_definitions(-DEM4_ENABLE_PROFILING)
+endif()
 
 if(EM4_COMPUTE_ANALYTICAL)
   add_definitions(-DEM4_COMPUTE_ANALYTICAL)

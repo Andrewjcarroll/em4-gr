@@ -76,7 +76,7 @@ class EM4CtxGPU : public ts::Ctx<EM4CtxGPU, DendroScalar, unsigned int> {
     /**@brief: evolution var (zip)*/
     DVec m_var[VL::END];
 
-    static const unsigned int DEVICE_RHS_BATCHED_GRAIN_SZ = 2048;
+    static const unsigned int DEVICE_RHS_BATCHED_GRAIN_SZ = 512;
     static const unsigned int DEVICE_RHS_BLK_SZ           = 13 * 13 * 13;
     static const unsigned int DEVICE_RHS_NSTREAMS         = 1;
 

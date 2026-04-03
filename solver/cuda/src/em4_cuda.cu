@@ -5,6 +5,7 @@
 #include "TreeNode.h"
 #include "assert.h"
 #include "ets.h"
+#include "gpu_profile_params.cuh"
 #include "grUtils.h"
 #include "mesh.h"
 #include "mpi.h"
@@ -149,19 +150,12 @@ int main(int argc, char** argv) {
             const unsigned int rank_global = ets->get_global_rank();
 
             if ((step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
-                std::cout << "    NOW SYNCHRONIZING" << std::endl;
                 appCtx->device_to_host_sync();
-                std::cout << "    finished sync" << std::endl;
                 if (appCtx->is_remesh()) {
-                    std::cout << "    NOW REMESHING AND GRID TRANSFER"
-                              << std::endl;
                     appCtx->remesh_and_gridtransfer(
                         dsolve::SOLVER_DENDRO_GRAIN_SZ,
                         dsolve::SOLVER_LOAD_IMB_TOL, dsolve::SOLVER_SPLIT_FIX);
-                    std::cout << "    syncing with mesh..." << std::endl;
                     ets->sync_with_mesh();
-                    std::cout << "    finished remesh and grid transfer"
-                              << std::endl;
                 }
             }
 
@@ -186,23 +180,23 @@ int main(int argc, char** argv) {
                 std::cout << "    finished checkpoint" << std::endl;
             }
 
-            std::cout << "    NOW RESETTING FOR EVOLUTION" << std::endl;
             appCtx->resetForEvolutionStuff();
-            std::cout << "    finished reset for evolution" << std::endl;
-
-            std::cout << "    NOW EVOLVING" << std::endl;
             ets->evolve();
-            std::cout << "    finished evolution" << std::endl;
-
-            std::cout << "    NOW RESETTING FOR NEXT STEP" << std::endl;
             appCtx->resetForNextStep();
-            std::cout << "    finished reset for next step" << std::endl;
         }
 
         double t2 = MPI_Wtime() - t1;
         double t2_g;
         par::Mpi_Allreduce(&t2, &t2_g, 1, MPI_MAX, ets->get_global_comm());
         if (!rank) std::cout << " ETS time (max) : " << t2_g << std::endl;
+
+        appCtx->finalize();
+
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::gpu_timer::profileInfoGPU(
+            dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(),
+            appCtx->get_mesh());
+#endif
 
         delete appCtx->get_mesh();
         delete appCtx;
