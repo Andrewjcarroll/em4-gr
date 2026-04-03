@@ -52,10 +52,10 @@ option(EM4_COMPUTE_ANALYTICAL
        ON)
 
 option(EM4_ENABLE_COMPACT_DERIVS
-       "Swaps the RHS functionality to run compact finite differences" ON)
+       "Swaps the RHS functionality to run compact finite differences" OFF)
 
 option(EM4_DEBUG_COMPACT_DERIVS
-       "Enables some debug checks (like nan checking) in CFDs" ON)
+       "Enables some debug checks (like nan checking) in CFDs" OFF)
 
 option(
   EM4_USE_XSMM_MAT_MUL
@@ -143,9 +143,9 @@ if(SOLVER_ENABLE_VTU_CONSTRAINT_OUTPUT)
   add_definitions(-DSOLVER_ENABLE_VTU_CONSTRAINT_OUTPUT)
 endif()
 
-if(SOLVER_ENABLE_CUDA)
-  add_definitions(-DSOLVER_ENABLE_CUDA)
-endif()
+# if(SOLVER_ENABLE_CUDA)
+#   add_definitions(-DSOLVER_ENABLE_CUDA)
+# endif()
 
 if(EM4_COMPUTE_ANALYTICAL)
   add_definitions(-DEM4_COMPUTE_ANALYTICAL)
@@ -182,111 +182,79 @@ set(CUSTOM_SOLVER_INC
     ${CMAKE_SOURCE_DIR}/solver/include/solverCtx.h
     )
 
-set(CUSTOM_SOLVER_SRC
-    src/debugger_tools.cpp
-    src/rkSolver.cpp
+set(SOLVER_SRC_FILES
     src/parameters.cpp
     src/grUtils.cpp
     src/rhs.cpp
     src/derivs.cpp
+    src/solverCtx.cpp
+    src/debugger_tools.cpp
+    src/rkSolver.cpp
     src/physcon.cpp
     src/profile_params.cpp
     src/system_constraints.cpp
     src/dataUtils.cpp
-    src/solverCtx.cpp
+)
+
+set(SOLVER_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+)
+
+if(DEFINED CHECK_GIT_INCLUDE_PATH)
+  list(APPEND SOLVER_INCLUDE_DIRS ${CHECK_GIT_INCLUDE_PATH})
+endif()
+
+add_library(solver_common OBJECT ${SOLVER_SRC_FILES})
+target_include_directories(solver_common PUBLIC ${SOLVER_INCLUDE_DIRS})
+target_compile_options(solver_common PUBLIC -fext-numeric-literals)
+target_link_libraries(solver_common PUBLIC dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11)
+
+if(WITH_CUDA)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcudafe --diag_suppress=177")
+  set(EM4_CUDA_SRC_FILES
+        src/EM4CtxGPU.cu
     )
+  target_sources(solver_common PRIVATE ${EM4_CUDA_SRC_FILES})
+  set_target_properties(solver_common PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  target_include_directories(solver_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/cuda/include)
+  target_compile_definitions(solver_common PUBLIC SOLVER_ENABLE_CUDA)
+endif()
 
-set(SOURCE_FILES solver_main.cpp ${CUSTOM_SOLVER_INC} ${CUSTOM_SOLVER_SRC})
-add_executable(em4Solver ${SOURCE_FILES})
+macro(em4_add_executable TARGET_NAME)
+  add_executable(${TARGET_NAME} ${ARGN})
+  target_link_libraries(${TARGET_NAME} PRIVATE
+        solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m)
+  target_compile_options(${TARGET_NAME} PRIVATE -fext-numeric-literals)
+endmacro()
 
-# source directory is root of this project since this file is only called from
-# the outer CMake call
-target_include_directories(em4Solver PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(em4Solver PRIVATE ${CMAKE_SOURCE_DIR}/solver)
-target_include_directories(em4Solver PRIVATE ${CMAKE_SOURCE_DIR}/solver/include)
-target_include_directories(em4Solver PRIVATE ${CMAKE_SOURCE_DIR}/scripts)
-target_include_directories(em4Solver PRIVATE ${DENDRO_dendrolib_SRC})
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/test/include)
-target_include_directories(
-  em4Solver PRIVATE ${DENDRO_dendrolib_SRC}/examples/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/ODE/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/FEM/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/vtk/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(em4Solver
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/zlib/inc)
+if(WITH_CUDA)
+  macro(em4_add_cuda_executable TARGET_NAME)
+    add_executable(${TARGET_NAME} ${ARGN})
+    set_target_properties(${TARGET_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    target_include_directories(${TARGET_NAME} PRIVATE ${SOLVER_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/cuda/include)
 
-# and don't forget to include the MPI and GSL paths
-target_include_directories(em4Solver PRIVATE ${MPI_INCLUDE_PATH})
-target_include_directories(em4Solver PRIVATE ${GSL_INCLUDE_DIRS})
+    target_compile_definitions(${TARGET_NAME} PRIVATE SOLVER_ENABLE_CUDA)
 
-# also the toml library with the git submodule
-target_include_directories(em4Solver PRIVATE ${EXTERNAL_LIB_HEADERS})
+    target_link_libraries(${TARGET_NAME} PRIVATE
+            solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m)
+  endmacro()
+endif()
 
-# then don't forget to link the libraries!!!!
-target_link_libraries(em4Solver dendro5 ${LAPACK_LIBRARIES} ${MPI_LIBRARIES}
-                      ${GSL_LIBRARIES} m toml11::toml11)
+em4_add_executable(em4Solver solver_main.cpp)
 
+if(WITH_CUDA)
+  em4_add_cuda_executable(em4SolverCUDA cuda/src/em4_cuda.cu)
+endif()
 
 # SCALING SOURCES
-
-set(SOURCE_FILES solver_scaling.cpp ${CUSTOM_SOLVER_INC} ${CUSTOM_SOLVER_SRC})
-add_executable(solverScalingTest ${SOURCE_FILES})
-
-target_include_directories(solverScalingTest PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(solverScalingTest PRIVATE ${CMAKE_SOURCE_DIR}/solver)
-target_include_directories(solverScalingTest
-                           PRIVATE ${CMAKE_SOURCE_DIR}/solver/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${CMAKE_SOURCE_DIR}/scripts)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC})
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/test/include)
-target_include_directories(
-  solverScalingTest PRIVATE ${DENDRO_dendrolib_SRC}/examples/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/ODE/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/FEM/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/vtk/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/LinAlg/include)
-target_include_directories(solverScalingTest
-                           PRIVATE ${DENDRO_dendrolib_SRC}/IO/zlib/inc)
-
-# and don't forget to include the MPI and GSL paths
-target_include_directories(solverScalingTest PRIVATE ${MPI_INCLUDE_PATH})
-target_include_directories(solverScalingTest PRIVATE ${GSL_INCLUDE_DIRS})
-
-# also the toml library with the git submodule
-target_include_directories(solverScalingTest PRIVATE ${EXTERNAL_LIB_HEADERS})
-
-# then don't forget to link the libraries!!!!
-target_link_libraries(solverScalingTest dendro5 ${LAPACK_LIBRARIES}
-                      ${MPI_LIBRARIES} ${GSL_LIBRARIES} m toml11::toml11)
+em4_add_executable(solverScalingTest solver_scaling.cpp)
 
 if(EM4_USE_XSMM_MAT_MUL)
   target_link_libraries(solverScalingTest xsmm)
 endif()
+
 
 # then add the dependency add custom command to generate the source files from
 # cog note that this doesn't actually *output* files, it actually will read

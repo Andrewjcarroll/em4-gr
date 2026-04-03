@@ -31,15 +31,15 @@ void solverRHS(double **uzipVarsRHS, double **uZipVars,
     unsigned int sz[3];
     unsigned int bflag;
     double dx, dy, dz;
-    double kappa_1 = 0.1 ; 
-    double kappa_2 = 0.1 ; 
+    double kappa_1 = 0.1;
+    double kappa_2 = 0.1;
     const Point pt_min(dsolve::SOLVER_COMPD_MIN[0], dsolve::SOLVER_COMPD_MIN[1],
                        dsolve::SOLVER_COMPD_MIN[2]);
     const Point pt_max(dsolve::SOLVER_COMPD_MAX[0], dsolve::SOLVER_COMPD_MAX[1],
                        dsolve::SOLVER_COMPD_MAX[2]);
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
 
-#ifdef SOLVER_ENABLE_CUDA
+#if 0  // #ifdef SOLVER_ENABLE_CUDA
     cuda::SOLVERComputeParams solverParams;
 
     dim3 threadBlock(16, 16, 1);
@@ -49,16 +49,16 @@ void solverRHS(double **uzipVarsRHS, double **uZipVars,
 #else
 
     for (unsigned int blk = 0; blk < numBlocks; blk++) {
-        offset = blkList[blk].getOffset();
-        sz[0] = blkList[blk].getAllocationSzX();
-        sz[1] = blkList[blk].getAllocationSzY();
-        sz[2] = blkList[blk].getAllocationSzZ();
+        offset   = blkList[blk].getOffset();
+        sz[0]    = blkList[blk].getAllocationSzX();
+        sz[1]    = blkList[blk].getAllocationSzY();
+        sz[2]    = blkList[blk].getAllocationSzZ();
 
-        bflag = blkList[blk].getBlkNodeFlag();
+        bflag    = blkList[blk].getBlkNodeFlag();
 
-        dx = blkList[blk].computeDx(pt_min, pt_max);
-        dy = blkList[blk].computeDy(pt_min, pt_max);
-        dz = blkList[blk].computeDz(pt_min, pt_max);
+        dx       = blkList[blk].computeDx(pt_min, pt_max);
+        dy       = blkList[blk].computeDy(pt_min, pt_max);
+        dz       = blkList[blk].computeDz(pt_min, pt_max);
 
         ptmin[0] = GRIDX_TO_X(blkList[blk].getBlockNode().minX()) - PW * dx;
         ptmin[1] = GRIDY_TO_Y(blkList[blk].getBlockNode().minY()) - PW * dy;
@@ -94,7 +94,7 @@ void solverRHS(double **uzipVarsRHS, const double **uZipVars,
                        dsolve::SOLVER_COMPD_MAX[2]);
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
 
-#ifdef SOLVER_ENABLE_CUDA
+#if 0  // #ifdef SOLVER_ENABLE_CUDA
     cuda::SOLVERComputeParams solverParams;
 
     dim3 threadBlock(16, 16, 1);
@@ -104,16 +104,16 @@ void solverRHS(double **uzipVarsRHS, const double **uZipVars,
 #else
 
     for (unsigned int blk = 0; blk < numBlocks; blk++) {
-        offset = blkList[blk].getOffset();
-        sz[0] = blkList[blk].getAllocationSzX();
-        sz[1] = blkList[blk].getAllocationSzY();
-        sz[2] = blkList[blk].getAllocationSzZ();
+        offset   = blkList[blk].getOffset();
+        sz[0]    = blkList[blk].getAllocationSzX();
+        sz[1]    = blkList[blk].getAllocationSzY();
+        sz[2]    = blkList[blk].getAllocationSzZ();
 
-        bflag = blkList[blk].getBlkNodeFlag();
+        bflag    = blkList[blk].getBlkNodeFlag();
 
-        dx = blkList[blk].computeDx(pt_min, pt_max);
-        dy = blkList[blk].computeDy(pt_min, pt_max);
-        dz = blkList[blk].computeDz(pt_min, pt_max);
+        dx       = blkList[blk].computeDx(pt_min, pt_max);
+        dy       = blkList[blk].computeDy(pt_min, pt_max);
+        dz       = blkList[blk].computeDz(pt_min, pt_max);
 
         ptmin[0] = GRIDX_TO_X(blkList[blk].getBlockNode().minX()) - PW * dx;
         ptmin[1] = GRIDY_TO_Y(blkList[blk].getBlockNode().minY()) - PW * dy;
@@ -259,7 +259,7 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
  
     //[[[end]]]
 
-    //EVOLUTION VARIABLE EXTRACTION NOT RHS -AJC
+//EVOLUTION VARIABLE EXTRACTION NOT RHS -AJC
     const double *E0 = &uZipVars[VAR::U_E0][offset];
     const double *E1 = &uZipVars[VAR::U_E1][offset];
     const double *E2 = &uZipVars[VAR::U_E2][offset];
@@ -303,14 +303,14 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
 
     int idx[3];
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
-    unsigned int n = sz[0] * sz[1] * sz[2];
+    unsigned int n        = sz[0] * sz[1] * sz[2];
 
     dsolve::timer::t_deriv.start();
 
     const unsigned int BLK_SZ = n;
-    const unsigned int bytes = n * sizeof(double);
+    const unsigned int bytes  = n * sizeof(double);
     // get derivative workspace
-    double *const deriv_base = dsolve::SOLVER_DERIV_WORKSPACE;
+    double *const deriv_base  = dsolve::SOLVER_DERIV_WORKSPACE;
 
     // Get the number of processes
     int world_size;
@@ -390,16 +390,16 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
     // TODO: is this even necessary?
     double *rho_e = __mem_pool->allocate(n);
 
-    double *J0 = __mem_pool->allocate(n);
-    double *J1 = __mem_pool->allocate(n);
-    double *J2 = __mem_pool->allocate(n);
+    double *J0    = __mem_pool->allocate(n);
+    double *J1    = __mem_pool->allocate(n);
+    double *J2    = __mem_pool->allocate(n);
 
     for (unsigned int m = 0; m < n; m++) {
         rho_e[m] = 0.0;
 
-        J0[m] = 0.0;
-        J1[m] = 0.0;
-        J2[m] = 0.0;
+        J0[m]    = 0.0;
+        J1[m]    = 0.0;
+        J2[m]    = 0.0;
     }
 
     // loop dep. removed allowing compiler to optmize for vectorization.
@@ -414,15 +414,15 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
 #endif
 #endif
             for (unsigned int i = PW; i < nx - PW; i++) {
-                const double x = pmin[0] + i * hx;
-                const double y = pmin[1] + j * hy;
-                const double z = pmin[2] + k * hz;
+                const double x        = pmin[0] + i * hx;
+                const double y        = pmin[1] + j * hy;
+                const double z        = pmin[2] + k * hz;
 
-                double kappa_1 = 0.1 ; 
-                double kappa_2 = 0.1 ;   
+                double kappa_1        = 0.1;
+                double kappa_2        = 0.1;
 
                 const unsigned int pp = i + nx * (j + ny * k);
-                const double r_coord = sqrt(x * x + y * y + z * z);
+                const double r_coord  = sqrt(x * x + y * y + z * z);
 
                 // clang-format off
                 /*[[[cog
@@ -481,10 +481,10 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
 
-        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
-                                   pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
-                                   pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi,
+                                   grad_2_Phi, pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi,
+                                   grad_2_Psi, pmin, pmax, 2.0, 0.0, sz, bflag);
 
         //[[[end]]]
 
@@ -565,6 +565,7 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
     dsolve::timer::t_deriv.stop();
 }
 
+#ifdef EM4_ENABLE_COMPACT_DERIVS
 void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                               const unsigned int &offset, const double *pmin,
                               const double *pmax, const unsigned int *sz,
@@ -574,45 +575,44 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     //
 
     // EVOLUTION VARIABLE EXTRACTION NOT RHS -AJC
-    double *E0 = &uZipVars[VAR::U_E0][offset];
-    double *E1 = &uZipVars[VAR::U_E1][offset];
-    double *E2 = &uZipVars[VAR::U_E2][offset];
-    double *B0 = &uZipVars[VAR::U_B0][offset];
-    double *B1 = &uZipVars[VAR::U_B1][offset];
-    double *B2 = &uZipVars[VAR::U_B2][offset];
-    double *Phi = &uZipVars[VAR::U_PHI][offset];
-    double *Psi = &uZipVars[VAR::U_PSI][offset];
+    double *E0                           = &uZipVars[VAR::U_E0][offset];
+    double *E1                           = &uZipVars[VAR::U_E1][offset];
+    double *E2                           = &uZipVars[VAR::U_E2][offset];
+    double *B0                           = &uZipVars[VAR::U_B0][offset];
+    double *B1                           = &uZipVars[VAR::U_B1][offset];
+    double *B2                           = &uZipVars[VAR::U_B2][offset];
+    double *Phi                          = &uZipVars[VAR::U_PHI][offset];
+    double *Psi                          = &uZipVars[VAR::U_PSI][offset];
     // EVOLUTION VARIABLE EXTRACTION RHS -AJC
-    double *E_rhs0 = &unzipVarsRHS[VAR::U_E0][offset];
-    double *E_rhs1 = &unzipVarsRHS[VAR::U_E1][offset];
-    double *E_rhs2 = &unzipVarsRHS[VAR::U_E2][offset];
-    double *B_rhs0 = &unzipVarsRHS[VAR::U_B0][offset];
-    double *B_rhs1 = &unzipVarsRHS[VAR::U_B1][offset];
-    double *B_rhs2 = &unzipVarsRHS[VAR::U_B2][offset];
-    double *Phi_rhs = &unzipVarsRHS[VAR::U_PHI][offset];
-    double *Psi_rhs = &unzipVarsRHS[VAR::U_PSI][offset];
-
+    double *E_rhs0                       = &unzipVarsRHS[VAR::U_E0][offset];
+    double *E_rhs1                       = &unzipVarsRHS[VAR::U_E1][offset];
+    double *E_rhs2                       = &unzipVarsRHS[VAR::U_E2][offset];
+    double *B_rhs0                       = &unzipVarsRHS[VAR::U_B0][offset];
+    double *B_rhs1                       = &unzipVarsRHS[VAR::U_B1][offset];
+    double *B_rhs2                       = &unzipVarsRHS[VAR::U_B2][offset];
+    double *Phi_rhs                      = &unzipVarsRHS[VAR::U_PHI][offset];
+    double *Psi_rhs                      = &unzipVarsRHS[VAR::U_PSI][offset];
 
     mem::memory_pool<double> *__mem_pool = &SOLVER_MEM_POOL;
 
-    const unsigned int nx = sz[0];
-    const unsigned int ny = sz[1];
-    const unsigned int nz = sz[2];
+    const unsigned int nx                = sz[0];
+    const unsigned int ny                = sz[1];
+    const unsigned int nz                = sz[2];
 
-    const double hx = (pmax[0] - pmin[0]) / (nx - 1);
-    const double hy = (pmax[1] - pmin[1]) / (ny - 1);
-    const double hz = (pmax[2] - pmin[2]) / (nz - 1);
+    const double hx                      = (pmax[0] - pmin[0]) / (nx - 1);
+    const double hy                      = (pmax[1] - pmin[1]) / (ny - 1);
+    const double hz                      = (pmax[2] - pmin[2]) / (nz - 1);
 
     int idx[3];
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
-    unsigned int n = sz[0] * sz[1] * sz[2];
+    unsigned int n        = sz[0] * sz[1] * sz[2];
 
     dsolve::timer::t_deriv.start();
 
     const unsigned int BLK_SZ = n;
-    const unsigned int bytes = n * sizeof(double);
+    const unsigned int bytes  = n * sizeof(double);
     // get derivative workspace
-    double *const deriv_base = dsolve::SOLVER_DERIV_WORKSPACE;
+    double *const deriv_base  = dsolve::SOLVER_DERIV_WORKSPACE;
 
     // Get the number of processes
     int world_size;
@@ -624,12 +624,12 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
 
     // store a pointer to the variables that will be sent into our derivatives
     // if we're not filtering there's no reason to change it
-    double *E0_cpy = (double *)E0;
-    double *E1_cpy = (double *)E1;
-    double *E2_cpy = (double *)E2;
-    double *B0_cpy = (double *)B0;
-    double *B1_cpy = (double *)B1;
-    double *B2_cpy = (double *)B2;
+    double *E0_cpy  = (double *)E0;
+    double *E1_cpy  = (double *)E1;
+    double *E2_cpy  = (double *)E2;
+    double *B0_cpy  = (double *)B0;
+    double *B1_cpy  = (double *)B1;
+    double *B2_cpy  = (double *)B2;
     double *Phi_cpy = (double *)Phi;
     double *Psi_cpy = (double *)Psi;
 
@@ -640,12 +640,12 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
         // will then feed ONLY into the derivatives. We might want to use the
         // "cpy" version for the RHS computations eventually to see if it helps,
         // but at the very least the derivatives will get the filtered version.
-        E0_cpy = E_rhs0;
-        E1_cpy = E_rhs1;
-        E2_cpy = E_rhs2;
-        B0_cpy = B_rhs0;
-        B1_cpy = B_rhs1;
-        B2_cpy = B_rhs2;
+        E0_cpy  = E_rhs0;
+        E1_cpy  = E_rhs1;
+        E2_cpy  = E_rhs2;
+        B0_cpy  = B_rhs0;
+        B1_cpy  = B_rhs1;
+        B2_cpy  = B_rhs2;
         Phi_cpy = Phi_rhs;
         Psi_cpy = Psi_rhs;
 
@@ -664,10 +664,10 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                               1.0, sz, bflag);
         SOLVER_DERIVS->filter(B2, B2_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
                               1.0, sz, bflag);
-        SOLVER_DERIVS->filter(Phi, Phi_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
-                              1.0, sz, bflag);
-        SOLVER_DERIVS->filter(Psi, Psi_cpy, nullptr, nullptr, nullptr, hx, hy, hz,
-                              1.0, sz, bflag);
+        SOLVER_DERIVS->filter(Phi, Phi_cpy, nullptr, nullptr, nullptr, hx, hy,
+                              hz, 1.0, sz, bflag);
+        SOLVER_DERIVS->filter(Psi, Psi_cpy, nullptr, nullptr, nullptr, hx, hy,
+                              hz, 1.0, sz, bflag);
     }
 
     // calculate the derivatives, on the copies if necessary
@@ -703,22 +703,21 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     SOLVER_DERIVS->grad_y(grad_1_Psi, Psi_cpy, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_Psi, Psi_cpy, hz, sz, bflag);
 
-
     dsolve::timer::t_deriv.stop();
 
     // TODO: is this even necessary?
     double *rho_e = __mem_pool->allocate(n);
 
-    double *J0 = __mem_pool->allocate(n);
-    double *J1 = __mem_pool->allocate(n);
-    double *J2 = __mem_pool->allocate(n);
+    double *J0    = __mem_pool->allocate(n);
+    double *J1    = __mem_pool->allocate(n);
+    double *J2    = __mem_pool->allocate(n);
 
     for (unsigned int m = 0; m < n; m++) {
         rho_e[m] = 0.0;
 
-        J0[m] = 0.0;
-        J1[m] = 0.0;
-        J2[m] = 0.0;
+        J0[m]    = 0.0;
+        J1[m]    = 0.0;
+        J2[m]    = 0.0;
     }
 
     // loop dep. removed allowing compiler to optmize for vectorization.
@@ -732,17 +731,15 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
 #endif
 #endif
             for (unsigned int i = PW; i < nx - PW; i++) {
-                const double x = pmin[0] + i * hx;
-                const double y = pmin[1] + j * hy;
-                const double z = pmin[2] + k * hz;
+                const double x        = pmin[0] + i * hx;
+                const double y        = pmin[1] + j * hy;
+                const double z        = pmin[2] + k * hz;
 
                 const unsigned int pp = i + nx * (j + ny * k);
-                const double r_coord = sqrt(x * x + y * y + z * z);
+                const double r_coord  = sqrt(x * x + y * y + z * z);
 
-                double kappa_1 = 0.1 ; 
-                double kappa_2 = 0.1 ;   
-
-
+                double kappa_1        = 0.1;
+                double kappa_2        = 0.1;
 
                 // NOTE: (for now) we are not sending in the filtered E's and
                 // B's if they're used. (They're not! But it's good to note!)
@@ -768,10 +765,10 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
         asymptotic_and_falloff_bcs(B_rhs2, B2, grad_0_B2, grad_1_B2, grad_2_B2,
                                    pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi, grad_2_Phi,
-                                   pmin, pmax, 2.0, 0.0, sz, bflag);
-        asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi, grad_2_Psi,
-                                   pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Phi_rhs, Phi, grad_0_Phi, grad_1_Phi,
+                                   grad_2_Phi, pmin, pmax, 2.0, 0.0, sz, bflag);
+        asymptotic_and_falloff_bcs(Psi_rhs, Psi, grad_0_Psi, grad_1_Psi,
+                                   grad_2_Psi, pmin, pmax, 2.0, 0.0, sz, bflag);
 
         //[[[end]]]
 
@@ -803,10 +800,10 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
                               hy, hz, sigma, sz, bflag);
         SOLVER_DERIVS->filter(B2, B_rhs2, grad_0_B2, grad_1_B2, grad_2_B2, hx,
                               hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(Phi, Phi_rhs, grad_0_Phi, grad_1_Phi, grad_2_Phi, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(Psi, Psi_rhs, grad_0_Psi, grad_1_Psi, grad_2_Psi, hx,
-                              hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(Phi, Phi_rhs, grad_0_Phi, grad_1_Phi, grad_2_Phi,
+                              hx, hy, hz, sigma, sz, bflag);
+        SOLVER_DERIVS->filter(Psi, Psi_rhs, grad_0_Psi, grad_1_Psi, grad_2_Psi,
+                              hx, hy, hz, sigma, sz, bflag);
 
         dsolve::timer::t_rhs.stop();
     }
@@ -819,6 +816,7 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     __mem_pool->free(rho_e);
     dsolve::timer::t_deriv.stop();
 }
+#endif
 
 /*----------------------------------------------------------------------;
  *
@@ -836,18 +834,18 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
     const unsigned int ny = sz[1];
     const unsigned int nz = sz[2];
 
-    const double hx = (pmax[0] - pmin[0]) / (nx - 1);
-    const double hy = (pmax[1] - pmin[1]) / (ny - 1);
-    const double hz = (pmax[2] - pmin[2]) / (nz - 1);
+    const double hx       = (pmax[0] - pmin[0]) / (nx - 1);
+    const double hy       = (pmax[1] - pmin[1]) / (ny - 1);
+    const double hz       = (pmax[2] - pmin[2]) / (nz - 1);
 
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
 
-    unsigned int ib = PW;
-    unsigned int jb = PW;
-    unsigned int kb = PW;
-    unsigned int ie = sz[0] - PW;
-    unsigned int je = sz[1] - PW;
-    unsigned int ke = sz[2] - PW;
+    unsigned int ib       = PW;
+    unsigned int jb       = PW;
+    unsigned int kb       = PW;
+    unsigned int ie       = sz[0] - PW;
+    unsigned int je       = sz[1] - PW;
+    unsigned int ke       = sz[2] - PW;
 
     double x, y, z;
     unsigned int pp;
@@ -858,9 +856,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int k = kb; k < ke; k++) {
             z = pmin[2] + k * hz;
             for (unsigned int j = jb; j < je; j++) {
-                y = pmin[1] + j * hy;
-                pp = IDX(ib, j, k);
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
+                y             = pmin[1] + j * hy;
+                pp            = IDX(ib, j, k);
+                inv_r         = 1.0 / sqrt(x * x + y * y + z * z);
 
                 double f_temp = f_rhs[pp];
 
@@ -880,9 +878,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int k = kb; k < ke; k++) {
             z = pmin[2] + k * hz;
             for (unsigned int j = jb; j < je; j++) {
-                y = pmin[1] + j * hy;
-                pp = IDX((ie - 1), j, k);
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
+                y         = pmin[1] + j * hy;
+                pp        = IDX((ie - 1), j, k);
+                inv_r     = 1.0 / sqrt(x * x + y * y + z * z);
 
                 f_rhs[pp] = -inv_r * (x * dxf[pp] + y * dyf[pp] + z * dzf[pp] +
                                       f_falloff * (f[pp] - f_asymptotic));
@@ -895,9 +893,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int k = kb; k < ke; k++) {
             z = pmin[2] + k * hz;
             for (unsigned int i = ib; i < ie; i++) {
-                x = pmin[0] + i * hx;
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
-                pp = IDX(i, jb, k);
+                x         = pmin[0] + i * hx;
+                inv_r     = 1.0 / sqrt(x * x + y * y + z * z);
+                pp        = IDX(i, jb, k);
 
                 f_rhs[pp] = -inv_r * (x * dxf[pp] + y * dyf[pp] + z * dzf[pp] +
                                       f_falloff * (f[pp] - f_asymptotic));
@@ -910,9 +908,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int k = kb; k < ke; k++) {
             z = pmin[2] + k * hz;
             for (unsigned int i = ib; i < ie; i++) {
-                x = pmin[0] + i * hx;
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
-                pp = IDX(i, (je - 1), k);
+                x         = pmin[0] + i * hx;
+                inv_r     = 1.0 / sqrt(x * x + y * y + z * z);
+                pp        = IDX(i, (je - 1), k);
 
                 f_rhs[pp] = -inv_r * (x * dxf[pp] + y * dyf[pp] + z * dzf[pp] +
                                       f_falloff * (f[pp] - f_asymptotic));
@@ -925,9 +923,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int j = jb; j < je; j++) {
             y = pmin[1] + j * hy;
             for (unsigned int i = ib; i < ie; i++) {
-                x = pmin[0] + i * hx;
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
-                pp = IDX(i, j, kb);
+                x         = pmin[0] + i * hx;
+                inv_r     = 1.0 / sqrt(x * x + y * y + z * z);
+                pp        = IDX(i, j, kb);
 
                 f_rhs[pp] = -inv_r * (x * dxf[pp] + y * dyf[pp] + z * dzf[pp] +
                                       f_falloff * (f[pp] - f_asymptotic));
@@ -940,9 +938,9 @@ void asymptotic_and_falloff_bcs(double *f_rhs, const double *f,
         for (unsigned int j = jb; j < je; j++) {
             y = pmin[1] + j * hy;
             for (unsigned int i = ib; i < ie; i++) {
-                x = pmin[0] + i * hx;
-                inv_r = 1.0 / sqrt(x * x + y * y + z * z);
-                pp = IDX(i, j, (ke - 1));
+                x         = pmin[0] + i * hx;
+                inv_r     = 1.0 / sqrt(x * x + y * y + z * z);
+                pp        = IDX(i, j, (ke - 1));
 
                 f_rhs[pp] = -inv_r * (x * dxf[pp] + y * dyf[pp] + z * dzf[pp] +
                                       f_falloff * (f[pp] - f_asymptotic));
@@ -971,12 +969,12 @@ void max_spacetime_speeds(double *const lambda1max, double *const lambda2max,
     const unsigned int nz = sz[2];
 
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
-    unsigned int ib = PW;
-    unsigned int jb = PW;
-    unsigned int kb = PW;
-    unsigned int ie = sz[0] - PW;
-    unsigned int je = sz[1] - PW;
-    unsigned int ke = sz[2] - PW;
+    unsigned int ib       = PW;
+    unsigned int jb       = PW;
+    unsigned int kb       = PW;
+    unsigned int ie       = sz[0] - PW;
+    unsigned int je       = sz[1] - PW;
+    unsigned int ke       = sz[2] - PW;
 
     for (unsigned int k = kb; k < ke; k++) {
         for (unsigned int j = jb; j < je; j++) {
@@ -985,9 +983,9 @@ void max_spacetime_speeds(double *const lambda1max, double *const lambda2max,
                 /* note: gtu is the inverse tilde metric. It should have detgtd
                  * = 1. So, for the purposes of
                  * calculating wavespeeds, I simple set detgtd = 1. */
-                double gtu11 = gtd22[pp] * gtd33[pp] - gtd23[pp] * gtd23[pp];
-                double gtu22 = gtd11[pp] * gtd33[pp] - gtd13[pp] * gtd13[pp];
-                double gtu33 = gtd11[pp] * gtd22[pp] - gtd12[pp] * gtd12[pp];
+                double gtu11    = gtd22[pp] * gtd33[pp] - gtd23[pp] * gtd23[pp];
+                double gtu22    = gtd11[pp] * gtd33[pp] - gtd13[pp] * gtd13[pp];
+                double gtu33    = gtd11[pp] * gtd22[pp] - gtd12[pp] * gtd12[pp];
                 if (gtu11 < 0.0 || gtu22 < 0.0 || gtu33 < 0.0) {
                     std::cout << "Problem computing spacetime characteristics"
                               << std::endl;
@@ -1023,19 +1021,19 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     const unsigned int nz = sz[2];
 
     const unsigned int PW = dsolve::SOLVER_PADDING_WIDTH;
-    unsigned int ib = PW;
-    unsigned int jb = PW;
-    unsigned int kb = PW;
-    unsigned int ie = sz[0] - PW;
-    unsigned int je = sz[1] - PW;
-    unsigned int ke = sz[2] - PW;
+    unsigned int ib       = PW;
+    unsigned int jb       = PW;
+    unsigned int kb       = PW;
+    unsigned int ie       = sz[0] - PW;
+    unsigned int je       = sz[1] - PW;
+    unsigned int ke       = sz[2] - PW;
 
     unsigned int pp;
 
     if (bflag & (1u << OCT_DIR_LEFT)) {
         for (unsigned int k = kb; k < ke; k++) {
             for (unsigned int j = jb; j < je; j++) {
-                pp = IDX(ib, j, k);
+                pp        = IDX(ib, j, k);
                 f_rhs[pp] = 0.0;
             }
         }
@@ -1044,7 +1042,7 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     if (bflag & (1u << OCT_DIR_RIGHT)) {
         for (unsigned int k = kb; k < ke; k++) {
             for (unsigned int j = jb; j < je; j++) {
-                pp = IDX((ie - 1), j, k);
+                pp        = IDX((ie - 1), j, k);
                 f_rhs[pp] = 0.0;
             }
         }
@@ -1053,7 +1051,7 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     if (bflag & (1u << OCT_DIR_DOWN)) {
         for (unsigned int k = kb; k < ke; k++) {
             for (unsigned int i = ib; i < ie; i++) {
-                pp = IDX(i, jb, k);
+                pp        = IDX(i, jb, k);
                 f_rhs[pp] = 0.0;
             }
         }
@@ -1062,7 +1060,7 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     if (bflag & (1u << OCT_DIR_UP)) {
         for (unsigned int k = kb; k < ke; k++) {
             for (unsigned int i = ib; i < ie; i++) {
-                pp = IDX(i, (je - 1), k);
+                pp        = IDX(i, (je - 1), k);
                 f_rhs[pp] = 0.0;
             }
         }
@@ -1071,7 +1069,7 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     if (bflag & (1u << OCT_DIR_BACK)) {
         for (unsigned int j = jb; j < je; j++) {
             for (unsigned int i = ib; i < ie; i++) {
-                pp = IDX(i, j, kb);
+                pp        = IDX(i, j, kb);
                 f_rhs[pp] = 0.0;
             }
         }
@@ -1080,7 +1078,7 @@ void freeze_bcs(double *f_rhs, const unsigned int *sz,
     if (bflag & (1u << OCT_DIR_FRONT)) {
         for (unsigned int j = jb; j < je; j++) {
             for (unsigned int i = ib; i < ie; i++) {
-                pp = IDX(i, j, (ke - 1));
+                pp        = IDX(i, j, (ke - 1));
                 f_rhs[pp] = 0.0;
             }
         }

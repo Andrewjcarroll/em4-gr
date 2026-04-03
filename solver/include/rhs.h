@@ -13,11 +13,11 @@
 #include "parameters.h"
 #include "profile_params.h"
 
-#ifdef SOLVER_ENABLE_CUDA
-#include "params_ch.h"
-#include "profile_gpu.h"
-#include "rhs_cuda.cuh"
-#endif
+// #ifdef SOLVER_ENABLE_CUDA
+// #include "params_ch.h"
+// #include "profile_gpu.h"
+// #include "rhs_cuda.cuh"
+// #endif
 
 /**@brief computes complete RHS iteratiing over all the blocks.
  * @param[out] unzipVarsRHS: unzipped variables computed RHS

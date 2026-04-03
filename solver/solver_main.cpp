@@ -9,18 +9,6 @@
 
 #include "solver_main.h"
 
-#include <iostream>
-#include <vector>
-
-#include "TreeNode.h"
-#include "grUtils.h"
-#include "mesh.h"
-#include "meshUtils.h"
-#include "mpi.h"
-#include "octUtils.h"
-#include "parameters.h"
-#include "rkSolver.h"
-
 int main(int argc, char** argv) {
     unsigned int ts_mode = 1;
 
@@ -288,13 +276,17 @@ int main(int argc, char** argv) {
             std::cout << CYN << BLD << "Now initializing time stepper..." << NRM
                       << std::endl;
         }
-        dsolve::SOLVERCtx* solverCtx = new dsolve::SOLVERCtx(mesh);
+        typedef dsolve::SOLVERCtx ctxType;
+
+        ctxType* solverCtx = new ctxType(mesh);
+
         if (!rank) {
             std::cout << CYN << BLD << "Time stepper successfully initialized!"
                       << NRM << std::endl;
         }
-        ts::ETS<DendroScalar, dsolve::SOLVERCtx>* ets =
-            new ts::ETS<DendroScalar, dsolve::SOLVERCtx>(solverCtx);
+
+        ts::ETS<DendroScalar, ctxType>* ets =
+            new ts::ETS<DendroScalar, ctxType>(solverCtx);
         ets->set_evolve_vars(solverCtx->get_evolution_vars());
         if (!rank) {
             std::cout << CYN << BLD << "Evolution variables now set..." << NRM
@@ -327,7 +319,7 @@ int main(int argc, char** argv) {
             outfile.open(fname, std::ios_base::app);
             time_t now = time(0);
             // convert now to string form
-            char* dt = ctime(&now);
+            char* dt   = ctime(&now);
             outfile << "======================================================="
                        "====="
                     << std::endl;
@@ -344,7 +336,7 @@ int main(int argc, char** argv) {
 #endif
 
         // merging
-        double t1 = MPI_Wtime();
+        double t1                  = MPI_Wtime();
         bool did_print_output_time = false;
 
         if (!rank) {
@@ -353,15 +345,15 @@ int main(int argc, char** argv) {
         }
 
         while (ets->curr_time() < dsolve::SOLVER_RK_TIME_END) {
-            const DendroIntL step = ets->curr_step();
-            const DendroScalar time = ets->curr_time();
+            const DendroIntL step                = ets->curr_step();
+            const DendroScalar time              = ets->curr_time();
 
             dsolve::SOLVER_CURRENT_RK_COORD_TIME = time;
-            dsolve::SOLVER_CURRENT_RK_STEP = step;
+            dsolve::SOLVER_CURRENT_RK_STEP       = step;
 
-            const bool isActive = ets->is_active();
+            const bool isActive                  = ets->is_active();
 
-            const unsigned int rank_global = ets->get_global_rank();
+            const unsigned int rank_global       = ets->get_global_rank();
 
             if ((step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
                 if (!rank_global)
@@ -394,7 +386,7 @@ int main(int argc, char** argv) {
                           ((double)dsolve::SOLVER_ELE_ORDER)) /
                          ((double)(1u << (m_uiMaxDepth))));
                     ts::TSInfo ts_in = solverCtx->get_ts_info();
-                    ts_in._m_uiTh = dsolve::SOLVER_RK45_TIME_STEP_SIZE;
+                    ts_in._m_uiTh    = dsolve::SOLVER_RK45_TIME_STEP_SIZE;
                     solverCtx->set_ts_info(ts_in);
                 } else {
                     if (!rank_global)
@@ -493,6 +485,7 @@ int main(int argc, char** argv) {
         delete ets;
 
     } else {
+#if 0
         // ========================================
         // OLD method of solver
         ode::solver::RK_SOLVER rk_solver(
@@ -534,6 +527,7 @@ int main(int argc, char** argv) {
         }
 
         rk_solver.freeMesh();
+#endif
     }
 
     MPI_Finalize();

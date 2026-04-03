@@ -2,7 +2,7 @@
 #include "parameters.h"
 
 #include "compact_derivs.h"
-#include "derivatives.h"
+#include "derivs.h"
 #include "parUtils.h"
 #define PRPL "\033[95m"
 
@@ -153,7 +153,7 @@ std::vector<double> SOLVER_INMATFILT_SECOND_COEFFS             = {};
 
 // default initialization
 // this *MUST* be initialized
-std::unique_ptr<dendroderivs::DendroDerivatives> SOLVER_DERIVS = nullptr;
+// extern std::unique_ptr<dendroderivs::DendroDerivatives> SOLVER_DERIVS;
 
 }  // namespace dsolve
 namespace dsolve {
@@ -797,12 +797,14 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     // establish the dendro derivatives class, this should always be built,
     // should also establish KO of the "proper" order automatically
+/*
     SOLVER_DERIVS = std::make_unique<dendroderivs::DendroDerivatives>(
         SOLVER_DERIVTYPE_FIRST, SOLVER_DERIVTYPE_SECOND, SOLVER_ELE_ORDER,
         SOLVER_DERIV_FIRST_COEFFS, SOLVER_DERIV_SECOND_COEFFS,
         SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID,
         SOLVER_INMATFILT_FIRST, SOLVER_INMATFILT_SECOND,
         SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS);
+*/
 
     // TODO: COMPD_MIN, COMPD_MAX should be GRID_MIN and GRID_MAX, not settable
     // by user
@@ -1055,11 +1057,11 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << std::endl;
         sout << "\tdsolve::SOLVER_GRID_MAX_Z: " << dsolve::SOLVER_GRID_MAX_Z
              << std::endl;
-        sout << "\tDERIVS USE: " << SOLVER_DERIVS->toString() << std::endl;
+        // sout << "\tDERIVS USE: " << SOLVER_DERIVS->toString() << std::endl;
         sout << "[FILTER] type=" << dendro_cfd::FILT_TYPE_NAMES[SOLVER_FILTER_TYPE + 1]
-              << " KO_sigma=" << KO_DISS_SIGMA;
-        sout << YLW << "\t DERIVS: " << SOLVER_DERIVS->toString() << NRM
-             << std::endl;
+              << " KO_sigma=" << KO_DISS_SIGMA << std::endl;
+        // sout << YLW << "\t DERIVS: " << SOLVER_DERIVS->toString() << NRM
+        //      << std::endl;
 
         sout << PRPL << "\t SOLVER_DERIVTYPE_FIRST:  " << SOLVER_DERIVTYPE_FIRST
              << std::endl;

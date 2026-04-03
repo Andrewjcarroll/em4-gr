@@ -11,7 +11,7 @@
 #include <memory>
 #include <toml.hpp>
 
-#include "derivatives.h"
+#include "derivs.h"
 
 // dendro only includes
 #include "dendro.h"
@@ -309,7 +309,7 @@ extern double SOLVER_GRID_MIN_Z;
 
 extern double SOLVER_GRID_MAX_Z;
 
-extern std::unique_ptr<dendroderivs::DendroDerivatives> SOLVER_DERIVS;
+// extern std::unique_ptr<dendroderivs::DendroDerivatives> SOLVER_DERIVS;
 
 extern std::string SOLVER_DERIVTYPE_FIRST;
 extern std::string SOLVER_DERIVTYPE_SECOND;

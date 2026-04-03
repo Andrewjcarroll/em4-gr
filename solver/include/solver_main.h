@@ -7,18 +7,22 @@
  * :::License:::
  */
 
-#ifndef SFCSORTBENCH_GR_H
-#define SFCSORTBENCH_GR_H
+#pragma once
 
 #include <iostream>
 #include <vector>
 
+#include "TreeNode.h"
+#include "assert.h"
 #include "debugger_tools.h"
-#include "dendroProfileParams.h"
 #include "enuts.h"
 #include "ets.h"
+#include "grUtils.h"
+#include "mathUtils.h"
+#include "mesh.h"
+#include "mpi.h"
+#include "octUtils.h"
+#include "profile_params.h"
 #include "solverCtx.h"
 
 #define BLD "\033[1m"
-
-#endif  // end of SFCSORTBENCH_GR_H

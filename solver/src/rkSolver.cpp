@@ -1318,7 +1318,7 @@ void RK_SOLVER::performSingleIterationRK45() {
                     ot::test::isUnzipNaN(m_uiMesh, m_uiUnzipVar[index]);
 #endif
 
-#ifdef SOLVER_ENABLE_CUDA
+#if 0 // #ifdef SOLVER_ENABLE_CUDA
                 cuda::SOLVERComputeParams solverParams;
                 solverParams.SOLVER_LAMBDA[0] = dsolve::SOLVER_LAMBDA[0];
                 solverParams.SOLVER_LAMBDA[1] = dsolve::SOLVER_LAMBDA[1];
@@ -1458,7 +1458,7 @@ void RK_SOLVER::performSingleIterationRK45() {
                 ot::test::isUnzipNaN(m_uiMesh, m_uiUnzipVar[index]);
 #endif
 
-#ifdef SOLVER_ENABLE_CUDA
+#if 0 // #ifdef SOLVER_ENABLE_CUDA
             cuda::SOLVERComputeParams solverParams;
             solverParams.SOLVER_LAMBDA[0] = dsolve::SOLVER_LAMBDA[0];
             solverParams.SOLVER_LAMBDA[1] = dsolve::SOLVER_LAMBDA[1];

@@ -479,7 +479,7 @@ void allocate_deriv_workspace(const ot::Mesh *pMesh, unsigned int s_fac) {
 
 #ifdef DENDRO_USE_NEW_DERIVS
     // make sure the maximum block size is properly set
-    SOLVER_DERIVS->set_maximum_block_size(max_blk_sz);
+    // SOLVER_DERIVS->set_maximum_block_size(max_blk_sz);
 #endif
 
 #endif

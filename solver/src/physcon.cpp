@@ -260,6 +260,7 @@ void physical_constraints_compact_derivs(double **uZipConVars,
                                          const double *pmin, const double *pmax,
                                          const unsigned int *sz,
                                          const unsigned int &bflag) {
+#ifdef EM4_ENABLE_COMPACT_DERIVS
     // wait_for_debugger();
 
     const unsigned int nx = sz[0];
@@ -486,4 +487,5 @@ void physical_constraints_compact_derivs(double **uZipConVars,
 #include "../gencode/solver_physcon_deriv_memdealloc.cpp.inc"
     //[[[end]]]
     // clang-format on
+#endif
 }

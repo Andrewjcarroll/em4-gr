@@ -8,10 +8,18 @@
 # directories such as src/ and dendro/
 
 # NOTE: cmake minimum is now set to 3.1
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
 
 # full project name and the languages used
 project(DendroEM4 C CXX Fortran)
+
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+endif()
+
+if(POLICY CMP0146)
+  cmake_policy(SET CMP0146 OLD)
+endif()
 
 # the standard we're using is c++11
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -131,13 +139,7 @@ if(WITH_CUDA)
       31
       CACHE STRING 31)
   add_definitions(-DOCT2BLK_COARSEST_LEV=${OCT2BLK_COARSEST_LEV})
-  find_package(CUDA REQUIRED)
-  if(CUDA_FOUND)
-    set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    set(CUDA_SEPARABLE_COMPILATION ON)
-
-    # list( APPEND CUDA_NVCC_FLAGS -gencode arch=compute_30,code=sm_30) list(
-    # APPEND CUDA_NVCC_FLAGS -gencode arch=compute_50,code=sm_50) list( APPEND
+  enable_language(CUDA)
     # CUDA_NVCC_FLAGS -gencode arch=compute_60,code=sm_60) list( APPEND
     # CUDA_NVCC_FLAGS --generate-line-info) list( APPEND CUDA_NVCC_FLAGS
     # -gencode arch=compute_61,code=sm_61)
@@ -154,7 +156,6 @@ if(WITH_CUDA)
       -lineinfo)
     add_definitions(-DWITH_CUDA)
 
-  endif()
   if(MPIX_CUDA_AWARE_SUPPORT)
     add_definitions(-DMPIX_CUDA_AWARE_SUPPORT)
   endif()
@@ -300,6 +301,13 @@ endif()
 
 # === END REQUIRED CONFIGURATIONS FOR DENDRO ===
 
+set(CHECK_GIT_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/cmake-modules)
+if (EXISTS ${CHECK_GIT_INCLUDE_PATH}/CheckGit.cmake)
+  include(${CHECK_GIT_INCLUDE_PATH}/CheckGit.cmake)
+  message(STATUS "Setting up adding Git Information directly to compile options, header file should be in ${CHECK_GIT_INCLUDE_PATH}")
+  checkgitsetup()
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
   toml11
@@ -309,11 +317,28 @@ FetchContent_MakeAvailable(toml11)
 
 
 
-add_subdirectory(lib)
+# settable option for the user on where dendrolib is available
+set(DENDRO_dendrolib_DIR "" CACHE PATH "Path to the local dendrolib source directory (optional)")
+set(DENDRO_dendrolib_GIT_TAG "master" CACHE STRING "The Git tag, branch, or commit hash for dendrolib")
 
-# # TEMP: this links things to the development versions of dendrolib
-add_subdirectory(../dendrolib_dfvk dendrolib)
-set(DENDRO_dendrolib_DIR /home/andrewc/Programs/CFD/EM4/dendrolib_dfvk)
+# now include the dendro repository for compiling the library
+if (IS_DIRECTORY ${DENDRO_dendrolib_DIR})
+  message(STATUS "Using user-provided dendrolib from: ${DENDRO_dendrolib_DIR}")
+  add_subdirectory(${DENDRO_dendrolib_DIR} dendrolib)
+  set(DENDRO_FETCHED FALSE)
+else()
+  message(STATUS "Dendrolib not found locally, fetching from repository...")
+  FetchContent_Declare(
+    dendrolib
+    GIT_REPOSITORY "https://github.com/paralab/Dendro-5.01"
+    GIT_TAG ${DENDRO_dendrolib_GIT_TAG}
+  )
+
+  FetchContent_MakeAvailable(dendrolib)
+
+  set(DENDRO_dendrolib_DIR ${dendrolib_SOURCE_DIR} CACHE INTERNAL "Path to the fetched dendrolib source")
+
+endif()
 
 # then the subdirectory for the actual source of the project
 add_subdirectory(solver)
