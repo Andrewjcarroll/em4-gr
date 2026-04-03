@@ -41,9 +41,11 @@ enum VL {
     CPU_EV_UZ_IN,
     CPU_EV_UZ_OUT,
     CPU_CV_UZ_IN,
+#ifdef SOLVER_ENABLE_CUDA
     GPU_EV,
     GPU_EV_UZ_IN,
     GPU_EV_UZ_OUT,
+#endif
 #if 0
     // redefine these if analytic needs to be done on a block-wise basis!
     CPU_ANALYTIC_UZ_IN,

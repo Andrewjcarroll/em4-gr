@@ -876,7 +876,6 @@ int SOLVERCtx::initialize() {
 
 int SOLVERCtx::init_grid() {
     DVec &m_evar = m_var[VL::CPU_EV];
-    DVec &m_dptr_evar = m_var[VL::GPU_EV];
 
     const ot::TreeNode *pNodes = &(*(m_uiMesh->getAllElements().begin()));
     const unsigned int eleOrder = m_uiMesh->getElementOrder();
