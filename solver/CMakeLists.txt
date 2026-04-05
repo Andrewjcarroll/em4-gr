@@ -214,7 +214,7 @@ endif()
 add_library(solver_common OBJECT ${SOLVER_SRC_FILES})
 target_include_directories(solver_common PUBLIC ${SOLVER_INCLUDE_DIRS})
 target_compile_options(solver_common PUBLIC -fext-numeric-literals)
-target_link_libraries(solver_common PUBLIC dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11)
+target_link_libraries(solver_common PUBLIC dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 dendro_git_version_and_date)
 
 if(WITH_CUDA)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcudafe --diag_suppress=177")
@@ -230,7 +230,7 @@ endif()
 macro(em4_add_executable TARGET_NAME)
   add_executable(${TARGET_NAME} ${ARGN})
   target_link_libraries(${TARGET_NAME} PRIVATE
-        solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m)
+        solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m dendro_git_version_and_date)
   target_compile_options(${TARGET_NAME} PRIVATE -fext-numeric-literals)
 endmacro()
 
@@ -243,7 +243,7 @@ if(WITH_CUDA)
     target_compile_definitions(${TARGET_NAME} PRIVATE SOLVER_ENABLE_CUDA)
 
     target_link_libraries(${TARGET_NAME} PRIVATE
-            solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m)
+            solver_common dendro5 MPI::MPI_CXX GSL::gsl toml11::toml11 m dendro_git_version_and_date)
   endmacro()
 endif()
 

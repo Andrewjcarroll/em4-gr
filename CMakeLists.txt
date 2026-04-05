@@ -17,45 +17,56 @@ if(POLICY CMP0169)
   cmake_policy(SET CMP0169 OLD)
 endif()
 
-if(POLICY CMP0146)
-  cmake_policy(SET CMP0146 OLD)
-endif()
+# specify the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# the standard we're using is c++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-
-# set up fsanatize flags to check for memory leaks, need to set them for C++, X,
-# and linker but only on debug
-set(CMAKE_CXX_FLAGS_DEBUG
-    "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -fno-sanitize-recover"
-)
-set(CMAKE_C_FLAGS_DEBUG
-    "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address,undefined -fno-sanitize-recover")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG
-    "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address,undefined -fno-sanitize-recover"
-)
-
-# find OpenMP, MPI, and GSL
+# OpenMP, MPI, and GSL are required packages for all aspects of the project
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 find_package(GSL REQUIRED)
 
-# For now we just make it compulsory to have LAPACK installed. Later we will
-# make it possible if LAPACK is not present to automaticall install before
-# compiling dendro5
-if(OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS
-      "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+# =============================
+# == CPU ARCH OPTIONS ==
+# =============================
+set(CPU_ARCH "native" CACHE STRING "Target CPU Architecture, see list")
+
+# this list of strings are the valid list of options we have available for compiling
+set(CPU_ARCH_STRINGS
+    "native"
+    "znver1" "znver2" "znver3" "znver4"
+    "haswell" "broadwell" "skylake-avx512" "cascadelake" "icelake-server"
+    "generic_avx2" "x86-64-v3"
+)
+set_property(CACHE CPU_ARCH PROPERTY STRINGS ${CPU_ARCH_STRINGS})
+
+set(ARCH_FLAGS "")
+
+if(CPU_ARCH STREQUAL "generic_avx2")
+  # this is like a custom alias for generic avx2
+  list(APPEND ARCH_FLAGS "-mavx2" "-mfma")
+elseif(CPU_ARCH IN_LIST CPU_ARCH_STRINGS)
+  # we pass the name directly to "march" if it's in the list of strings
+  list(APPEND ARCH_FLAGS "-march=${CPU_ARCH}")
+else()
+  message(FATAL_ERROR "Unknown CPU_ARCH: ${CPU_ARCH}")
 endif()
 
-if(MPI_COMPILE_FLAGS)
-  set(COMPILE_FLAGS "${COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
-endif()
+# by setting compile options, we're forcing things to be set properly
+add_compile_options(${ARCH_FLAGS})
 
-if(MPI_LINK_FLAGS)
-  set(LINK_FLAGS "${LINK_FLAGS} ${MPI_LINK_FLAGS}")
+message(STATUS "Build Target Architecture: ${CPU_ARCH}")
+message(STATUS "Compiler Flags: ${ARCH_FLAGS}")
+
+# set up fsanatize flags to check for memory leaks (Debug only)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(SAN_FLAGS "-fsanitize=address,undefined" "-fno-sanitize-recover=all")
+  foreach(FLAG ${SAN_FLAGS})
+    add_compile_options($<$<CONFIG:Debug>:${FLAG}>)
+    add_link_options($<$<CONFIG:Debug>:${FLAG}>)
+  endforeach()
+  message(STATUS "Sanitizers configured for Debug builds (Address + Undefined)")
 endif()
 
 # =============================
@@ -140,21 +151,7 @@ if(WITH_CUDA)
       CACHE STRING 31)
   add_definitions(-DOCT2BLK_COARSEST_LEV=${OCT2BLK_COARSEST_LEV})
   enable_language(CUDA)
-    # CUDA_NVCC_FLAGS -gencode arch=compute_60,code=sm_60) list( APPEND
-    # CUDA_NVCC_FLAGS --generate-line-info) list( APPEND CUDA_NVCC_FLAGS
-    # -gencode arch=compute_61,code=sm_61)
-
-    # list( APPEND CUDA_NVCC_FLAGS -use_fast_math ) list( APPEND CUDA_NVCC_FLAGS
-    # -maxrregcount 64 )
-    list(
-      APPEND
-      CUDA_NVCC_FLAGS
-      -std=c++11
-      --ptxas-options=-O3
-      --ptxas-options=-v
-      -w
-      -lineinfo)
-    add_definitions(-DWITH_CUDA)
+  add_definitions(-DWITH_CUDA)
 
   if(MPIX_CUDA_AWARE_SUPPORT)
     add_definitions(-DMPIX_CUDA_AWARE_SUPPORT)
@@ -162,50 +159,44 @@ if(WITH_CUDA)
 endif()
 add_definitions(-DOCT2BLK_COARSEST_LEV=${OCT2BLK_COARSEST_LEV})
 
-# ===== == BLAS and LAPAC FINDING ==
-# ============================
-if(WITH_BLAS_LAPACK)
-  add_definitions(-DWITH_BLAS_LAPACK)
-  if(MANUAL_BLAS_LAPACK)
-    if("$ENV{BLAS}" STREQUAL "")
-      message(
-        "Environment Variable BLAS is not set. Please set it to BLAS directory")
-    endif()
-
-    if("$ENV{LAPACK}" STREQUAL "")
-      message(
-        "Enviroment Variable LAPACK is note set. Please set it to LAPACK directory. "
-      )
-    endif()
-    set(LAPACKE_DIR $ENV{LAPACK}/LAPACKE)
-    set(BLAS_LIBS $ENV{BLAS}/lib)
-    set(LAPACK_LIBS $ENV{LAPACK}/lib)
-    set(LAPACK_LINKER_FLAGS -llapacke -llapack -lblas -lgfortran -lquadmath)
-    set(LAPACK_LIBRARIES
-        ${LAPACK_LIBS}/liblapacke.a ${LAPACK_LIBS}/liblapack.a
-        ${BLAS_LIBS}/libblas.a -static libgfortran.a libquadmath.a)
-    set(LINK_FLAGS "${LINK_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  else()
-    find_package(BLAS REQUIRED)
-    find_package(LAPACK REQUIRED)
-    set(LAPACK_LINKER_FLAGS -llapacke -llapack -lblas -lgfortran -lquadmath)
-    set(LAPACKE_DIR $ENV{LAPACK}/LAPACKE)
-    set(LINK_FLAGS "${LINK_FLAGS} ${LAPACK_LINKER_FLAGS}")
-    # LAPACKE is not used anymore. find_library(LAPACKE_LIB NAMES lapacke
-    # lapackelib liblapacke HINTS "/usr/lib/" )
-    set(LAPACK_LIBRARIES ${LAPACK_LIBRARIES} ${LAPACKE_LIB})
-    message(STATUS ${LAPACK_LIBRARIES})
-
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-      message(
-        "${CMAKE_CXX_COMPILER_ID} compiler detected adding -mkl flag for BLAS LAPACK"
-      )
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl")
-    endif()
-
+# =============================
+# == BLAS and LAPACK FINDING ==
+# =============================
+if(MANUAL_BLAS_LAPACK)
+  if("$ENV{BLAS}" STREQUAL "" OR "$ENV{LAPACK}" STREQUAL "")
+    message(FATAL_ERROR "MANUAL_BLAS_LAPACK is ON, but BLAS/LAPACK env vars are empty.")
   endif()
 
+  message(STATUS "Configuring BLAS/LAPACK Manually...")
+
+  set(LAPACKE_DIR "$ENV{LAPACK}/LAPACKE")
+  set(BLAS_LIBS "$ENV{BLAS}/lib")
+  set(LAPACK_LIBS "$ENV{LAPACK}/lib")
+
+  set(MANUAL_LIBS
+        "${LAPACK_LIBS}/liblapacke.a"
+        "${LAPACK_LIBS}/liblapack.a"
+        "${BLAS_LIBS}/libblas.a"
+        "-static" "libgfortran.a" "libquadmath.a"
+    )
+
+  if(NOT TARGET BLAS::BLAS)
+    add_library(BLAS::BLAS INTERFACE IMPORTED)
+    set_target_properties(BLAS::BLAS PROPERTIES INTERFACE_LINK_LIBRARIES "${MANUAL_LIBS}")
+  endif()
+
+  if(NOT TARGET LAPACK::LAPACK)
+    add_library(LAPACK::LAPACK INTERFACE IMPORTED)
+    set_target_properties(LAPACK::LAPACK PROPERTIES INTERFACE_LINK_LIBRARIES "${MANUAL_LIBS}")
+  endif()
+
+  # prevent dendrolib from trying to find_package and overwriting this
+  set(BLAS_FOUND TRUE)
+  set(LAPACK_FOUND TRUE)
+endif()
+
+if(WITH_BLAS_LAPACK)
+  add_definitions(-DWITH_BLAS_LAPACK)
 endif()
 
 # ===================
@@ -302,17 +293,15 @@ endif()
 # === END REQUIRED CONFIGURATIONS FOR DENDRO ===
 
 set(CHECK_GIT_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/cmake-modules)
-if (EXISTS ${CHECK_GIT_INCLUDE_PATH}/CheckGit.cmake)
-  include(${CHECK_GIT_INCLUDE_PATH}/CheckGit.cmake)
-  message(STATUS "Setting up adding Git Information directly to compile options, header file should be in ${CHECK_GIT_INCLUDE_PATH}")
-  checkgitsetup()
-endif()
+include(${CHECK_GIT_INCLUDE_PATH}/CheckGit.cmake)
+message(STATUS "Setting up adding Git Information directly to compile options, header file should be in ${CHECK_GIT_INCLUDE_PATH}")
+checkgitsetup()
 
 include(FetchContent)
 FetchContent_Declare(
   toml11
   GIT_REPOSITORY "https://github.com/ToruNiina/toml11"
-  GIT_TAG "v4.2.0")
+  GIT_TAG "v4.4.0")
 FetchContent_MakeAvailable(toml11)
 
 
