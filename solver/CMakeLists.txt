@@ -21,7 +21,7 @@ set(EXTERNAL_LIB_HEADERS ${CMAKE_SOURCE_DIR}/lib/toml11)
 # compiling and modifying the project
 # ===========================
 # option(COG_SOURCE_FILES "Enable cogging of source files" OFF)
-option(SOLVER_PROFILE_HUMAN_READABLE "Enable human readable profile outputs" ON)
+option(SOLVER_PROFILE_HUMAN_READABLE "Enable human readable profile outputs" OFF)
 option(
   SOLVER_CONSEC_COMM_SELECT
   "Rank selection is performed using consecutive ranks (works with an arbitrary number of processes). If off, the ranks are selected in binary tree fashion (only with powers of two processes)"
@@ -150,6 +150,8 @@ endif()
 
 if(EM4_ENABLE_PROFILING)
   add_definitions(-DEM4_ENABLE_PROFILING)
+  add_definitions(-D__PROFILE_CTX__)
+  add_definitions(-D__PROFILE_ETS__)
 endif()
 
 if(EM4_COMPUTE_ANALYTICAL)

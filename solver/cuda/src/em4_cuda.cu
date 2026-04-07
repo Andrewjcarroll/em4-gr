@@ -149,17 +149,24 @@ int main(int argc, char** argv) {
             const bool isActive            = ets->is_active();
             const unsigned int rank_global = ets->get_global_rank();
 
-            if ((step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
+            if (dsolve::SOLVER_REMESH_TEST_FREQ > 0 &&
+                (step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
                 appCtx->device_to_host_sync();
-                if (appCtx->is_remesh()) {
+                dsolve::timer::t_isReMesh.start();
+                bool isRemesh = appCtx->is_remesh();
+                dsolve::timer::t_isReMesh.stop();
+                if (isRemesh) {
+                    dsolve::timer::t_remesh.start();
                     appCtx->remesh_and_gridtransfer(
                         dsolve::SOLVER_DENDRO_GRAIN_SZ,
                         dsolve::SOLVER_LOAD_IMB_TOL, dsolve::SOLVER_SPLIT_FIX);
+                    dsolve::timer::t_remesh.stop();
                     ets->sync_with_mesh();
                 }
             }
 
-            if ((step % dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ) == 0) {
+            if (dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ > 0 &&
+                (step % dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ) == 0) {
                 if (!rank_global)
                     std::cout << BLD << GRN << "==========\n"
                               << "[ETS - SOLVER] : SOLVER UPDATE\n"
@@ -169,11 +176,13 @@ int main(int argc, char** argv) {
                 appCtx->terminal_output();
             }
 
-            if ((step % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
+            if (dsolve::SOLVER_IO_OUTPUT_FREQ > 0 &&
+                (step % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
                 appCtx->write_vtu();
             }
 
-            if ((step % dsolve::SOLVER_CHECKPT_FREQ) == 0) {
+            if (dsolve::SOLVER_CHECKPT_FREQ > 0 &&
+                (step % dsolve::SOLVER_CHECKPT_FREQ) == 0) {
                 std::cout << "    NOW writing checkpoint" << std::endl;
                 appCtx->write_checkpt();
                 appCtx->get_mesh()->waitAll();
@@ -181,7 +190,9 @@ int main(int argc, char** argv) {
             }
 
             appCtx->resetForEvolutionStuff();
+            dsolve::timer::t_rkStep.start();
             ets->evolve();
+            dsolve::timer::t_rkStep.stop();
             appCtx->resetForNextStep();
         }
 
@@ -193,6 +204,10 @@ int main(int argc, char** argv) {
         appCtx->finalize();
 
 #ifdef EM4_ENABLE_PROFILING
+        dsolve::timer::profileInfo(
+            dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(),
+            appCtx->get_mesh());
+
         dsolve::gpu_timer::profileInfoGPU(
             dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(),
             appCtx->get_mesh());

@@ -355,19 +355,25 @@ int main(int argc, char** argv) {
 
             const unsigned int rank_global       = ets->get_global_rank();
 
-            if ((step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
+            if (dsolve::SOLVER_REMESH_TEST_FREQ > 0 &&
+                (step % dsolve::SOLVER_REMESH_TEST_FREQ) == 0 && step != 0) {
                 if (!rank_global)
                     std::cout << "[ETS] : Remesh time reached, checking to see "
                                  "if remesh should occur.  \n";
 
+                dsolve::timer::t_isReMesh.start();
                 bool isRemesh = solverCtx->is_remesh();
+                dsolve::timer::t_isReMesh.stop();
+
                 if (isRemesh) {
                     if (!rank_global)
                         std::cout << "[ETS] : Remesh has been triggered.  \n";
 
+                    dsolve::timer::t_remesh.start();
                     solverCtx->remesh_and_gridtransfer(
                         dsolve::SOLVER_DENDRO_GRAIN_SZ,
                         dsolve::SOLVER_LOAD_IMB_TOL, dsolve::SOLVER_SPLIT_FIX);
+                    dsolve::timer::t_remesh.stop();
                     dsolve::deallocate_deriv_workspace();
                     dsolve::allocate_deriv_workspace(solverCtx->get_mesh(), 1);
                     ets->sync_with_mesh();
@@ -398,7 +404,7 @@ int main(int argc, char** argv) {
             // ML data
             did_print_output_time = false;
 
-            if ((step % dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ) == 0) {
+            if (dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ > 0 && (step % dsolve::SOLVER_TIME_STEP_OUTPUT_FREQ) == 0) {
                 if (!rank_global)
                     std::cout << BLD << GRN << "==========\n"
                               << "[ETS - SOLVER] : SOLVER UPDATE\n"
@@ -410,7 +416,7 @@ int main(int argc, char** argv) {
                 did_print_output_time = true;
             }
 
-            if ((step % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
+            if (dsolve::SOLVER_IO_OUTPUT_FREQ > 0 && (step % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
                 if (!rank_global) {
                     if (!did_print_output_time) {
                         std::cout << BLD << GRN << "==========\n"
@@ -432,7 +438,7 @@ int main(int argc, char** argv) {
                               << NRM << std::endl;
             }
 
-            if ((step % dsolve::SOLVER_PROFILE_OUTPUT_FREQ) == 0) {
+            if (dsolve::SOLVER_PROFILE_OUTPUT_FREQ > 0 && (step % dsolve::SOLVER_PROFILE_OUTPUT_FREQ) == 0) {
                 if (!rank_global) {
                     if (!did_print_output_time) {
                         std::cout << BLD << GRN << "==========\n"
@@ -458,7 +464,7 @@ int main(int argc, char** argv) {
                               << std::endl;
             }
 
-            if ((step % dsolve::SOLVER_CHECKPT_FREQ) == 0)
+            if (dsolve::SOLVER_CHECKPT_FREQ > 0 && (step % dsolve::SOLVER_CHECKPT_FREQ) == 0)
                 solverCtx->write_checkpt();
 
             dsolve::timer::t_rkStep.start();
@@ -477,6 +483,14 @@ int main(int argc, char** argv) {
         par::Mpi_Allreduce(&t2, &t2_g, 1, MPI_MAX, ets->get_global_comm());
         if (!(ets->get_global_rank()))
             std::cout << " ETS time (max) : " << t2_g << std::endl;
+
+        dsolve::timer::total_runtime.stop();
+
+#ifdef EM4_ENABLE_PROFILING
+        dsolve::timer::profileInfo(
+            dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(),
+            solverCtx->get_mesh());
+#endif
 
         // cleanup
         ot::Mesh* tmp_mesh = solverCtx->get_mesh();

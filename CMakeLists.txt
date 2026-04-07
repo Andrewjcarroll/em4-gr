@@ -107,7 +107,7 @@ option(DENDRO_ENABLE_GHOST_COMPRESSION
 
 option(DVEC_ZERO_ALLOC "Make the memory allocation of dvec on CPU initialize as zeros" OFF)
 
-option(DENDRO_USE_NEW_DERIVS "Use the new derivs" ON)
+option(DENDRO_USE_NEW_DERIVS "Use the new derivs" OFF)
 
 
 # option(KWAY "K parameter for alltoallv_kway" 128)

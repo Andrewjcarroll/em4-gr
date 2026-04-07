@@ -36,6 +36,7 @@ profiler_t t_zip;
 profiler_t t_rkStep;
 
 profiler_t t_isReMesh;
+profiler_t t_remesh;
 profiler_t t_gridTransfer;
 profiler_t t_ioVtu;
 profiler_t t_ioCheckPoint;

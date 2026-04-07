@@ -745,7 +745,7 @@ int SOLVERCtx::initialize() {
     DVec &m_evar = m_var[VL::CPU_EV];
     DVec &m_evar_unz = m_var[VL::CPU_EV_UZ_IN];
 
-    do {
+    while (max_iter > 0) {  // skip entirely when INIT_GRID_ITER=0
         // initialize the grid at each step if desired
         if (dsolve::SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME) this->init_grid();
 
@@ -821,10 +821,12 @@ int SOLVERCtx::initialize() {
 
         iterCount += 1;
 
-    } while (isRefine &&
-             (newElements_g != oldElements_g ||
-              newGridPoints_g != oldGridPoints_g) &&
-             (iterCount < max_iter));
+        if (!isRefine ||
+            (newElements_g == oldElements_g &&
+             newGridPoints_g == oldGridPoints_g) ||
+            iterCount >= max_iter)
+            break;
+    }  // end while (max_iter > 0)
 
     // initialize the grid!
     this->init_grid();
@@ -979,7 +981,7 @@ int SOLVERCtx::write_vtu() {
 
 #ifdef SOLVER_ENABLE_VTU_OUTPUT
 
-    if ((m_uiTinfo._m_uiStep % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
+    if (dsolve::SOLVER_IO_OUTPUT_FREQ > 0 && (m_uiTinfo._m_uiStep % dsolve::SOLVER_IO_OUTPUT_FREQ) == 0) {
         std::vector<std::string> pDataNames;
         const unsigned int numConstVars =
             dsolve::SOLVER_NUM_CONST_VARS_VTU_OUTPUT;
@@ -1071,7 +1073,7 @@ int SOLVERCtx::write_checkpt() {
     if (!m_uiMesh->isActive()) return 0;
 
     unsigned int cpIndex;
-    (m_uiTinfo._m_uiStep % (2 * dsolve::SOLVER_CHECKPT_FREQ) == 0)
+    (dsolve::SOLVER_CHECKPT_FREQ > 0 && m_uiTinfo._m_uiStep % (2 * dsolve::SOLVER_CHECKPT_FREQ) == 0)
         ? cpIndex = 0
         : cpIndex = 1;  // to support alternate file writing.
 

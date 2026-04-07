@@ -1109,6 +1109,56 @@ void profileInfo(const char *filePrefix, const ot::Mesh *pMesh) {
         outfile << std::left << std::setw(numWidth) << std::setfill(separator)
                 << t_stat_g[2] << std::endl;
 
+    // ---- AMR / remesh stages ----
+    if (!rank)
+        outfile << "\n========== AMR Stages "
+                   "=========================================\n";
+
+    t_stat = t_isReMesh.seconds;
+    computeOverallStats(&t_stat, t_stat_g, comm);
+    if (!rank)
+        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+                << " ++isRemesh(wavelet)";
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[0];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[1];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[2] << std::endl;
+
+    t_stat = t_remesh.seconds;
+    computeOverallStats(&t_stat, t_stat_g, comm);
+    if (!rank)
+        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+                << "  --remesh(oct+LB)";
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[0];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[1];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[2] << std::endl;
+
+    t_stat = t_gridTransfer.seconds;
+    computeOverallStats(&t_stat, t_stat_g, comm);
+    if (!rank)
+        outfile << std::left << std::setw(nameWidth) << std::setfill(separator)
+                << "  --gridTransfer(GPU)";
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[0];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[1];
+    if (!rank)
+        outfile << std::left << std::setw(numWidth) << std::setfill(separator)
+                << t_stat_g[2] << std::endl;
+
     if (!rank) outfile.close();
 }
 

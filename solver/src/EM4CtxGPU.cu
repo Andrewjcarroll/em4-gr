@@ -825,7 +825,7 @@ int EM4CtxGPU::initialize() {
 
     DVec& m_evar_unz = m_var[VL::CPU_EV_UZ];
 
-    do {
+    while (max_iter > 0) {  // skip entirely when INIT_GRID_ITER=0
         // Re-initialize grid at each step of convergence
         this->init_grid();
 
@@ -875,10 +875,12 @@ int EM4CtxGPU::initialize() {
 
         iterCount += 1;
 
-    } while (isRefine &&
-             (newElements_g != oldElements_g ||
-              newGridPoints_g != oldGridPoints_g) &&
-             (iterCount < max_iter));
+        if (!isRefine ||
+            (newElements_g == oldElements_g &&
+             newGridPoints_g == oldGridPoints_g) ||
+            iterCount >= max_iter)
+            break;
+    }  // end while (max_iter > 0)
 
     this->init_grid();
 
@@ -1149,7 +1151,7 @@ int EM4CtxGPU::write_checkpt() {
     DVec& m_evar = m_var[VL::CPU_EV];
     if (m_uiMesh->isActive()) {
         unsigned int cpIndex =
-            (m_uiTinfo._m_uiStep % (2 * dsolve::SOLVER_CHECKPT_FREQ) == 0) ? 0
+            (dsolve::SOLVER_CHECKPT_FREQ > 0 && m_uiTinfo._m_uiStep % (2 * dsolve::SOLVER_CHECKPT_FREQ) == 0) ? 0
                                                                            : 1;
         unsigned int rank = m_uiMesh->getMPIRank();
 
