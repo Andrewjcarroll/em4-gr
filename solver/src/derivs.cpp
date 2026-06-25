@@ -155,7 +155,7 @@ void set_appropriate_derivs(const unsigned pw) {
     if (pw == 4) {
         dendro_derivs::deriv_x = deriv8642_x;
         dendro_derivs::deriv_y = deriv8642_y;
-        dendro_derivs::deriv_z = deriv8642_x;
+        dendro_derivs::deriv_z = deriv8642_z;
 
         dendro_derivs::deriv_xx = deriv8642_xx;
         dendro_derivs::deriv_yy = deriv8642_yy;
@@ -165,11 +165,10 @@ void set_appropriate_derivs(const unsigned pw) {
         dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
         dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
 
-    } 
-        if (pw == 5) {
+    } else if (pw == 5) {
         dendro_derivs::deriv_x = deriv8642_x;
         dendro_derivs::deriv_y = deriv8642_y;
-        dendro_derivs::deriv_z = deriv8642_x;
+        dendro_derivs::deriv_z = deriv8642_z;
 
         dendro_derivs::deriv_xx = deriv8642_xx;
         dendro_derivs::deriv_yy = deriv8642_yy;

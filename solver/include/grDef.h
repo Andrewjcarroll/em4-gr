@@ -34,7 +34,11 @@
      dsolve::SOLVER_OCTREE_MIN[2])
 
 // type of the rk method.
-enum RKType { RK3 = 0, RK4, RK45 };
+// 0=RK3, 1=RK4, 2=RK45 (standard methods)
+// 3=RK4_MSRK2_1, 4=RK4_MSRK2_2, 5=RK4_MSRK3 (multistep methods,
+//   arXiv:2603.05763)
+// 0=RK3, 1=RK4, 2=RK5(Butcher,6-stage), 3=MSRK2_1, 4=MSRK2_2, 5=MSRK3
+enum RKType { RK3 = 0, RK4, RK5, RK4_MSRK2_1, RK4_MSRK2_2, RK4_MSRK3 };
 
 namespace dsolve {
 // clang-format off

@@ -17,6 +17,7 @@
 #include "debugger_tools.h"
 #include "enuts.h"
 #include "ets.h"
+#include "ets_msrk.h"
 #include "grUtils.h"
 #include "mathUtils.h"
 #include "mesh.h"

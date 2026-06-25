@@ -285,20 +285,38 @@ int main(int argc, char** argv) {
                       << NRM << std::endl;
         }
 
-        ts::ETS<DendroScalar, ctxType>* ets =
-            new ts::ETS<DendroScalar, ctxType>(solverCtx);
-        ets->set_evolve_vars(solverCtx->get_evolution_vars());
-        if (!rank) {
-            std::cout << CYN << BLD << "Evolution variables now set..." << NRM
-                      << std::endl;
+        // select time integrator based on SOLVER_RK_TYPE:
+        //   0=RK3, 1=RK4, 2=RK5 (Butcher 6-stage)
+        //   3=MSRK2_1, 4=MSRK2_2, 5=MSRK3 (multistep RK, arXiv:2603.05763)
+        // MSRK methods reuse RHS evals from previous steps for ~20-40% speedup.
+        const RKType rkType = (RKType)dsolve::SOLVER_RK_TYPE;
+
+        ts::ETS<DendroScalar, ctxType>* ets = nullptr;
+
+        if (rkType == RKType::RK4_MSRK2_1 || rkType == RKType::RK4_MSRK2_2 ||
+            rkType == RKType::RK4_MSRK3) {
+            ts::ETSType msrkVariant;
+            if (rkType == RKType::RK4_MSRK2_1)
+                msrkVariant = ts::ETSType::RK4_MSRK2_1;
+            else if (rkType == RKType::RK4_MSRK2_2)
+                msrkVariant = ts::ETSType::RK4_MSRK2_2;
+            else
+                msrkVariant = ts::ETSType::RK4_MSRK3;
+
+            ets = new ts::ETS_MSRK<DendroScalar, ctxType>(
+                solverCtx, msrkVariant);
+        } else {
+            ets = new ts::ETS<DendroScalar, ctxType>(solverCtx);
+
+            if (rkType == RKType::RK3)
+                ets->set_ets_coefficients(ts::ETSType::RK3);
+            else if (rkType == RKType::RK4)
+                ets->set_ets_coefficients(ts::ETSType::RK4);
+            else if (rkType == RKType::RK5)
+                ets->set_ets_coefficients(ts::ETSType::RK5);
         }
 
-        if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK3)
-            ets->set_ets_coefficients(ts::ETSType::RK3);
-        else if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK4)
-            ets->set_ets_coefficients(ts::ETSType::RK4);
-        else if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK45)
-            ets->set_ets_coefficients(ts::ETSType::RK5);
+        ets->set_evolve_vars(solverCtx->get_evolution_vars());
 
         if (!rank) {
             std::cout << CYN << BLD << "Now initializing time stepper..." << NRM

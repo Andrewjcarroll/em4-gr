@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
             ets->set_ets_coefficients(ts::ETSType::RK3);
         else if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK4)
             ets->set_ets_coefficients(ts::ETSType::RK4);
-        else if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK45)
+        else if ((RKType)dsolve::SOLVER_RK_TYPE == RKType::RK5)
             ets->set_ets_coefficients(ts::ETSType::RK5);
 
         ets->init();

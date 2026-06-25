@@ -36,7 +36,7 @@ RK_SOLVER::RK_SOLVER(ot::Mesh *pMesh, DendroScalar pTBegin, DendroScalar pTEnd,
         m_uiNumRKStages = dsolve::SOLVER_RK3_STAGES;
     else if (m_uiRKType == RKType::RK4)
         m_uiNumRKStages = dsolve::SOLVER_RK4_STAGES;
-    else if (m_uiRKType == RKType::RK45)
+    else if (m_uiRKType == RKType::RK5)
         m_uiNumRKStages = dsolve::SOLVER_RK45_STAGES;
     else {
         if (!(pMesh->getMPIRankGlobal()))
@@ -1614,7 +1614,7 @@ void RK_SOLVER::performSingleIteration() {
         } else if (m_uiRKType == RKType::RK4) {
             // rk4 solver
             performSingleIterationRK4();
-        } else if (m_uiRKType == RKType::RK45) {
+        } else if (m_uiRKType == RKType::RK5) {
             // rk45 solver
             performSingleIterationRK45();
         }
