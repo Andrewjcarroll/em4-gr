@@ -1686,7 +1686,25 @@ int SOLVERCtx::grid_transfer(const ot::Mesh *m_new) {
     m_uiCtxpt[ts::CTXPROFILE::GRID_TRASFER].start();
 #endif
     DVec &m_evar = m_var[VL::CPU_EV];
-    DVec::grid_transfer(m_uiMesh, m_new, m_evar);
+    // NOTE: inline the shared-node intergrid transfer here rather than calling
+    // the static DVec::grid_transfer(). The out-of-line instantiation mismatched
+    // this CUDA TU's pinned-memory handling (create_vector -> cudaMallocHost vs a
+    // plain-malloc'd temporary), which corrupted the pinned allocator and made the
+    // NEXT cudaMallocHost fail with "invalid argument" on the first remesh. Doing
+    // it in-TU keeps the alloc/free pinned-consistent. CPU_EV is OCT_SHARED_NODES,
+    // so INJECTION is the correct transfer mode.
+    {
+        DVec vec_tmp = DVec();
+        vec_tmp.create_vector(m_new, m_evar.get_type(), m_evar.get_loc(),
+                              m_evar.get_dof(), m_evar.is_ghost_allocated());
+        const unsigned int dof = m_evar.get_dof();
+        DendroScalar *in  = m_evar.get_vec_ptr();
+        DendroScalar *out = vec_tmp.get_vec_ptr();
+        m_uiMesh->interGridTransfer(in, out, m_new,
+                                    ot::INTERGRID_TRANSFER_MODE::INJECTION, dof);
+        std::swap(vec_tmp, m_evar);
+        vec_tmp.destroy_vector();
+    }
     // printf("igt ended\n");
 
     m_var[VL::CPU_CV].destroy_vector();
