@@ -17,7 +17,6 @@
 #include "grUtils.h"
 
 #include "compact_derivs.h"
-#define PRPL "\033[95m"
 namespace dsolve {
 
 // NOTE: the read param file and dump param file are now included in
