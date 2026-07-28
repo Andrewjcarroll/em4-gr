@@ -149,6 +149,12 @@
     # @brief: Dendro coarsening factor, if computed wavelet tol < EMDA_DENDRO_AMR_FAC*EMDA_WAVELET_TOL
     EMDA_DENDRO_AMR_FAC = {class = "semivariant", dtype = "double", default = 0.1, min = 0.0, max = 0.2, desc="Dendro coarsening factor, if computed wavelet tol < EMDA_DENDRO_AMR_FAC*EMDA_WAVELET_TOL"}
 
+    # @brief: Weight applied to the first-derivative WAMR indicator
+    EMDA_DERIV_FIRST_WEIGHT = {class = "semivariant", dtype = "double", default = 0.0, min = 0.0, max = 100.0, desc="Weight applied to the first-derivative WAMR indicator"}
+
+    # @brief: Weight applied to the second-derivative WAMR indicator
+    EMDA_DERIV_SECOND_WEIGHT = {class = "semivariant", dtype = "double", default = 0.0, min = 0.0, max = 100.0, desc="Weight applied to the second-derivative WAMR indicator"}
+
     # @brief: Number of grid iterations untill the grid converges
     EMDA_INIT_GRID_ITER = {class = "semivariant", dtype = "unsigned int", default = 10, min = 0, max = 20, desc="Number of grid iterations untill the grid converges"}
 

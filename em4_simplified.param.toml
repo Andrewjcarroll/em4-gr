@@ -286,6 +286,14 @@ SOLVER_INMATFILT_SECOND_COEFFS = [0.5]
 # param type: semivariant | data type: double | default: 0.1 | min: 0.0 | max: 0.2
 "dsolve::SOLVER_DENDRO_AMR_FAC" = 0.1
 
+# @brief: Weight applied to the first-derivative WAMR indicator
+# param type: semivariant | data type: double | default: 0.0 | min: 0.0 | max: 100.0
+"dsolve::SOLVER_DERIV_FIRST_WEIGHT" = 0.0
+
+# @brief: Weight applied to the second-derivative WAMR indicator
+# param type: semivariant | data type: double | default: 0.0 | min: 0.0 | max: 100.0
+"dsolve::SOLVER_DERIV_SECOND_WEIGHT" = 0.0
+
 # @brief: Number of grid iterations untill the grid converges initially
 # param type: semivariant | data type: unsigned int | default: 10 | min: 0 | max: 20
 "dsolve::SOLVER_INIT_GRID_ITER" = 10

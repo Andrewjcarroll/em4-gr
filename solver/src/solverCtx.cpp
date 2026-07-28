@@ -755,7 +755,10 @@ int SOLVERCtx::initialize() {
                 isRefine = m_uiMesh->isReMeshUnzip(
                     (const double **)unzipVar, refineVarIds,
                     dsolve::SOLVER_NUM_REFINE_VARS, waveletTolFunc,
-                    dsolve::SOLVER_DENDRO_AMR_FAC);
+                    dsolve::SOLVER_DENDRO_AMR_FAC,
+                    DENDRO_REMESH_UNZIP_SCALE_FAC,
+                    dsolve::SOLVER_DERIV_FIRST_WEIGHT,
+                    dsolve::SOLVER_DERIV_SECOND_WEIGHT);
 
             } else if (dsolve::SOLVER_REFINEMENT_MODE ==
                        dsolve::RefinementMode::REFINE_MODE_NONE) {
@@ -1434,7 +1437,9 @@ bool SOLVERCtx::is_remesh() {
         isRefine = m_uiMesh->isReMeshUnzip(
             (const double **)unzipVar, refineVarIds,
             dsolve::SOLVER_NUM_REFINE_VARS, waveletTolFunc,
-            dsolve::SOLVER_DENDRO_AMR_FAC);
+            dsolve::SOLVER_DENDRO_AMR_FAC, DENDRO_REMESH_UNZIP_SCALE_FAC,
+            dsolve::SOLVER_DERIV_FIRST_WEIGHT,
+            dsolve::SOLVER_DERIV_SECOND_WEIGHT);
     } else if (dsolve::SOLVER_REFINEMENT_MODE ==
                dsolve::RefinementMode::REFINE_MODE_NONE) {
         isRefine = false;

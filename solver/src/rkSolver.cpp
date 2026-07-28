@@ -290,7 +290,10 @@ void RK_SOLVER::initialGridConverge() {
                 dsolve::RefinementMode::WAMR) {
                 isRefine = m_uiMesh->isReMeshUnzip(
                     (const double **)m_uiUnzipVar, refineVarIds, refineNumVars,
-                    waveletTolFunc, dsolve::SOLVER_DENDRO_AMR_FAC);
+                    waveletTolFunc, dsolve::SOLVER_DENDRO_AMR_FAC,
+                    DENDRO_REMESH_UNZIP_SCALE_FAC,
+                    dsolve::SOLVER_DERIV_FIRST_WEIGHT,
+                    dsolve::SOLVER_DERIV_SECOND_WEIGHT);
                 // isRefine = dsolve::isReMeshWAMR(
                 //     m_uiMesh, (const double **)m_uiUnzipVar, refineVarIds,
                 //     refineNumVars, waveletTolFunc,
@@ -1734,7 +1737,10 @@ void RK_SOLVER::rkSolve() {
                     isRefine = m_uiMesh->isReMeshUnzip(
                         (const double **)m_uiUnzipVar, refineVarIds,
                         refineNumVars, waveletTolFunc,
-                        dsolve::SOLVER_DENDRO_AMR_FAC);
+                        dsolve::SOLVER_DENDRO_AMR_FAC,
+                        DENDRO_REMESH_UNZIP_SCALE_FAC,
+                        dsolve::SOLVER_DERIV_FIRST_WEIGHT,
+                        dsolve::SOLVER_DERIV_SECOND_WEIGHT);
                     // isRefine = dsolve::isReMeshWAMR(
                     //     m_uiMesh, (const double **)m_uiUnzipVar,
                     //     refineVarIds, refineNumVars, waveletTolFunc,

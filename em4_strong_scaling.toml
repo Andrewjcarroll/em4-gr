@@ -274,6 +274,12 @@
 # param type: semivariant | data type: double | default: 0.1 | min: 0.0 | max: 0.2
 "dsolve::SOLVER_DENDRO_AMR_FAC" = 1.0e-2
 
+# @brief: Weight applied to the first-derivative WAMR indicator
+"dsolve::SOLVER_DERIV_FIRST_WEIGHT" = 0.0
+
+# @brief: Weight applied to the second-derivative WAMR indicator
+"dsolve::SOLVER_DERIV_SECOND_WEIGHT" = 0.0
+
 # @brief: Number of grid iterations untill the grid converges initially
 # param type: semivariant | data type: unsigned int | default: 10 | min: 0 | max: 20
 # NOTE: for weak scalability, no need to change the mesh once grain size is reached
@@ -366,4 +372,3 @@
 # ===========================================
 # END PARAMTER FILE
 # ===========================================:wq
-

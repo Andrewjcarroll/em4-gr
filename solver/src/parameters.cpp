@@ -116,6 +116,8 @@ unsigned int SOLVER_USE_WAVELET_TOL_FUNCTION       = 3;
 double SOLVER_WAVELET_TOL_MAX                      = 0.001;
 double SOLVER_WAVELET_TOL_FUNCTION_R0              = 30.0;
 double SOLVER_WAVELET_TOL_FUNCTION_R1              = 220.0;
+double SOLVER_DERIV_FIRST_WEIGHT                   = 0.0;
+double SOLVER_DERIV_SECOND_WEIGHT                  = 0.0;
 bool SOLVER_USE_FD_GRID_TRANSFER                   = false;
 RefinementMode SOLVER_REFINEMENT_MODE          = static_cast<RefinementMode>(0);
 double SOLVER_BLK_MIN_X                        = -6.0;
@@ -516,6 +518,30 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
         dsolve::SOLVER_WAVELET_TOL_MAX =
             file["dsolve::SOLVER_WAVELET_TOL_MAX"].as_floating();
+    }
+
+    if (file.contains("dsolve::SOLVER_DERIV_FIRST_WEIGHT")) {
+        if (0.0 > file["dsolve::SOLVER_DERIV_FIRST_WEIGHT"].as_floating()) {
+            std::cerr
+                << R"(Invalid value for "dsolve::SOLVER_DERIV_FIRST_WEIGHT")"
+                << std::endl;
+            exit(-1);
+        }
+
+        dsolve::SOLVER_DERIV_FIRST_WEIGHT =
+            file["dsolve::SOLVER_DERIV_FIRST_WEIGHT"].as_floating();
+    }
+
+    if (file.contains("dsolve::SOLVER_DERIV_SECOND_WEIGHT")) {
+        if (0.0 > file["dsolve::SOLVER_DERIV_SECOND_WEIGHT"].as_floating()) {
+            std::cerr
+                << R"(Invalid value for "dsolve::SOLVER_DERIV_SECOND_WEIGHT")"
+                << std::endl;
+            exit(-1);
+        }
+
+        dsolve::SOLVER_DERIV_SECOND_WEIGHT =
+            file["dsolve::SOLVER_DERIV_SECOND_WEIGHT"].as_floating();
     }
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0")) {
@@ -1017,6 +1043,10 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0 << std::endl;
         sout << "\tdsolve::SOLVER_WAVELET_TOL_FUNCTION_R1: "
              << dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1 << std::endl;
+        sout << "\tdsolve::SOLVER_DERIV_FIRST_WEIGHT: "
+             << dsolve::SOLVER_DERIV_FIRST_WEIGHT << std::endl;
+        sout << "\tdsolve::SOLVER_DERIV_SECOND_WEIGHT: "
+             << dsolve::SOLVER_DERIV_SECOND_WEIGHT << std::endl;
         sout << "\tdsolve::SOLVER_USE_FD_GRID_TRANSFER: "
              << dsolve::SOLVER_USE_FD_GRID_TRANSFER << std::endl;
         sout << "\tdsolve::SOLVER_ETA_CONST: " << dsolve::SOLVER_ETA_CONST

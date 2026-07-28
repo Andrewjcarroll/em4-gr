@@ -311,10 +311,31 @@ FetchContent_MakeAvailable(toml11)
 
 add_subdirectory(lib)
 
-# # TEMP: this links things to the development versions of dendrolib
-add_subdirectory(../dendrolib_dfvk dendrolib)
-set(DENDRO_dendrolib_DIR /home/andrewc/Programs/CFD/EM4/dendrolib_dfvk)
+# Allow developers to use an existing DendroLib checkout, otherwise retrieve
+# the same Sobolev branch used by EM2.
+set(DENDRO_dendrolib_DIR
+    ""
+    CACHE PATH "Path to a local DendroLib source directory (optional)")
+set(DENDRO_dendrolib_GIT_TAG
+    "Sobolev"
+    CACHE STRING "The Git tag, branch, or commit hash for DendroLib")
+
+if(IS_DIRECTORY "${DENDRO_dendrolib_DIR}")
+  message(
+    STATUS "Using user-provided DendroLib from: ${DENDRO_dendrolib_DIR}")
+  add_subdirectory("${DENDRO_dendrolib_DIR}" dendrolib)
+else()
+  message(STATUS "DendroLib not found locally, fetching from repository...")
+  FetchContent_Declare(
+    dendrolib
+    GIT_REPOSITORY "https://github.com/dfvankomen/Dendro-5.01.git"
+    GIT_TAG "${DENDRO_dendrolib_GIT_TAG}")
+  FetchContent_MakeAvailable(dendrolib)
+
+  set(DENDRO_dendrolib_DIR
+      "${dendrolib_SOURCE_DIR}"
+      CACHE INTERNAL "Path to the fetched DendroLib source")
+endif()
 
 # then the subdirectory for the actual source of the project
 add_subdirectory(solver)
-

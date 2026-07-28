@@ -198,6 +198,12 @@ extern unsigned int SOLVER_DENDRO_GRAIN_SZ;
  * SOLVER_DENDRO_AMR_FAC*SOLVER_WAVELET_TOL */
 extern double SOLVER_DENDRO_AMR_FAC;
 
+/** @brief: Weight applied to the first-derivative WAMR indicator */
+extern double SOLVER_DERIV_FIRST_WEIGHT;
+
+/** @brief: Weight applied to the second-derivative WAMR indicator */
+extern double SOLVER_DERIV_SECOND_WEIGHT;
+
 /** @brief: Number of grid iterations untill the grid converges */
 extern unsigned int SOLVER_INIT_GRID_ITER;
 
