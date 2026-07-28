@@ -311,10 +311,29 @@ FetchContent_MakeAvailable(toml11)
 
 add_subdirectory(lib)
 
-# # TEMP: this links things to the development versions of dendrolib
-add_subdirectory(../dendrolib_dfvk dendrolib)
-set(DENDRO_dendrolib_DIR /home/andrewc/Programs/CFD/EM4/dendrolib_dfvk)
+# Allow developers to use a local dendrolib checkout.  Otherwise, fetch the
+# experimental branch automatically, following the same pattern as emda-gr.
+set(DENDRO_dendrolib_DIR "" CACHE PATH
+    "Path to a local dendrolib source directory (optional)")
+set(DENDRO_dendrolib_GIT_TAG "experimental" CACHE STRING
+    "Git tag, branch, or commit hash to fetch for dendrolib")
+
+if(IS_DIRECTORY "${DENDRO_dendrolib_DIR}")
+  message(STATUS
+          "Using user-provided dendrolib from: ${DENDRO_dendrolib_DIR}")
+  add_subdirectory("${DENDRO_dendrolib_DIR}" dendrolib)
+else()
+  message(STATUS
+          "Dendrolib not found locally; fetching ${DENDRO_dendrolib_GIT_TAG}...")
+  FetchContent_Declare(
+    dendrolib
+    GIT_REPOSITORY "https://github.com/dfvankomen/Dendro-5.01"
+    GIT_TAG "${DENDRO_dendrolib_GIT_TAG}")
+  FetchContent_MakeAvailable(dendrolib)
+
+  set(DENDRO_dendrolib_DIR "${dendrolib_SOURCE_DIR}" CACHE INTERNAL
+      "Path to the fetched dendrolib source")
+endif()
 
 # then the subdirectory for the actual source of the project
 add_subdirectory(solver)
-
