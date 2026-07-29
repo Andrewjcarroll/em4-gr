@@ -459,6 +459,7 @@ int main(int argc, char** argv) {
                 dsolve::timer::profileInfoIntermediate(
                     dsolve::SOLVER_PROFILE_FILE_PREFIX.c_str(),
                     solverCtx->get_mesh(), step);
+                solverCtx->write_grid_summary_data();
 
                 if (!rank_global)
                     std::cout << BLD << GRN

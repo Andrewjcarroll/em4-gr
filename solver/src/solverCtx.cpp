@@ -25,7 +25,7 @@
 #include "profile_params.h"
 
 namespace dsolve {
-SOLVERCtx::SOLVERCtx(ot::Mesh *pMesh) : Ctx() {
+SOLVERCtx::SOLVERCtx(ot::Mesh *pMesh) : Ctx(), m_uiWroteGridInfoHeader(false) {
     m_uiMesh = pMesh;
 
     // variable declaration
@@ -1053,6 +1053,45 @@ int SOLVERCtx::write_vtu() {
     // end SOLVER_ENABLE_VTU_OUTPUT
 
     return 0;
+}
+
+void SOLVERCtx::write_grid_summary_data() {
+    if (!m_uiMesh->isActive()) return;
+
+    unsigned int localMeshElements = m_uiMesh->getNumLocalMeshElements();
+    unsigned int globalMeshElements = 0;
+    unsigned int localGridPoints = m_uiMesh->getNumLocalMeshNodes();
+    unsigned int globalGridPoints = 0;
+
+    par::Mpi_Reduce(&localMeshElements, &globalMeshElements, 1, MPI_SUM, 0,
+                    m_uiMesh->getMPICommunicator());
+    par::Mpi_Reduce(&localGridPoints, &globalGridPoints, 1, MPI_SUM, 0,
+                    m_uiMesh->getMPICommunicator());
+
+    if (m_uiMesh->getMPIRankGlobal()) return;
+
+    const std::string fname =
+        dsolve::SOLVER_PROFILE_FILE_PREFIX + "_GridInfo.dat";
+
+    std::ofstream fileGridData;
+    fileGridData.open(fname, std::ofstream::app);
+    fileGridData.precision(12);
+    fileGridData << std::scientific;
+
+    if (!m_uiWroteGridInfoHeader) {
+        fileGridData << "timeStep,simTime,commSize,wTime,"
+                        "meshSize,totalGridPoints,stepSize\n";
+        m_uiWroteGridInfoHeader = true;
+    }
+
+    fileGridData << dsolve::SOLVER_CURRENT_RK_STEP << ",";
+    fileGridData << dsolve::SOLVER_CURRENT_RK_COORD_TIME << ",";
+    fileGridData << m_uiMesh->getMPICommSize() << ",";
+    fileGridData << MPI_Wtime() << ",";
+    fileGridData << globalMeshElements << ",";
+    fileGridData << globalGridPoints << ",";
+    fileGridData << dsolve::SOLVER_RK45_TIME_STEP_SIZE << "\n";
+    fileGridData.close();
 }
 
 int SOLVERCtx::write_checkpt() {
