@@ -84,6 +84,8 @@ extern double EM4_NOISE_AMPLITUDE;
 
 extern double EM4_ID_AMP1;
 extern double EM4_ID_LAMBDA1;
+// plane-wave (SOLVER_ID_TYPE=1) wavenumber: E_y = B_z = AMP1 * sin(KWAVE*(x-t))
+extern double EM4_ID_KWAVE;
 
 extern double SOLVER_ETA_CONST;
 extern double SOLVER_ETA_R0;
@@ -202,6 +204,17 @@ extern double SOLVER_DENDRO_AMR_FAC;
 extern unsigned int SOLVER_INIT_GRID_ITER;
 
 extern bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME;
+
+/** @brief: Refinement buffer layers applied by the wavelet criterion
+ * (ot::Mesh::setRefineBufferLayers). Every element with a face neighbour the
+ * criterion wants FINER is raised to that neighbour's target level, this many
+ * times, so 2:1 interfaces sit in smoother field. 0 = off (default). */
+extern unsigned int SOLVER_REFINE_BUFFER_LAYERS;
+
+/** @brief: Print interface-local error norms ([ifc] lines) at every terminal
+ * output: |E-E_exact|, |B-B_exact|, divE, divB on the unzipped blocks, binned
+ * by distance to the nearest block face with a COARSER neighbour. */
+extern bool SOLVER_INTERFACE_NORMS;
 
 /** @brief: Splitter fix value */
 extern unsigned int SOLVER_SPLIT_FIX;

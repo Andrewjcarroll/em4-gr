@@ -55,6 +55,7 @@ double SOLVER_KIM_FILTER_EPS                = 0.25;
 double EM4_NOISE_AMPLITUDE                  = 0.0;
 double EM4_ID_AMP1                          = 5.0;
 double EM4_ID_LAMBDA1                       = 0.05;
+double EM4_ID_KWAVE                         = 1.0;
 
 double SOLVER_ETA_CONST                     = 2.0;
 double SOLVER_ETA_DAMPING_EXP               = 2.0;
@@ -94,6 +95,8 @@ unsigned int SOLVER_DENDRO_GRAIN_SZ                = 50;
 double SOLVER_DENDRO_AMR_FAC                       = 0.1;
 unsigned int SOLVER_INIT_GRID_ITER                 = 10;
 bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME       = true;
+unsigned int SOLVER_REFINE_BUFFER_LAYERS           = 0;
+bool SOLVER_INTERFACE_NORMS                        = false;
 unsigned int SOLVER_SPLIT_FIX                      = 2;
 double SOLVER_CFL_FACTOR                           = 0.25;
 unsigned int SOLVER_RK_TIME_BEGIN                  = 0;
@@ -157,6 +160,16 @@ std::unique_ptr<dendroderivs::DendroDerivatives> SOLVER_DERIVS = nullptr;
 
 }  // namespace dsolve
 namespace dsolve {
+// Read a TOML numeric value as a double, accepting EITHER a floating-point or
+// an integer literal (so "= 30" and "= 30.0" both parse). toml11's
+// as_floating() throws toml::type_error on an integer, which is brittle for
+// human-edited / script-generated parameter files. Stored target vars are
+// already double, so an integer literal is simply widened.
+template <typename V>
+static inline double as_double(const V& v) {
+    return v.is_integer() ? static_cast<double>(v.as_integer())
+                          : v.as_floating();
+}
 void readParamFile(const char* inFile, MPI_Comm comm) {
     int rank, npes;
     MPI_Comm_rank(comm, &rank);
@@ -166,24 +179,27 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     if (file.contains("dsolve::EM4_NOISE_AMPLITUDE")) {
         dsolve::EM4_NOISE_AMPLITUDE =
-            file["dsolve::EM4_NOISE_AMPLITUDE"].as_floating();
+            as_double(file["dsolve::EM4_NOISE_AMPLITUDE"]);
     }
     if (file.contains("dsolve::EM4_ID_AMP1")) {
-        dsolve::EM4_ID_AMP1 = file["dsolve::EM4_ID_AMP1"].as_floating();
+        dsolve::EM4_ID_AMP1 = as_double(file["dsolve::EM4_ID_AMP1"]);
     }
     if (file.contains("dsolve::EM4_ID_LAMBDA1")) {
-        dsolve::EM4_ID_LAMBDA1 = file["dsolve::EM4_ID_LAMBDA1"].as_floating();
+        dsolve::EM4_ID_LAMBDA1 = as_double(file["dsolve::EM4_ID_LAMBDA1"]);
+    }
+    if (file.contains("dsolve::EM4_ID_KWAVE")) {
+        dsolve::EM4_ID_KWAVE = as_double(file["dsolve::EM4_ID_KWAVE"]);
     }
     if (file.contains("dsolve::SOLVER_ETA_CONST")) {
         dsolve::SOLVER_ETA_CONST =
-            file["dsolve::SOLVER_ETA_CONST"].as_floating();
+            as_double(file["dsolve::SOLVER_ETA_CONST"]);
     }
     if (file.contains("dsolve::SOLVER_ETA_R0")) {
-        dsolve::SOLVER_ETA_R0 = file["dsolve::SOLVER_ETA_R0"].as_floating();
+        dsolve::SOLVER_ETA_R0 = as_double(file["dsolve::SOLVER_ETA_R0"]);
     }
     if (file.contains("dsolve::SOLVER_ETA_DAMPING_EXP")) {
         dsolve::SOLVER_ETA_DAMPING_EXP =
-            file["dsolve::SOLVER_ETA_DAMPING_EXP"].as_floating();
+            as_double(file["dsolve::SOLVER_ETA_DAMPING_EXP"]);
     }
     if (file.contains("dsolve::SOLVER_PROFILE_OUTPUT_FREQ")) {
         dsolve::SOLVER_PROFILE_OUTPUT_FREQ =
@@ -220,12 +236,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     if (file.contains("dsolve::SOLVER_KIM_FILTER_KC")) {
         dsolve::SOLVER_KIM_FILTER_KC =
-            file["dsolve::SOLVER_KIM_FILTER_KC"].as_floating();
+            as_double(file["dsolve::SOLVER_KIM_FILTER_KC"]);
     }
 
     if (file.contains("dsolve::SOLVER_KIM_FILTER_EPS")) {
         dsolve::SOLVER_KIM_FILTER_EPS =
-            file["dsolve::SOLVER_KIM_FILTER_EPS"].as_floating();
+            as_double(file["dsolve::SOLVER_KIM_FILTER_EPS"]);
     }
 
     if (file.contains("dsolve::SOLVER_ELE_ORDER")) {
@@ -356,15 +372,15 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_DENDRO_AMR_FAC")) {
-        if (0.0 > file["dsolve::SOLVER_DENDRO_AMR_FAC"].as_floating() ||
-            0.2 < file["dsolve::SOLVER_DENDRO_AMR_FAC"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_DENDRO_AMR_FAC"]) ||
+            0.2 < as_double(file["dsolve::SOLVER_DENDRO_AMR_FAC"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_DENDRO_AMR_FAC")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_DENDRO_AMR_FAC =
-            file["dsolve::SOLVER_DENDRO_AMR_FAC"].as_floating();
+            as_double(file["dsolve::SOLVER_DENDRO_AMR_FAC"]);
     }
 
     if (file.contains("dsolve::SOLVER_INIT_GRID_ITER")) {
@@ -378,21 +394,31 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
                 .as_boolean();
     }
 
+    if (file.contains("dsolve::SOLVER_REFINE_BUFFER_LAYERS")) {
+        dsolve::SOLVER_REFINE_BUFFER_LAYERS =
+            file["dsolve::SOLVER_REFINE_BUFFER_LAYERS"].as_integer();
+    }
+
+    if (file.contains("dsolve::SOLVER_INTERFACE_NORMS")) {
+        dsolve::SOLVER_INTERFACE_NORMS =
+            file["dsolve::SOLVER_INTERFACE_NORMS"].as_boolean();
+    }
+
     if (file.contains("dsolve::SOLVER_SPLIT_FIX")) {
         dsolve::SOLVER_SPLIT_FIX =
             file["dsolve::SOLVER_SPLIT_FIX"].as_integer();
     }
 
     if (file.contains("dsolve::SOLVER_CFL_FACTOR")) {
-        if (0.0 > file["dsolve::SOLVER_CFL_FACTOR"].as_floating() ||
-            0.5 < file["dsolve::SOLVER_CFL_FACTOR"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_CFL_FACTOR"]) ||
+            0.5 < as_double(file["dsolve::SOLVER_CFL_FACTOR"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_CFL_FACTOR")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_CFL_FACTOR =
-            file["dsolve::SOLVER_CFL_FACTOR"].as_floating();
+            as_double(file["dsolve::SOLVER_CFL_FACTOR"]);
     }
 
     if (file.contains("dsolve::SOLVER_RK_TIME_BEGIN")) {
@@ -402,7 +428,7 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     if (file.contains("dsolve::SOLVER_RK_TIME_END")) {
         dsolve::SOLVER_RK_TIME_END =
-            file["dsolve::SOLVER_RK_TIME_END"].as_floating();
+            as_double(file["dsolve::SOLVER_RK_TIME_END"]);
     }
 
     if (file.contains("dsolve::SOLVER_RK_TYPE")) {
@@ -410,8 +436,8 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_RK45_TIME_STEP_SIZE")) {
-        if (0.0 > file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"].as_floating() ||
-            0.02 < file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"]) ||
+            0.02 < as_double(file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"])) {
             std::cerr
                 << R"(Invalid value for "dsolve::SOLVER_RK45_TIME_STEP_SIZE")"
                 << std::endl;
@@ -419,12 +445,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         }
 
         dsolve::SOLVER_RK45_TIME_STEP_SIZE =
-            file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"].as_floating();
+            as_double(file["dsolve::SOLVER_RK45_TIME_STEP_SIZE"]);
     }
 
     if (file.contains("dsolve::SOLVER_RK45_DESIRED_TOL")) {
-        if (0.0 > file["dsolve::SOLVER_RK45_DESIRED_TOL"].as_floating() ||
-            0.002 < file["dsolve::SOLVER_RK45_DESIRED_TOL"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_RK45_DESIRED_TOL"]) ||
+            0.002 < as_double(file["dsolve::SOLVER_RK45_DESIRED_TOL"])) {
             std::cerr
                 << R"(Invalid value for "dsolve::SOLVER_RK45_DESIRED_TOL")"
                 << std::endl;
@@ -432,7 +458,7 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         }
 
         dsolve::SOLVER_RK45_DESIRED_TOL =
-            file["dsolve::SOLVER_RK45_DESIRED_TOL"].as_floating();
+            as_double(file["dsolve::SOLVER_RK45_DESIRED_TOL"]);
     }
 
     if (file.contains("dsolve::DISSIPATION_TYPE")) {
@@ -466,15 +492,15 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_LOAD_IMB_TOL")) {
-        if (0.0 > file["dsolve::SOLVER_LOAD_IMB_TOL"].as_floating() ||
-            0.2 < file["dsolve::SOLVER_LOAD_IMB_TOL"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_LOAD_IMB_TOL"]) ||
+            0.2 < as_double(file["dsolve::SOLVER_LOAD_IMB_TOL"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_LOAD_IMB_TOL")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_LOAD_IMB_TOL =
-            file["dsolve::SOLVER_LOAD_IMB_TOL"].as_floating();
+            as_double(file["dsolve::SOLVER_LOAD_IMB_TOL"]);
     }
 
     if (file.contains("dsolve::SOLVER_DIM")) {
@@ -490,15 +516,15 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL")) {
-        if (0.0 > file["dsolve::SOLVER_WAVELET_TOL"].as_floating() ||
-            1.0 < file["dsolve::SOLVER_WAVELET_TOL"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_WAVELET_TOL"]) ||
+            1.0 < as_double(file["dsolve::SOLVER_WAVELET_TOL"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_WAVELET_TOL")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_WAVELET_TOL =
-            file["dsolve::SOLVER_WAVELET_TOL"].as_floating();
+            as_double(file["dsolve::SOLVER_WAVELET_TOL"]);
     }
 
     if (file.contains("dsolve::SOLVER_USE_WAVELET_TOL_FUNCTION")) {
@@ -507,22 +533,22 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL_MAX")) {
-        if (0.0 > file["dsolve::SOLVER_WAVELET_TOL_MAX"].as_floating() ||
-            0.002 < file["dsolve::SOLVER_WAVELET_TOL_MAX"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_WAVELET_TOL_MAX"]) ||
+            0.002 < as_double(file["dsolve::SOLVER_WAVELET_TOL_MAX"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_WAVELET_TOL_MAX")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_WAVELET_TOL_MAX =
-            file["dsolve::SOLVER_WAVELET_TOL_MAX"].as_floating();
+            as_double(file["dsolve::SOLVER_WAVELET_TOL_MAX"]);
     }
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0")) {
         if (0.0 >
-                file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"].as_floating() ||
+                as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"]) ||
             60.0 <
-                file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"].as_floating()) {
+                as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"])) {
             std::cerr
                 << R"(Invalid value for "dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0")"
                 << std::endl;
@@ -530,14 +556,14 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         }
 
         dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0 =
-            file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"].as_floating();
+            as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R0"]);
     }
 
     if (file.contains("dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1")) {
         if (0.0 >
-                file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"].as_floating() ||
+                as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"]) ||
             440.0 <
-                file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"].as_floating()) {
+                as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"])) {
             std::cerr
                 << R"(Invalid value for "dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1")"
                 << std::endl;
@@ -545,7 +571,7 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         }
 
         dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1 =
-            file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"].as_floating();
+            as_double(file["dsolve::SOLVER_WAVELET_TOL_FUNCTION_R1"]);
     }
 
     if (file.contains("dsolve::SOLVER_USE_FD_GRID_TRANSFER")) {
@@ -567,8 +593,8 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MIN_X")) {
-        // if (-12.0 > file["dsolve::SOLVER_BLK_MIN_X"].as_floating() ||
-        //     0.0 < file["dsolve::SOLVER_BLK_MIN_X"].as_floating()) {
+        // if (-12.0 > as_double(file["dsolve::SOLVER_BLK_MIN_X"]) ||
+        //     0.0 < as_double(file["dsolve::SOLVER_BLK_MIN_X"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MIN_X")"
         //               << std::endl;
@@ -576,12 +602,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MIN_X =
-            file["dsolve::SOLVER_BLK_MIN_X"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MIN_X"]);
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MIN_Y")) {
-        // if (-12.0 > file["dsolve::SOLVER_BLK_MIN_Y"].as_floating() ||
-        //     0.0 < file["dsolve::SOLVER_BLK_MIN_Y"].as_floating()) {
+        // if (-12.0 > as_double(file["dsolve::SOLVER_BLK_MIN_Y"]) ||
+        //     0.0 < as_double(file["dsolve::SOLVER_BLK_MIN_Y"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MIN_Y")"
         //               << std::endl;
@@ -589,12 +615,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MIN_Y =
-            file["dsolve::SOLVER_BLK_MIN_Y"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MIN_Y"]);
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MIN_Z")) {
-        // if (-12.0 > file["dsolve::SOLVER_BLK_MIN_Z"].as_floating() ||
-        //     0.0 < file["dsolve::SOLVER_BLK_MIN_Z"].as_floating()) {
+        // if (-12.0 > as_double(file["dsolve::SOLVER_BLK_MIN_Z"]) ||
+        //     0.0 < as_double(file["dsolve::SOLVER_BLK_MIN_Z"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MIN_Z")"
         //               << std::endl;
@@ -602,12 +628,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MIN_Z =
-            file["dsolve::SOLVER_BLK_MIN_Z"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MIN_Z"]);
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MAX_X")) {
-        // if (0.0 > file["dsolve::SOLVER_BLK_MAX_X"].as_floating() ||
-        //     12.0 < file["dsolve::SOLVER_BLK_MAX_X"].as_floating()) {
+        // if (0.0 > as_double(file["dsolve::SOLVER_BLK_MAX_X"]) ||
+        //     12.0 < as_double(file["dsolve::SOLVER_BLK_MAX_X"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MAX_X")"
         //               << std::endl;
@@ -615,12 +641,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MAX_X =
-            file["dsolve::SOLVER_BLK_MAX_X"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MAX_X"]);
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MAX_Y")) {
-        // if (0.0 > file["dsolve::SOLVER_BLK_MAX_Y"].as_floating() ||
-        //     12.0 < file["dsolve::SOLVER_BLK_MAX_Y"].as_floating()) {
+        // if (0.0 > as_double(file["dsolve::SOLVER_BLK_MAX_Y"]) ||
+        //     12.0 < as_double(file["dsolve::SOLVER_BLK_MAX_Y"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MAX_Y")"
         //               << std::endl;
@@ -628,12 +654,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MAX_Y =
-            file["dsolve::SOLVER_BLK_MAX_Y"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MAX_Y"]);
     }
 
     if (file.contains("dsolve::SOLVER_BLK_MAX_Z")) {
-        // if (0.0 > file["dsolve::SOLVER_BLK_MAX_Z"].as_floating() ||
-        //     12.0 < file["dsolve::SOLVER_BLK_MAX_Z"].as_floating()) {
+        // if (0.0 > as_double(file["dsolve::SOLVER_BLK_MAX_Z"]) ||
+        //     12.0 < as_double(file["dsolve::SOLVER_BLK_MAX_Z"])) {
         //     std::cerr << R"(Invalid value for
         //     "dsolve::SOLVER_BLK_MAX_Z")"
         //               << std::endl;
@@ -641,18 +667,18 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         // }
 
         dsolve::SOLVER_BLK_MAX_Z =
-            file["dsolve::SOLVER_BLK_MAX_Z"].as_floating();
+            as_double(file["dsolve::SOLVER_BLK_MAX_Z"]);
     }
 
     if (file.contains("dsolve::KO_DISS_SIGMA")) {
-        if (0.0 > file["dsolve::KO_DISS_SIGMA"].as_floating() ||
-            0.8 < file["dsolve::KO_DISS_SIGMA"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::KO_DISS_SIGMA"]) ||
+            0.8 < as_double(file["dsolve::KO_DISS_SIGMA"])) {
             std::cerr << R"(Invalid value for "dsolve::KO_DISS_SIGMA")"
                       << std::endl;
             exit(-1);
         }
 
-        dsolve::KO_DISS_SIGMA = file["dsolve::KO_DISS_SIGMA"].as_floating();
+        dsolve::KO_DISS_SIGMA = as_double(file["dsolve::KO_DISS_SIGMA"]);
     }
 
     if (file.contains("dsolve::SOLVER_ID_TYPE")) {
@@ -660,75 +686,75 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MIN_X")) {
-        if (-500.0 > file["dsolve::SOLVER_GRID_MIN_X"].as_floating() ||
-            0.0 < file["dsolve::SOLVER_GRID_MIN_X"].as_floating()) {
+        if (-500.0 > as_double(file["dsolve::SOLVER_GRID_MIN_X"]) ||
+            0.0 < as_double(file["dsolve::SOLVER_GRID_MIN_X"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MIN_X")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MIN_X =
-            file["dsolve::SOLVER_GRID_MIN_X"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MIN_X"]);
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MAX_X")) {
-        if (0.0 > file["dsolve::SOLVER_GRID_MAX_X"].as_floating() ||
-            500.0 < file["dsolve::SOLVER_GRID_MAX_X"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_GRID_MAX_X"]) ||
+            500.0 < as_double(file["dsolve::SOLVER_GRID_MAX_X"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MAX_X")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MAX_X =
-            file["dsolve::SOLVER_GRID_MAX_X"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MAX_X"]);
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MIN_Y")) {
-        if (-500.0 > file["dsolve::SOLVER_GRID_MIN_Y"].as_floating() ||
-            0.0 < file["dsolve::SOLVER_GRID_MIN_Y"].as_floating()) {
+        if (-500.0 > as_double(file["dsolve::SOLVER_GRID_MIN_Y"]) ||
+            0.0 < as_double(file["dsolve::SOLVER_GRID_MIN_Y"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MIN_Y")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MIN_Y =
-            file["dsolve::SOLVER_GRID_MIN_Y"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MIN_Y"]);
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MAX_Y")) {
-        if (0.0 > file["dsolve::SOLVER_GRID_MAX_Y"].as_floating() ||
-            500.0 < file["dsolve::SOLVER_GRID_MAX_Y"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_GRID_MAX_Y"]) ||
+            500.0 < as_double(file["dsolve::SOLVER_GRID_MAX_Y"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MAX_Y")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MAX_Y =
-            file["dsolve::SOLVER_GRID_MAX_Y"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MAX_Y"]);
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MIN_Z")) {
-        if (-500.0 > file["dsolve::SOLVER_GRID_MIN_Z"].as_floating() ||
-            0.0 < file["dsolve::SOLVER_GRID_MIN_Z"].as_floating()) {
+        if (-500.0 > as_double(file["dsolve::SOLVER_GRID_MIN_Z"]) ||
+            0.0 < as_double(file["dsolve::SOLVER_GRID_MIN_Z"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MIN_Z")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MIN_Z =
-            file["dsolve::SOLVER_GRID_MIN_Z"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MIN_Z"]);
     }
 
     if (file.contains("dsolve::SOLVER_GRID_MAX_Z")) {
-        if (0.0 > file["dsolve::SOLVER_GRID_MAX_Z"].as_floating() ||
-            500.0 < file["dsolve::SOLVER_GRID_MAX_Z"].as_floating()) {
+        if (0.0 > as_double(file["dsolve::SOLVER_GRID_MAX_Z"]) ||
+            500.0 < as_double(file["dsolve::SOLVER_GRID_MAX_Z"])) {
             std::cerr << R"(Invalid value for "dsolve::SOLVER_GRID_MAX_Z")"
                       << std::endl;
             exit(-1);
         }
 
         dsolve::SOLVER_GRID_MAX_Z =
-            file["dsolve::SOLVER_GRID_MAX_Z"].as_floating();
+            as_double(file["dsolve::SOLVER_GRID_MAX_Z"]);
     }
 
     if (file.contains("SOLVER_DERIVTYPE_FIRST")) {
@@ -974,6 +1000,10 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << dsolve::SOLVER_INIT_GRID_ITER << std::endl;
         sout << "\tdsolve::SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME: "
              << dsolve::SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME << std::endl;
+        sout << "\tdsolve::SOLVER_REFINE_BUFFER_LAYERS: "
+             << dsolve::SOLVER_REFINE_BUFFER_LAYERS << std::endl;
+        sout << "\tdsolve::SOLVER_INTERFACE_NORMS: "
+             << dsolve::SOLVER_INTERFACE_NORMS << std::endl;
         sout << "\tdsolve::SOLVER_SPLIT_FIX: " << dsolve::SOLVER_SPLIT_FIX
              << std::endl;
         sout << "\tdsolve::SOLVER_CFL_FACTOR: " << dsolve::SOLVER_CFL_FACTOR
