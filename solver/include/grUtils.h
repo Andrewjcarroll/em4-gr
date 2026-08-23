@@ -109,6 +109,14 @@ void initDataEM4(const double x, const double y, const double z,
               double* var);
 
 /**
+ * @brief Plane-wave initial data (SOLVER_ID_TYPE=1): a +x-propagating wave
+ *  E_y = B_z = EM4_ID_AMP1 * sin(EM4_ID_KWAVE * x) at t=0. Exact vacuum
+ *  Maxwell solution for the long-propagation dispersion / phase-error test.
+ */
+void initDataPlaneWave(const double x, const double y, const double z,
+                       double* var);
+
+/**
  * @brief calculate and set the initial data for superposed boosted kerr-sen
  * @param xx1 : x coord, GRIDX format
  * @param yy1 : y coord, GRIDX format

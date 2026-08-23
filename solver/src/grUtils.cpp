@@ -36,6 +36,11 @@ void initDataFuncToPhysCoords(const double xx1, const double yy1,
             initDataEM4(xx, yy, zz, var);
             break;
 
+        case 1:
+
+            initDataPlaneWave(xx, yy, zz, var);
+            break;
+
         default:
             std::cout << "Unknown ID type: " << dsolve::SOLVER_ID_TYPE
                       << std::endl;
@@ -81,6 +86,25 @@ void initDataEM4(const double x, const double y, const double z, double *var) {
     var[VAR::U_PHI] = Phi;
     var[VAR::U_PSI] = Psi;
 
+}
+
+// Plane wave propagating in +x: E_y = B_z = A sin(k x) at t=0. This is an exact
+// vacuum Maxwell solution (div E = div B = 0, |E|=|B|) and propagates at c=1 with
+// no amplitude decay, so accumulated dispersion appears directly as phase error.
+void initDataPlaneWave(const double x, const double y, const double z,
+                       double* var) {
+    const double amp = dsolve::EM4_ID_AMP1;
+    const double k   = dsolve::EM4_ID_KWAVE;
+    const double s   = amp * sin(k * x);
+
+    var[VAR::U_E0] = 0.0;
+    var[VAR::U_E1] = s;     // E_y
+    var[VAR::U_E2] = 0.0;
+    var[VAR::U_B0] = 0.0;
+    var[VAR::U_B1] = 0.0;
+    var[VAR::U_B2] = s;     // B_z = E_y for a +x wave
+    var[VAR::U_PHI] = 0.0;
+    var[VAR::U_PSI] = 0.0;
 }
 
 double CalTolHelper(const double t, const double r, const double rad[],
@@ -209,6 +233,22 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
         x = xx;
         y = yy;
         z = zz;
+    }
+
+    // plane wave (SOLVER_ID_TYPE=1): exact solution E_y = B_z = A sin(k(x-t))
+    if (dsolve::SOLVER_ID_TYPE == 1) {
+        const double amp = dsolve::EM4_ID_AMP1;
+        const double k   = dsolve::EM4_ID_KWAVE;
+        const double s   = amp * sin(k * (x - t));
+        var[VAR::U_E0] = 0.0;
+        var[VAR::U_E1] = s;
+        var[VAR::U_E2] = 0.0;
+        var[VAR::U_B0] = 0.0;
+        var[VAR::U_B1] = 0.0;
+        var[VAR::U_B2] = s;
+        var[VAR::U_PHI] = 0.0;
+        var[VAR::U_PSI] = 0.0;
+        return;
     }
 
     const double amp1 = dsolve::EM4_ID_AMP1;

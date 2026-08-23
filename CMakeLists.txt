@@ -7,8 +7,8 @@
 # Note that all options and compiler flags set here will propagate to other
 # directories such as src/ and dendro/
 
-# NOTE: cmake minimum is now set to 3.1
-cmake_minimum_required(VERSION 3.1)
+# NOTE: 3.15 to match dendrolib/dendrogr (CMake 4.x dropped < 3.5 support)
+cmake_minimum_required(VERSION 3.15)
 
 # full project name and the languages used
 project(DendroEM4 C CXX Fortran)
@@ -311,9 +311,23 @@ FetchContent_MakeAvailable(toml11)
 
 add_subdirectory(lib)
 
-# # TEMP: this links things to the development versions of dendrolib
-add_subdirectory(../dendrolib_dfvk dendrolib)
-set(DENDRO_dendrolib_DIR /home/andrewc/Programs/CFD/EM4/dendrolib_dfvk)
+# dendrolib source location -- settable with -DDENDRO_dendrolib_DIR=/path
+# (mirrors dendrogr's CMake). Defaults to the sibling dendrolib_dfvk_copy
+# checkout; if that path is not a directory, fall back to fetching from git.
+set(DENDRO_dendrolib_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../dendrolib_dfvk_copy"
+    CACHE PATH "Path to the local dendrolib source directory")
+set(DENDRO_dendrolib_GIT_TAG "experimental"
+    CACHE STRING "Git tag/branch/commit for dendrolib if fetched")
+if(IS_DIRECTORY ${DENDRO_dendrolib_DIR})
+  message(STATUS "EM4: using local dendrolib from: ${DENDRO_dendrolib_DIR}")
+  add_subdirectory(${DENDRO_dendrolib_DIR} dendrolib)
+else()
+  message(STATUS "EM4: dendrolib not local, fetching (tag ${DENDRO_dendrolib_GIT_TAG})")
+  FetchContent_Declare(dendrolib
+    GIT_REPOSITORY "https://github.com/dfvankomen/Dendro-5.01"
+    GIT_TAG ${DENDRO_dendrolib_GIT_TAG})
+  FetchContent_MakeAvailable(dendrolib)
+endif()
 
 # then the subdirectory for the actual source of the project
 add_subdirectory(solver)
