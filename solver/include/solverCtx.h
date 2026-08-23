@@ -196,6 +196,15 @@ class SOLVERCtx : public ts::Ctx<SOLVERCtx, DendroScalar, unsigned int> {
     /**@brief: prints any messages to the terminal output. */
     int terminal_output();
 
+    /**
+     * @brief Interface-local error norms (SOLVER_INTERFACE_NORMS): |dE|, |dB|
+     * vs the analytic solution and |divE|, |divB| on the unzipped blocks,
+     * binned per level by distance to the nearest block face with a COARSER
+     * neighbour (d1/d2/d3/d>=4/none; d>=4 and none are controls). Prints
+     * [ifc] lines; call after compute_constraints().
+     */
+    int interface_norms();
+
     /**@brief: returns the async communication batch size. */
     unsigned int get_async_batch_sz() { return dsolve::SOLVER_ASYNC_COMM_K; }
 

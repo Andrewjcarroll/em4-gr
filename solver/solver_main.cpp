@@ -111,6 +111,10 @@ int main(int argc, char** argv) {
     }
     dsolve::readParamFile(argv[1], comm);
 
+    // refinement buffer layers for the default wavelet criterion
+    // (process-wide, so every remeshed mesh honours it)
+    ot::Mesh::setRefineBufferLayers(dsolve::SOLVER_REFINE_BUFFER_LAYERS);
+
     int root = std::min(1, npes - 1);
     // dump parameter file
     dsolve::dumpParamFile(std::cout, root, comm);

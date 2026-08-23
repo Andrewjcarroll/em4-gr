@@ -14,6 +14,8 @@
 
 #include <stdlib.h>
 
+#include <cstdio>
+
 #include <ios>
 
 #include "dendro.h"
@@ -1539,6 +1541,19 @@ int SOLVERCtx::terminal_output() {
         DendroScalar *zippedUpAnalyticalDiff[SOLVER_NUM_VARS];
         m_var[VL::CPU_ANALYTIC_DIFF].to_2d(zippedUpAnalyticalDiff);
 
+        // volume-weighted (AMR-aware) norm normalization, matching the
+        // rms_vol convention used by BSSN_GR / CCZ4-GR:
+        //   rms_vol = sqrt( integral diff^2 dV / V ),   V = integral 1 dV.
+        // This is fair across schemes whose adaptive meshes differ, unlike the
+        // per-node DIFF_L2 (normL2) which weights every node equally.
+        std::vector<double> onesVec;
+        m_uiMesh->createVector(onesVec);
+        for (size_t ii = 0; ii < onesVec.size(); ii++) onesVec[ii] = 1.0;
+        const double meshVolume =
+            ot::integrateScalarFieldOnMesh(m_uiMesh, onesVec.data());
+        const double invMeshVolume =
+            (meshVolume > 0.0) ? (1.0 / meshVolume) : 0.0;
+
         for (unsigned int i = 0; i < dsolve::SOLVER_NUM_CONSOLE_OUTPUT_VARS;
              i++) {
             unsigned int v = dsolve::SOLVER_CONSOLE_OUTPUT_VARS[i];
@@ -1555,8 +1570,11 @@ int SOLVERCtx::terminal_output() {
                 (m_uiMesh->getNumLocalMeshNodes()),
                 m_uiMesh->getMPICommunicator());
 
-            double l2_integrated = ot::calculateL2FullMeshIntegration(
-                m_uiMesh, zippedUpAnalyticalDiff[v]);
+            // volume-averaged L2 norm (BSSN/CCZ4 rms_vol convention)
+            double l2_integrated = std::sqrt(
+                ot::calculateL2FullMeshIntegration(
+                    m_uiMesh, zippedUpAnalyticalDiff[v]) *
+                invMeshVolume);
 
             double rmse = normRMSE(
                 &zippedUpAnalyticalDiff[v][m_uiMesh->getNodeLocalBegin()],
@@ -1592,8 +1610,8 @@ int SOLVERCtx::terminal_output() {
                 }
 
                 fileDiff << l_min << "," << l_max << "," << l2_norm << ","
-                         << rmse << "," << nrmse << "," << mae << "," << ","
-                         << l2_integrated;
+                         << rmse << "," << nrmse << "," << mae << ","
+                         << l2_integrated << ",";
                 fileDiff.close();
             }
         }
@@ -1613,6 +1631,15 @@ int SOLVERCtx::terminal_output() {
         DendroScalar *zippedUpConstraints[SOLVER_CONSTRAINT_NUM_VARS];
         m_var[VL::CPU_CV].to_2d(zippedUpConstraints);
 
+        // volume-weighted norm normalization (BSSN/CCZ4 rms_vol convention)
+        std::vector<double> onesVecC;
+        m_uiMesh->createVector(onesVecC);
+        for (size_t ii = 0; ii < onesVecC.size(); ii++) onesVecC[ii] = 1.0;
+        const double meshVolumeC =
+            ot::integrateScalarFieldOnMesh(m_uiMesh, onesVecC.data());
+        const double invMeshVolumeC =
+            (meshVolumeC > 0.0) ? (1.0 / meshVolumeC) : 0.0;
+
         for (unsigned int i = 0;
              i < dsolve::SOLVER_NUM_CONSOLE_OUTPUT_CONSTRAINTS; i++) {
             unsigned int v = dsolve::SOLVER_CONSOLE_OUTPUT_CONSTRAINTS[i];
@@ -1630,8 +1657,11 @@ int SOLVERCtx::terminal_output() {
                        (m_uiMesh->getNumLocalMeshNodes()),
                        m_uiMesh->getMPICommunicator());
 
-            double l2_integrated = ot::calculateL2FullMeshIntegration(
-                m_uiMesh, zippedUpConstraints[v]);
+            // volume-averaged L2 norm (BSSN/CCZ4 rms_vol convention)
+            double l2_integrated = std::sqrt(
+                ot::calculateL2FullMeshIntegration(
+                    m_uiMesh, zippedUpConstraints[v]) *
+                invMeshVolumeC);
 
             if (!(m_uiMesh->getMPIRank())) {
                 std::cout << "\t[const]:" << std::setw(12)
@@ -1658,11 +1688,195 @@ int SOLVERCtx::terminal_output() {
 
 #endif
 
+        if (dsolve::SOLVER_INTERFACE_NORMS) this->interface_norms();
+
         std::cout.precision(ss);
         std::cout << std::setw(sw);
         std::cout.unsetf(std::ios_base::floatfield);
     }
 
+    return 0;
+}
+
+int SOLVERCtx::interface_norms() {
+    if (!m_uiMesh->isActive()) return 0;
+
+    // make sure the unzipped evolution vars (and constraints, when built)
+    // are current. compute_constraints unzips CPU_EV into CPU_EV_UZ_IN and
+    // early-outs if already done this step.
+#ifdef SOLVER_COMPUTE_CONSTRAINTS
+    this->compute_constraints();
+    const bool haveCons = true;
+#else
+    this->unzip(m_var[VL::CPU_EV], m_var[VL::CPU_EV_UZ_IN],
+                dsolve::SOLVER_ASYNC_COMM_K);
+    const bool haveCons = false;
+#endif
+
+    const std::vector<ot::Block> &blks   = m_uiMesh->getLocalBlockList();
+    const std::vector<ot::TreeNode> &AE  = m_uiMesh->getAllElements();
+    const std::vector<unsigned int> &e2e = m_uiMesh->getE2EMapping();
+    const unsigned int nd                = m_uiMesh->getNumDirections();
+    const unsigned int FAC[6] = {OCT_DIR_LEFT, OCT_DIR_RIGHT, OCT_DIR_DOWN,
+                                 OCT_DIR_UP,   OCT_DIR_BACK,  OCT_DIR_FRONT};
+
+    DendroScalar *ev[SOLVER_NUM_VARS];
+    m_var[VL::CPU_EV_UZ_IN].to_2d(ev);
+    DendroScalar *cv[SOLVER_CONSTRAINT_NUM_VARS];
+    if (haveCons) m_var[VL::CPU_CV_UZ_IN].to_2d(cv);
+
+    // quantities: |dE|, |dB|, |divE|, |divB|
+    // bins: dist 1, 2, 3, >=4 (to a 2:1 face), no 2:1 face on the block
+    constexpr int NQ = 4, NB = 5, NL = 20;
+    const char *qn[NQ] = {"|dE|", "|dB|", "divE", "divB"};
+    std::vector<double> s2(NQ * NL * NB, 0.0), mx(NQ * NL * NB, 0.0);
+    std::vector<long> cn(NL * NB, 0);
+
+    const double t = m_uiTinfo._m_uiT;
+    DendroScalar exact[dsolve::SOLVER_NUM_VARS];
+
+    for (size_t b = 0; b < blks.size(); b++) {
+        if (blks[b].getBlkNodeFlag()) continue;  // domain-boundary pad unset
+        const ot::TreeNode bn  = blks[b].getBlockNode();
+        const unsigned int pW  = blks[b].get1DPadWidth();
+        const unsigned int lx  = blks[b].getAllocationSzX();
+        const unsigned int ly  = blks[b].getAllocationSzY();
+        const unsigned int lz  = blks[b].getAllocationSzZ();
+        const unsigned int of  = blks[b].getOffset();
+        const double hx        = blks[b].computeGridDx();
+        const unsigned int lev = blks[b].getRegularGridLev();
+        if (lev >= (unsigned int)NL) continue;
+
+        // a face is a 2:1 face if ANY of the block's elements has a COARSER
+        // neighbour through it -- the fine side, whose pads are prolongated
+        bool jump[6] = {false, false, false, false, false, false};
+        for (DendroIntL e = blks[b].getLocalElementBegin();
+             e < blks[b].getLocalElementEnd(); e++)
+            for (int d = 0; d < 6; d++) {
+                const unsigned int nb = e2e[(size_t)e * nd + FAC[d]];
+                if (nb == LOOK_UP_TABLE_DEFAULT || nb >= AE.size()) continue;
+                if (AE[nb].getLevel() < AE[e].getLevel()) jump[d] = true;
+            }
+
+        const double x0 = (double)bn.minX() - pW * hx;
+        const double y0 = (double)bn.minY() - pW * hx;
+        const double z0 = (double)bn.minZ() - pW * hx;
+
+        for (unsigned int k = pW; k < lz - pW; k++)
+            for (unsigned int j = pW; j < ly - pW; j++)
+                for (unsigned int i = pW; i < lx - pW; i++) {
+                    const double X = GRIDX_TO_X(x0 + i * hx);
+                    const double Y = GRIDY_TO_Y(y0 + j * hx);
+                    const double Z = GRIDZ_TO_Z(z0 + k * hx);
+
+                    unsigned int dist = 1000;
+                    const unsigned int di[6] = {
+                        i - pW + 1, (lx - pW - 1) - i + 1,
+                        j - pW + 1, (ly - pW - 1) - j + 1,
+                        k - pW + 1, (lz - pW - 1) - k + 1};
+                    for (int d = 0; d < 6; d++)
+                        if (jump[d] && di[d] < dist) dist = di[d];
+                    const int bin = (dist == 1)     ? 0
+                                    : (dist == 2)   ? 1
+                                    : (dist == 3)   ? 2
+                                    : (dist < 1000) ? 3
+                                                    : 4;
+                    const size_t pp = of + (size_t)(k * ly + j) * lx + i;
+
+                    dsolve::analyticalSolEM4(X, Y, Z, t, exact, false);
+                    double q[NQ];
+                    {
+                        const double dE0 = ev[VAR::U_E0][pp] - exact[VAR::U_E0];
+                        const double dE1 = ev[VAR::U_E1][pp] - exact[VAR::U_E1];
+                        const double dE2 = ev[VAR::U_E2][pp] - exact[VAR::U_E2];
+                        const double dB0 = ev[VAR::U_B0][pp] - exact[VAR::U_B0];
+                        const double dB1 = ev[VAR::U_B1][pp] - exact[VAR::U_B1];
+                        const double dB2 = ev[VAR::U_B2][pp] - exact[VAR::U_B2];
+                        q[0] = std::sqrt(dE0 * dE0 + dE1 * dE1 + dE2 * dE2);
+                        q[1] = std::sqrt(dB0 * dB0 + dB1 * dB1 + dB2 * dB2);
+                        q[2] = haveCons
+                                   ? std::fabs(cv[VAR_CONSTRAINT::C_DIVE][pp])
+                                   : 0.0;
+                        q[3] = haveCons
+                                   ? std::fabs(cv[VAR_CONSTRAINT::C_DIVB][pp])
+                                   : 0.0;
+                    }
+                    const int c = (int)lev * NB + bin;
+                    cn[c]++;
+                    for (int qi = 0; qi < NQ; qi++) {
+                        const int idx = qi * NL * NB + c;
+                        s2[idx] += q[qi] * q[qi];
+                        if (q[qi] > mx[idx]) mx[idx] = q[qi];
+                    }
+                }
+    }
+
+    std::vector<double> gs2(NQ * NL * NB), gmx(NQ * NL * NB);
+    std::vector<long> gcn(NL * NB);
+    MPI_Comm comm = m_uiMesh->getMPICommunicator();
+    MPI_Allreduce(s2.data(), gs2.data(), NQ * NL * NB, MPI_DOUBLE, MPI_SUM,
+                  comm);
+    MPI_Allreduce(mx.data(), gmx.data(), NQ * NL * NB, MPI_DOUBLE, MPI_MAX,
+                  comm);
+    MPI_Allreduce(cn.data(), gcn.data(), NL * NB, MPI_LONG, MPI_SUM, comm);
+
+    // mesh size and wall clock so the cost of a configuration can be read
+    // off the same lines as its accuracy
+    long nLocEl = (long)m_uiMesh->getNumLocalMeshElements(), nGlbEl = 0;
+    MPI_Allreduce(&nLocEl, &nGlbEl, 1, MPI_LONG, MPI_SUM, comm);
+    static const double wall0 = MPI_Wtime();
+
+    if (!m_uiMesh->getMPIRank()) {
+        const char *nm[NB] = {"d1", "d2", "d3", "d>=4", "none"};
+        std::printf(
+            "[ifc] step %lu t %.5f elems %ld wall %.2f (rms, max, (count); "
+            "excess = d1/d>=4 rms)\n",
+            (unsigned long)m_uiTinfo._m_uiStep, t, nGlbEl,
+            MPI_Wtime() - wall0);
+        for (int qi = 0; qi < NQ; qi++) {
+            double ps2[NB] = {0, 0, 0, 0, 0}, pmx[NB] = {0, 0, 0, 0, 0};
+            long pcn[NB]   = {0, 0, 0, 0, 0};
+            for (int l = 0; l < NL; l++) {
+                bool any = false;
+                for (int tb = 0; tb < NB; tb++) any = any || gcn[l * NB + tb];
+                if (!any) continue;
+                std::printf("[ifc] %-5s lvl %2d |", qn[qi], l);
+                for (int tb = 0; tb < NB; tb++) {
+                    const int c   = l * NB + tb;
+                    const int idx = qi * NL * NB + c;
+                    ps2[tb] += gs2[idx];
+                    pcn[tb] += gcn[c];
+                    if (gmx[idx] > pmx[tb]) pmx[tb] = gmx[idx];
+                    if (gcn[c])
+                        std::printf(" %s %.3e %.3e (%ld) |", nm[tb],
+                                    std::sqrt(gs2[idx] / (double)gcn[c]),
+                                    gmx[idx], gcn[c]);
+                    else
+                        std::printf(" %s - |", nm[tb]);
+                }
+                const int c0 = qi * NL * NB + l * NB + 0;
+                const int c3 = qi * NL * NB + l * NB + 3;
+                if (gcn[l * NB + 0] && gcn[l * NB + 3] && gs2[c3] > 0)
+                    std::printf(" excess %.2f",
+                                std::sqrt(gs2[c0] / (double)gcn[l * NB + 0]) /
+                                    std::sqrt(gs2[c3] /
+                                              (double)gcn[l * NB + 3]));
+                std::printf("\n");
+            }
+            std::printf("[ifc] %-5s all    |", qn[qi]);
+            for (int tb = 0; tb < NB; tb++)
+                if (pcn[tb])
+                    std::printf(" %s %.3e %.3e (%ld) |", nm[tb],
+                                std::sqrt(ps2[tb] / (double)pcn[tb]), pmx[tb],
+                                pcn[tb]);
+            if (pcn[0] && pcn[3] && ps2[3] > 0)
+                std::printf(" excess %.2f",
+                            std::sqrt(ps2[0] / (double)pcn[0]) /
+                                std::sqrt(ps2[3] / (double)pcn[3]));
+            std::printf("\n");
+        }
+        std::fflush(stdout);
+    }
     return 0;
 }
 
