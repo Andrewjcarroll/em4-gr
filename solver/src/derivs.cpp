@@ -1,4 +1,5 @@
 #include "derivs.h"
+#include "parameters.h"
 
 #include <cmath>
 #include <iostream>
@@ -27,167 +28,97 @@ void (*ko_deriv_y)(double *const, const double *const, const double,
 void (*ko_deriv_z)(double *const, const double *const, const double,
                    const unsigned int *, unsigned);
 
+// NATE ADDITION
 void set_appropriate_derivs(const unsigned pw) {
-#ifdef SOLVER_USE_4TH_ORDER_DERIVS
-    if (pw == 2) {
-        // std::cout << "4th Order Derivatives set, detected padding width of 2"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv42_x_pw2;
-        dendro_derivs::deriv_y = deriv42_y_pw2;
-        dendro_derivs::deriv_z = deriv42_z_pw2;
+    const unsigned int order = dsolve::SOLVER_FD_DERIV_ORDER;
 
-        dendro_derivs::deriv_xx = deriv42_xx_pw2;
-        dendro_derivs::deriv_yy = deriv42_yy_pw2;
-        dendro_derivs::deriv_zz = deriv42_zz_pw2;
-
-        dendro_derivs::ko_deriv_x = ko_deriv21_x;
-        dendro_derivs::ko_deriv_y = ko_deriv21_y;
-        dendro_derivs::ko_deriv_z = ko_deriv21_z;
-    } else if (pw == 3) {
-        // std::cout << "4th Order Derivatives set, detected padding width of 3"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv42_x;
-        dendro_derivs::deriv_y = deriv42_y;
-        dendro_derivs::deriv_z = deriv42_z;
-
-        dendro_derivs::deriv_xx = deriv42_xx;
-        dendro_derivs::deriv_yy = deriv42_yy;
-        dendro_derivs::deriv_zz = deriv42_zz;
-
-        dendro_derivs::ko_deriv_x = ko_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_deriv42_z;
-    } else if (pw == 4) {
-        // std::cout << "4th Order Derivatives set, detected padding width of 4"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv42_x_pw4;
-        dendro_derivs::deriv_y = deriv42_y_pw4;
-        dendro_derivs::deriv_z = deriv42_z_pw4;
-
-        dendro_derivs::deriv_xx = deriv42_xx_pw4;
-        dendro_derivs::deriv_yy = deriv42_yy_pw4;
-        dendro_derivs::deriv_zz = deriv42_zz_pw4;
-
-        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
+    if (order == 4) {
+        if (pw == 2) {
+            dendro_derivs::deriv_x = deriv42_x_pw2;
+            dendro_derivs::deriv_y = deriv42_y_pw2;
+            dendro_derivs::deriv_z = deriv42_z_pw2;
+            dendro_derivs::deriv_xx = deriv42_xx_pw2;
+            dendro_derivs::deriv_yy = deriv42_yy_pw2;
+            dendro_derivs::deriv_zz = deriv42_zz_pw2;
+            dendro_derivs::ko_deriv_x = ko_deriv21_x;
+            dendro_derivs::ko_deriv_y = ko_deriv21_y;
+            dendro_derivs::ko_deriv_z = ko_deriv21_z;
+        } else if (pw == 3) {
+            dendro_derivs::deriv_x = deriv42_x;
+            dendro_derivs::deriv_y = deriv42_y;
+            dendro_derivs::deriv_z = deriv42_z;
+            dendro_derivs::deriv_xx = deriv42_xx;
+            dendro_derivs::deriv_yy = deriv42_yy;
+            dendro_derivs::deriv_zz = deriv42_zz;
+            dendro_derivs::ko_deriv_x = ko_deriv42_x;
+            dendro_derivs::ko_deriv_y = ko_deriv42_y;
+            dendro_derivs::ko_deriv_z = ko_deriv42_z;
+        } else if (pw == 4) {
+            dendro_derivs::deriv_x = deriv42_x_pw4;
+            dendro_derivs::deriv_y = deriv42_y_pw4;
+            dendro_derivs::deriv_z = deriv42_z_pw4;
+            dendro_derivs::deriv_xx = deriv42_xx_pw4;
+            dendro_derivs::deriv_yy = deriv42_yy_pw4;
+            dendro_derivs::deriv_zz = deriv42_zz_pw4;
+            dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
+            dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
+            dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
+        } else {
+            throw std::runtime_error(
+                "There is currently no support for 4th order derivatives with a "
+                "padding region that is not 2, 3, or 4!");
+        }
+    } else if (order == 6) {
+        if (pw == 3) {
+            dendro_derivs::deriv_x = deriv644_x;
+            dendro_derivs::deriv_y = deriv644_y;
+            dendro_derivs::deriv_z = deriv644_z;
+            dendro_derivs::deriv_xx = deriv42_xx;
+            dendro_derivs::deriv_yy = deriv42_yy;
+            dendro_derivs::deriv_zz = deriv42_zz;
+            dendro_derivs::ko_deriv_x = ko_deriv42_x;
+            dendro_derivs::ko_deriv_y = ko_deriv42_y;
+            dendro_derivs::ko_deriv_z = ko_deriv42_z;
+        } else if (pw == 4 || pw == 5) {
+            dendro_derivs::deriv_x = deriv644_x_pw4;
+            dendro_derivs::deriv_y = deriv644_y_pw4;
+            dendro_derivs::deriv_z = deriv644_z_pw4;
+            dendro_derivs::deriv_xx = deriv42_xx_pw4;
+            dendro_derivs::deriv_yy = deriv42_yy_pw4;
+            dendro_derivs::deriv_zz = deriv42_zz_pw4;
+            dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
+            dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
+            dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
+        } else {
+            throw std::runtime_error(
+                "There is currently no support for 6th order derivatives with a "
+                "padding region that is not 3, 4, or 5!");
+        }
+    } else if (order == 8) {
+        if (pw == 4 || pw == 5) {
+            dendro_derivs::deriv_x = deriv8642_x;
+            dendro_derivs::deriv_y = deriv8642_y;
+            dendro_derivs::deriv_z = deriv8642_z;
+            dendro_derivs::deriv_xx = deriv8642_xx;
+            dendro_derivs::deriv_yy = deriv8642_yy;
+            dendro_derivs::deriv_zz = deriv8642_zz;
+            dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
+            dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
+            dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
+        } else {
+            throw std::runtime_error(
+                "There is currently no support for 8th order derivatives with a "
+                "padding region that is not 4 or 5!");
+        }
     } else {
-        throw std::runtime_error(
-            "There is currently no support for 4th order derivatives with a "
-            "padding region that is not 2, 3, or 4!");
+        throw std::runtime_error("SOLVER_FD_DERIV_ORDER must be 4, 6, or 8.");
     }
-#endif
-
-#ifdef SOLVER_USE_6TH_ORDER_DERIVS
-    if (pw == 2) {
-        // std::cout << "4th Order Derivatives set, detected padding width of 2"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv42_x_pw2;
-        dendro_derivs::deriv_y = deriv42_y_pw2;
-        dendro_derivs::deriv_z = deriv42_z_pw2;
-
-        dendro_derivs::deriv_xx = deriv42_xx_pw2;
-        dendro_derivs::deriv_yy = deriv42_yy_pw2;
-        dendro_derivs::deriv_zz = deriv42_zz_pw2;
-
-        dendro_derivs::ko_deriv_x = ko_deriv21_x;
-        dendro_derivs::ko_deriv_y = ko_deriv21_y;
-        dendro_derivs::ko_deriv_z = ko_deriv21_z;
-        std::cout << "WARNING!!!::: AS A TEMPORARY MEASURE, 4TH ORDER "
-                     "DERIVATIVES AND KO_DERIVS HAVE BEEN ENABLED! 6TH ORDER "
-                     "DERIVS WAS ASKED FOR, BUT ELE4 WAS PROVIDED! THIS SHOULD "
-                     "NOT MAKE IT INTO PRODUCTION RUNS!!!"
-                  << std::endl;
-    } else if (pw == 3) {
-        // std::cout << "6th Order Derivatives set, detected padding width of 3"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv644_x;
-        dendro_derivs::deriv_y = deriv644_y;
-        dendro_derivs::deriv_z = deriv644_z;
-
-        dendro_derivs::deriv_xx = deriv42_xx;
-        dendro_derivs::deriv_yy = deriv42_yy;
-        dendro_derivs::deriv_zz = deriv42_zz;
-
-        dendro_derivs::ko_deriv_x = ko_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_deriv42_z;
-
-    } else if (pw == 4) {
-        // std::cout << "6th Order Derivatives set, detected padding width of 3"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv644_x_pw4;
-        dendro_derivs::deriv_y = deriv644_y_pw4;
-        dendro_derivs::deriv_z = deriv644_z_pw4;
-
-        dendro_derivs::deriv_xx = deriv42_xx_pw4;
-        dendro_derivs::deriv_yy = deriv42_yy_pw4;
-        dendro_derivs::deriv_zz = deriv42_zz_pw4;
-
-        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;}
-    else if (pw == 5) {
-        // std::cout << "6th Order Derivatives set, detected padding width of 3"
-        //           << std::endl;
-        dendro_derivs::deriv_x = deriv644_x_pw4;
-        dendro_derivs::deriv_y = deriv644_y_pw4;
-        dendro_derivs::deriv_z = deriv644_z_pw4;
-
-        dendro_derivs::deriv_xx = deriv42_xx_pw4;
-        dendro_derivs::deriv_yy = deriv42_yy_pw4;
-        dendro_derivs::deriv_zz = deriv42_zz_pw4;
-
-        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
-    }
-     else {
-        throw std::runtime_error(
-            "There is currently no support for 6th order derivatives with a "
-            "padding region that is not 3 4 or 5!");
-    }
-
-#endif
-
-#ifdef SOLVER_USE_8TH_ORDER_DERIVS
-
-    if (pw == 4) {
-        dendro_derivs::deriv_x = deriv8642_x;
-        dendro_derivs::deriv_y = deriv8642_y;
-        dendro_derivs::deriv_z = deriv8642_x;
-
-        dendro_derivs::deriv_xx = deriv8642_xx;
-        dendro_derivs::deriv_yy = deriv8642_yy;
-        dendro_derivs::deriv_zz = deriv8642_zz;
-
-        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
-
-    } 
-        if (pw == 5) {
-        dendro_derivs::deriv_x = deriv8642_x;
-        dendro_derivs::deriv_y = deriv8642_y;
-        dendro_derivs::deriv_z = deriv8642_x;
-
-        dendro_derivs::deriv_xx = deriv8642_xx;
-        dendro_derivs::deriv_yy = deriv8642_yy;
-        dendro_derivs::deriv_zz = deriv8642_zz;
-
-        dendro_derivs::ko_deriv_x = ko_pw4_deriv42_x;
-        dendro_derivs::ko_deriv_y = ko_pw4_deriv42_y;
-        dendro_derivs::ko_deriv_z = ko_pw4_deriv42_z;
-
-    }else {
-        throw std::runtime_error(
-            "There is currently no support for 8th order derivatives with a "
-            "padding region that is not 4 or 5!");
-    }
-#endif
 }
+}      	// namespace dendro_derivs
 
-}  // namespace dendro_derivs
+
+
+
 
 void deriv42_x_wrapper(double *const Dxu, const double *const u,
                        const double dx, const unsigned int *sz, unsigned bflag,

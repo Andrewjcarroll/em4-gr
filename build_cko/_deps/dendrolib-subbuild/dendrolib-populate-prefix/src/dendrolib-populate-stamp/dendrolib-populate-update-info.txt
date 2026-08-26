@@ -1,0 +1,7 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The patch step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+command (connected)=/vapps/rhel9/x86_64/cmake/3.28.3/gcc-11.3.1/bin/cmake;-Dcan_fetch=YES;-P;/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/tmp/dendrolib-populate-gitupdate.cmake
+command (disconnected)=/vapps/rhel9/x86_64/cmake/3.28.3/gcc-11.3.1/bin/cmake;-Dcan_fetch=NO;-P;/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/tmp/dendrolib-populate-gitupdate.cmake
+work_dir=/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-src

@@ -1,0 +1,11 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/vapps/rhel9/x86_64/cmake/3.28.3/gcc-11.3.1/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "CMakeLists.txt:16 (project)"
+    message: |
+      The system is: Linux - 5.14.0-570.120.1.el9_6.x86_64 - x86_64
+...

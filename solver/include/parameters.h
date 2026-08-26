@@ -56,6 +56,13 @@ extern double SOLVER_CURRENT_RK_COORD_TIME;
 extern unsigned int SOLVER_CURRENT_RK_STEP;
 
 extern double* SOLVER_DERIV_WORKSPACE;
+
+// NATE ADDITION
+extern unsigned int SOLVER_KO_DISS_ORDER;
+extern bool SOLVER_KO_DISS_ORDER_SET;
+extern unsigned int SOLVER_HERMITE_KO_VARIANT;
+extern unsigned int SOLVER_FD_DERIV_ORDER;
+
 // number of derivatives, the greater between the RHS and Constraint
 // TODO: this needs to be automated!!!!!!!!! ESPECIALLY WITH ADVANCED
 // DERIVATIVES AS OF THIS MOMENT: THERE ARE 90 IN CONSTRAINTS AS OF THIS MOMENT:

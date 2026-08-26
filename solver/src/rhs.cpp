@@ -7,6 +7,9 @@
 
 #define PI 3.14159265358979323846
 
+using namespace std;
+using namespace dsolve;
+
 // #define ROOTp () /* ... true iff rank == 0 */
 // static void wait_for_debugger() {
 //     if (getenv(" TJF_MPI_DEBUG ") != NULL && ROOTp()) {
@@ -21,8 +24,44 @@
 // EWH uncomment the below and should get lots more information
 // #define SOLVER_DEBUG_RHS_EQNS
 
-using namespace std;
-using namespace dsolve;
+// NATE ADDITION
+static inline double hermite_ko_term(const double *const u,
+                                      const double *const gradu,
+                                      const unsigned int pp, const int stride,
+                                      const double h, const double sigma) {
+    return (sigma / (4.0 * h)) *
+               (u[pp - stride] - 2.0 * u[pp] + u[pp + stride]) +
+           (sigma / 8.0) * (gradu[pp - stride] - gradu[pp + stride]);
+}
+
+// a hypothetical second variant, same signature
+static inline double hermite_ko_v2(const double *const u,
+                                    const double *const gradu,
+                                    const unsigned int pp, const int stride,
+                                    const double h, const double sigma) {
+    return -(sigma / (16.0 * h)) *
+               (u[pp - 2*stride] - 4.0*u[pp - stride] + 6.0*u[pp] -
+                4.0*u[pp + stride] + u[pp + 2*stride])
+         + (sigma / 16.0) *
+               (-0.5*gradu[pp - 2*stride] + gradu[pp - stride] -
+                gradu[pp + stride] + 0.5*gradu[pp + 2*stride]);
+}
+
+typedef double (*HermiteKOFn)(const double *, const double *, unsigned int,
+                              int, double, double);
+
+HermiteKOFn active_hermite_ko = hermite_ko_term;   // default choice
+
+void set_hermite_ko_variant(unsigned int variant) {
+    switch (variant) {
+        case 1: active_hermite_ko = hermite_ko_term; break;
+        case 2: active_hermite_ko = hermite_ko_v2; break;
+        default: throw std::runtime_error("Unknown hermite KO variant");
+    }
+}
+
+
+
 
 void solverRHS(double **uzipVarsRHS, double **uZipVars,
                const ot::Block *blkList, unsigned int numBlocks) {
@@ -494,57 +533,76 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
     dsolve::timer::t_deriv.start();
     // TODO: include more types of build options
 
-#include "../gencode/solver_rhs_ko_deriv_calc.cpp.inc"
-    dsolve::timer::t_deriv.stop();
 
-    dsolve::timer::t_rhs.start();
+//NATE ADDITION
+dsolve::timer::t_rhs.start();
+const double sigma = KO_DISS_SIGMA;
+const int ko_margin = 2;
 
-    const double sigma = KO_DISS_SIGMA;
+for (unsigned int k = PW + ko_margin; k < nz - PW - ko_margin; k++) {
+    for (unsigned int j = PW + ko_margin; j < ny - PW - ko_margin; j++) {
+        for (unsigned int i = PW + ko_margin; i < nx - PW - ko_margin; i++) {
+            const unsigned int pp = i + nx * (j + ny * k);
 
-    for (unsigned int k = PW; k < nz - PW; k++) {
-        for (unsigned int j = PW; j < ny - PW; j++) {
-#ifdef SOLVER_ENABLE_AVX
-#ifdef __INTEL_COMPILER
-#pragma vector vectorlength(__RHS_AVX_SIMD_LEN__) vecremainder
-#pragma ivdep
-#endif
-#endif
-            for (unsigned int i = PW; i < nx - PW; i++) {
-                const unsigned int pp = i + nx * (j + ny * k);
-                // Added KO DISSIPATION CALCULATIONS FROM EM4 CODE -AJC
-                E_rhs0[pp] +=
-                    sigma * (grad_0_E0[pp] + grad_1_E0[pp] + grad_2_E0[pp]);
-                E_rhs1[pp] +=
-                    sigma * (grad_0_E1[pp] + grad_1_E1[pp] + grad_2_E1[pp]);
-                E_rhs2[pp] +=
-                    sigma * (grad_0_E2[pp] + grad_1_E2[pp] + grad_2_E2[pp]);
+            E_rhs0[pp] += hermite_ko_term(E0, grad_0_E0, pp, 1,     hx, sigma)
+                        + hermite_ko_term(E0, grad_1_E0, pp, nx,    hy, sigma)
+                        + hermite_ko_term(E0, grad_2_E0, pp, nx*ny, hz, sigma);
+            E_rhs1[pp] += hermite_ko_term(E1, grad_0_E1, pp, 1,     hx, sigma)
+                        + hermite_ko_term(E1, grad_1_E1, pp, nx,    hy, sigma)
+                        + hermite_ko_term(E1, grad_2_E1, pp, nx*ny, hz, sigma);
+            E_rhs2[pp] += hermite_ko_term(E2, grad_0_E2, pp, 1,     hx, sigma)
+                        + hermite_ko_term(E2, grad_1_E2, pp, nx,    hy, sigma)
+                        + hermite_ko_term(E2, grad_2_E2, pp, nx*ny, hz, sigma);
 
-                B_rhs0[pp] +=
-                    sigma * (grad_0_B0[pp] + grad_1_B0[pp] + grad_2_B0[pp]);
-                B_rhs1[pp] +=
-                    sigma * (grad_0_B1[pp] + grad_1_B1[pp] + grad_2_B1[pp]);
-                B_rhs2[pp] +=
-                    sigma * (grad_0_B2[pp] + grad_1_B2[pp] + grad_2_B2[pp]);
-                Phi_rhs[pp] +=
-                    sigma * (grad_0_Phi[pp] + grad_1_Phi[pp] + grad_2_Phi[pp]);
-                Psi_rhs[pp] +=
-                    sigma * (grad_0_Psi[pp] + grad_1_Psi[pp] + grad_2_Psi[pp]);
-                // clang-format off
-                /*[[[cog
-                cog.outl('// clang-format on')
+            B_rhs0[pp] += hermite_ko_term(B0, grad_0_B0, pp, 1,     hx, sigma)
+                        + hermite_ko_term(B0, grad_1_B0, pp, nx,    hy, sigma)
+                       + hermite_ko_term(B0, grad_2_B0, pp, nx*ny, hz, sigma);
+            B_rhs1[pp] += hermite_ko_term(B1, grad_0_B1, pp, 1,     hx, sigma)
+                        + hermite_ko_term(B1, grad_1_B1, pp, nx,    hy, sigma)
+                        + hermite_ko_term(B1, grad_2_B1, pp, nx*ny, hz, sigma);
+            B_rhs2[pp] += hermite_ko_term(B2, grad_0_B2, pp, 1,     hx, sigma)
+                        + hermite_ko_term(B2, grad_1_B2, pp, nx,    hy, sigma)
+                        + hermite_ko_term(B2, grad_2_B2, pp, nx*ny, hz, sigma);
 
-                cog.outl("// GENERATED KO DISSIPATION CALCULATIONS")
-                cog.outl(dendroconf.dendroConfigs.generate_ko_calculations("evolution"))
-
-                ]]]*/
-                // clang-format on
-
-                //[[[end]]]
-            }
+            Phi_rhs[pp] += hermite_ko_term(Phi, grad_0_Phi, pp, 1,     hx, sigma)
+                         + hermite_ko_term(Phi, grad_1_Phi, pp, nx,    hy, sigma)
+                         + hermite_ko_term(Phi, grad_2_Phi, pp, nx*ny, hz, sigma);
+            Psi_rhs[pp] += hermite_ko_term(Psi, grad_0_Psi, pp, 1,     hx, sigma)
+                         + hermite_ko_term(Psi, grad_1_Psi, pp, nx,    hy, sigma)
+                         + hermite_ko_term(Psi, grad_2_Psi, pp, nx*ny, hz, sigma);
         }
     }
+}
+dsolve::timer::t_rhs.stop();
 
-    dsolve::timer::t_rhs.stop();
+
+// Explicit KO dissipation
+//dsolve::timer::t_deriv.start();
+//#include "../gencode/solver_rhs_ko_deriv_calc.cpp.inc"
+//dsolve::timer::t_deriv.stop();
+//
+//dsolve::timer::t_rhs.start();
+//const double sigma = KO_DISS_SIGMA;
+//
+//for (unsigned int k = PW; k < nz - PW; k++) {
+//    for (unsigned int j = PW; j < ny - PW; j++) {
+//        for (unsigned int i = PW; i < nx - PW; i++) {
+//            const unsigned int pp = i + nx * (j + ny * k);
+//            E_rhs0[pp] += sigma * (grad_0_E0[pp] + grad_1_E0[pp] + grad_2_E0[pp]);
+//            E_rhs1[pp] += sigma * (grad_0_E1[pp] + grad_1_E1[pp] + grad_2_E1[pp]);
+//            E_rhs2[pp] += sigma * (grad_0_E2[pp] + grad_1_E2[pp] + grad_2_E2[pp]);
+//            B_rhs0[pp] += sigma * (grad_0_B0[pp] + grad_1_B0[pp] + grad_2_B0[pp]);
+//            B_rhs1[pp] += sigma * (grad_0_B1[pp] + grad_1_B1[pp] + grad_2_B1[pp]);
+//            B_rhs2[pp] += sigma * (grad_0_B2[pp] + grad_1_B2[pp] + grad_2_B2[pp]);
+//            Phi_rhs[pp] += sigma * (grad_0_Phi[pp] + grad_1_Phi[pp] + grad_2_Phi[pp]);
+//            Psi_rhs[pp] += sigma * (grad_0_Psi[pp] + grad_1_Psi[pp] + grad_2_Psi[pp]);
+//        }
+//    }
+//}
+//dsolve::timer::t_rhs.stop();
+
+
+
 
     dsolve::timer::t_deriv.start();
     // clang-format off

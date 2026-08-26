@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/CMakeFiles/dendrolib-populate"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/CMakeFiles/dendrolib-populate.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/CMakeFiles/dendrolib-populate-complete.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-build.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-configure.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-download.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-install.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-patch.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-test.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/dendrolib-subbuild/dendrolib-populate-prefix/src/dendrolib-populate-stamp/dendrolib-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"dendrolib-populate"
+		],
+		"name" : "dendrolib-populate"
+	}
+}

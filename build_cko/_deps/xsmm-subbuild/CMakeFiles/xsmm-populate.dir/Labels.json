@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/CMakeFiles/xsmm-populate"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/CMakeFiles/xsmm-populate.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/CMakeFiles/xsmm-populate-complete.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-build.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-configure.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-download.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-install.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-patch.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-test.rule"
+		},
+		{
+			"file" : "/home/ngarey/Dendro/em4-CKO/build_cko/_deps/xsmm-subbuild/xsmm-populate-prefix/src/xsmm-populate-stamp/xsmm-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"xsmm-populate"
+		],
+		"name" : "xsmm-populate"
+	}
+}

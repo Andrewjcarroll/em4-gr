@@ -25,6 +25,10 @@
  * @param[in]  blkList: block list.
  * @param[in]  numBlocks: number of blocks.
  */
+
+// NATE ADDITION
+void set_hermite_ko_variant(unsigned int variant);
+
 void solverRHS(double **uzipVarsRHS, double **uZipVars,
                const ot::Block *blkList, unsigned int numBlocks);
 

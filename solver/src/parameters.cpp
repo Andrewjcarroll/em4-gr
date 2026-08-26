@@ -4,6 +4,7 @@
 #include "compact_derivs.h"
 #include "derivatives.h"
 #include "parUtils.h"
+#include "rhs.h"
 #define PRPL "\033[95m"
 
 /**
@@ -125,6 +126,13 @@ double SOLVER_BLK_MAX_X                        = 6.0;
 double SOLVER_BLK_MAX_Y                        = 6.0;
 double SOLVER_BLK_MAX_Z                        = 1.0;
 double KO_DISS_SIGMA                           = 0.4;
+
+//NATE ADDITION
+unsigned int SOLVER_KO_DISS_ORDER = 4;
+bool SOLVER_KO_DISS_ORDER_SET = false;
+unsigned int SOLVER_HERMITE_KO_VARIANT = 1;
+unsigned int SOLVER_FD_DERIV_ORDER = 6;
+
 unsigned int SOLVER_ID_TYPE                    = 0;
 double SOLVER_GRID_MIN_X                       = -400.0;
 double SOLVER_GRID_MAX_X                       = 400.0;
@@ -644,6 +652,22 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
             file["dsolve::SOLVER_BLK_MAX_Z"].as_floating();
     }
 
+//NATE ADDITION
+if (file.contains("dsolve::SOLVER_KO_DISS_ORDER")) {
+    dsolve::SOLVER_KO_DISS_ORDER = file["dsolve::SOLVER_KO_DISS_ORDER"].as_integer();
+    dsolve::SOLVER_KO_DISS_ORDER_SET = true;
+}
+if (file.contains("dsolve::SOLVER_HERMITE_KO_VARIANT")) {
+    dsolve::SOLVER_HERMITE_KO_VARIANT =
+        file["dsolve::SOLVER_HERMITE_KO_VARIANT"].as_integer();
+}
+if (file.contains("dsolve::SOLVER_FD_DERIV_ORDER")) {
+    dsolve::SOLVER_FD_DERIV_ORDER = file["dsolve::SOLVER_FD_DERIV_ORDER"].as_integer();
+}
+
+
+
+
     if (file.contains("dsolve::KO_DISS_SIGMA")) {
         if (0.0 > file["dsolve::KO_DISS_SIGMA"].as_floating() ||
             0.8 < file["dsolve::KO_DISS_SIGMA"].as_floating()) {
@@ -797,12 +821,20 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
 
     // establish the dendro derivatives class, this should always be built,
     // should also establish KO of the "proper" order automatically
+// NATE ADDITION
+
+    const std::string ko_filter_str = dsolve::SOLVER_KO_DISS_ORDER_SET
+        ? ("KO" + std::to_string(dsolve::SOLVER_KO_DISS_ORDER))
+	: "default";
+
     SOLVER_DERIVS = std::make_unique<dendroderivs::DendroDerivatives>(
         SOLVER_DERIVTYPE_FIRST, SOLVER_DERIVTYPE_SECOND, SOLVER_ELE_ORDER,
         SOLVER_DERIV_FIRST_COEFFS, SOLVER_DERIV_SECOND_COEFFS,
         SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID,
         SOLVER_INMATFILT_FIRST, SOLVER_INMATFILT_SECOND,
-        SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS);
+        SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS,
+	ko_filter_str);
+    set_hermite_ko_variant(SOLVER_HERMITE_KO_VARIANT);
 
     // TODO: COMPD_MIN, COMPD_MAX should be GRID_MIN and GRID_MAX, not settable
     // by user
