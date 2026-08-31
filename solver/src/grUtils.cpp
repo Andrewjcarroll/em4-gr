@@ -41,6 +41,12 @@ void initDataFuncToPhysCoords(const double xx1, const double yy1,
             initDataPlaneWave(xx, yy, zz, var);
             break;
 
+        case 2:
+            // superposed dipoles: the exact solution at t=0 IS the initial
+            // data (xx/yy/zz are already physical here)
+            analyticalSolEM4(xx, yy, zz, 0.0, var, false);
+            break;
+
         default:
             std::cout << "Unknown ID type: " << dsolve::SOLVER_ID_TYPE
                       << std::endl;
@@ -222,6 +228,12 @@ void analyticalSolEM4_BLOCK(double **uZipAnalyticVars,
 
 // added analytic calculation for the dipole pulse -AJC
 // added analytic calculation for the dipole pulse -AJC
+// single dipole pulse of amplitude amp1 / width lambda1 centered at the
+// origin of the (x,y,z) arguments -- shift the arguments to translate it
+static void dipolePulseSol(const double x, const double y, const double z,
+                           const double t, const double amp1,
+                           const double lambda1, double *var);
+
 void analyticalSolEM4(const double xx, const double yy, const double zz,
                       const double t, double *var, bool varsAreGrid) {
     double x, y, z;
@@ -251,8 +263,31 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
         return;
     }
 
-    const double amp1 = dsolve::EM4_ID_AMP1;
-    const double lambda1 = dsolve::EM4_ID_LAMBDA1;
+    // superposed dipole pulses (SOLVER_ID_TYPE=2): Maxwell is linear, so a
+    // sum of translated dipole solutions is itself an exact solution
+    if (dsolve::SOLVER_ID_TYPE == 2) {
+        for (unsigned int v = 0; v < dsolve::SOLVER_NUM_VARS; v++)
+            var[v] = 0.0;
+        double pulse[dsolve::SOLVER_NUM_VARS];
+        for (size_t p = 0; p < dsolve::EM4_ID_SUP_AMP.size(); p++) {
+            dipolePulseSol(x - dsolve::EM4_ID_SUP_CX[p],
+                           y - dsolve::EM4_ID_SUP_CY[p],
+                           z - dsolve::EM4_ID_SUP_CZ[p], t,
+                           dsolve::EM4_ID_SUP_AMP[p],
+                           dsolve::EM4_ID_SUP_LAMBDA[p], pulse);
+            for (unsigned int v = 0; v < dsolve::SOLVER_NUM_VARS; v++)
+                var[v] += pulse[v];
+        }
+        return;
+    }
+
+    dipolePulseSol(x, y, z, t, dsolve::EM4_ID_AMP1, dsolve::EM4_ID_LAMBDA1,
+                   var);
+}
+
+static void dipolePulseSol(const double x, const double y, const double z,
+                           const double t, const double amp1,
+                           const double lambda1, double *var) {
 
     double B0,B1,B2, E0,E1,E2, Phi,Psi ;
     double rho_e, J0,J1,J2;

@@ -113,7 +113,18 @@ int main(int argc, char** argv) {
 
     // refinement buffer layers for the default wavelet criterion
     // (process-wide, so every remeshed mesh honours it)
+#ifdef EM4_REFINE_BUFFER
     ot::Mesh::setRefineBufferLayers(dsolve::SOLVER_REFINE_BUFFER_LAYERS);
+#else
+    if (dsolve::SOLVER_REFINE_BUFFER_LAYERS > 0) {
+        if (!rank)
+            std::cerr << "SOLVER_REFINE_BUFFER_LAYERS > 0 requires an "
+                         "EM4_REFINE_BUFFER build against a dendrolib with "
+                         "ot::Mesh::setRefineBufferLayers"
+                      << std::endl;
+        MPI_Abort(comm, 1);
+    }
+#endif
 
     int root = std::min(1, npes - 1);
     // dump parameter file
@@ -200,6 +211,27 @@ int main(int argc, char** argv) {
 
         // max depth in to the function2Octree must be 2 less than the max depth
         maxDepthIn = m_uiMaxDepth - 2;
+
+        // fixed-structure convergence sweeps: lower the wavelet ceiling by the
+        // number of uniform refinement rounds so the base octree is identical
+        // across the sweep. The k uniform refinement rounds themselves run in
+        // SOLVERCtx::initialize(), through the mesh's own remesh machinery.
+        const unsigned int kRef = dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE;
+        if (kRef > 0) {
+            if (kRef >= maxDepthIn) {
+                if (!rank)
+                    std::cerr << "SOLVER_INIT_GRID_UNIFORM_REFINE (" << kRef
+                              << ") must be < maxDepth-2 (" << maxDepthIn
+                              << ")" << std::endl;
+                MPI_Abort(comm, 1);
+            }
+            maxDepthIn -= kRef;
+            if (!rank)
+                std::cout << YLW << "Fixed-structure sweep: base wavelet "
+                          << "ceiling pinned at " << maxDepthIn << ", " << kRef
+                          << " uniform refinement round(s) follow in ctx init"
+                          << NRM << std::endl;
+        }
 
         function2Octree(f_init, dsolve::SOLVER_NUM_VARS, varIndex, interpVars,
                         tmpNodes, maxDepthIn, dsolve::SOLVER_WAVELET_TOL,
