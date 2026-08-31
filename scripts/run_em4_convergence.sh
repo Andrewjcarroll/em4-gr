@@ -37,11 +37,13 @@ DENDROLIB="${DENDROLIB:-$HOME/research/dendrolib_dfvk_copy}"
 BASE_MAXDEPTH=$(grep '"dsolve::SOLVER_MAXDEPTH"' "$BASE_PAR" | grep -oE '[0-9]+')
 BASE_CFL=$(grep '"dsolve::SOLVER_CFL_FACTOR"' "$BASE_PAR" | grep -oE '[0-9.]+$')
 
+CMAKE_EXTRA="${CMAKE_EXTRA:-}"   # e.g. -DDENDRO_CPU_ARCH=znver3 on BYU
+
 if [[ "$FRESH" == "1" ]]; then rm -rf "$BUILD_DIR"; fi
 if [[ "$SKIP_BUILD" != "1" ]]; then
   cmake -S "$REPO" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
     -DEM4_COMPUTE_ANALYTICAL=ON \
-    -DDENDRO_dendrolib_DIR="$DENDROLIB" >"$BUILD_DIR.cfg.log" 2>&1 \
+    -DDENDRO_dendrolib_DIR="$DENDROLIB" $CMAKE_EXTRA >"$BUILD_DIR.cfg.log" 2>&1 \
     || { echo "configure failed, see $BUILD_DIR.cfg.log"; exit 1; }
   cmake --build "$BUILD_DIR" -j "$JOBS" --target em4Solver \
     >"$BUILD_DIR.build.log" 2>&1 \
