@@ -57,6 +57,13 @@ double EM4_ID_AMP1                          = 5.0;
 double EM4_ID_LAMBDA1                       = 0.05;
 double EM4_ID_KWAVE                         = 1.0;
 
+// superposed dipole pulses (SOLVER_ID_TYPE=2); defaults reproduce ID_TYPE=0
+std::vector<double> EM4_ID_SUP_AMP          = {5.0};
+std::vector<double> EM4_ID_SUP_LAMBDA       = {0.05};
+std::vector<double> EM4_ID_SUP_CX           = {0.0};
+std::vector<double> EM4_ID_SUP_CY           = {0.0};
+std::vector<double> EM4_ID_SUP_CZ           = {0.0};
+
 double SOLVER_ETA_CONST                     = 2.0;
 double SOLVER_ETA_DAMPING_EXP               = 2.0;
 double SOLVER_ETA_R0                        = 30.0;
@@ -94,6 +101,7 @@ unsigned int SOLVER_IO_OUTPUT_GAP                  = 1;
 unsigned int SOLVER_DENDRO_GRAIN_SZ                = 50;
 double SOLVER_DENDRO_AMR_FAC                       = 0.1;
 unsigned int SOLVER_INIT_GRID_ITER                 = 10;
+unsigned int SOLVER_INIT_GRID_UNIFORM_REFINE       = 0;
 bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME       = true;
 unsigned int SOLVER_REFINE_BUFFER_LAYERS           = 0;
 bool SOLVER_INTERFACE_NORMS                        = false;
@@ -189,6 +197,28 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     }
     if (file.contains("dsolve::EM4_ID_KWAVE")) {
         dsolve::EM4_ID_KWAVE = as_double(file["dsolve::EM4_ID_KWAVE"]);
+    }
+    if (file.contains("dsolve::EM4_ID_SUP_AMP")) {
+        dsolve::EM4_ID_SUP_AMP =
+            toml::find<std::vector<double>>(file, "dsolve::EM4_ID_SUP_AMP");
+        dsolve::EM4_ID_SUP_LAMBDA =
+            toml::find<std::vector<double>>(file, "dsolve::EM4_ID_SUP_LAMBDA");
+        dsolve::EM4_ID_SUP_CX =
+            toml::find<std::vector<double>>(file, "dsolve::EM4_ID_SUP_CX");
+        dsolve::EM4_ID_SUP_CY =
+            toml::find<std::vector<double>>(file, "dsolve::EM4_ID_SUP_CY");
+        dsolve::EM4_ID_SUP_CZ =
+            toml::find<std::vector<double>>(file, "dsolve::EM4_ID_SUP_CZ");
+        const size_t n = dsolve::EM4_ID_SUP_AMP.size();
+        if (n == 0 || dsolve::EM4_ID_SUP_LAMBDA.size() != n ||
+            dsolve::EM4_ID_SUP_CX.size() != n ||
+            dsolve::EM4_ID_SUP_CY.size() != n ||
+            dsolve::EM4_ID_SUP_CZ.size() != n) {
+            std::cerr << "EM4_ID_SUP_* arrays must be non-empty and of equal "
+                         "length"
+                      << std::endl;
+            exit(0);
+        }
     }
     if (file.contains("dsolve::SOLVER_ETA_CONST")) {
         dsolve::SOLVER_ETA_CONST =
@@ -383,6 +413,10 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
             as_double(file["dsolve::SOLVER_DENDRO_AMR_FAC"]);
     }
 
+    if (file.contains("dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE")) {
+        dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE =
+            file["dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE"].as_integer();
+    }
     if (file.contains("dsolve::SOLVER_INIT_GRID_ITER")) {
         dsolve::SOLVER_INIT_GRID_ITER =
             file["dsolve::SOLVER_INIT_GRID_ITER"].as_integer();
@@ -851,6 +885,16 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
         sout << "\tdsolve::EM4_ID_AMP1: " << dsolve::EM4_ID_AMP1 << std::endl;
         sout << "\tdsolve::EM4_ID_LAMBDA1: " << dsolve::EM4_ID_LAMBDA1
              << std::endl;
+        if (dsolve::SOLVER_ID_TYPE == 2) {
+            sout << "\tdsolve::EM4_ID_SUP (amp, lambda, cx, cy, cz):"
+                 << std::endl;
+            for (size_t i = 0; i < dsolve::EM4_ID_SUP_AMP.size(); i++)
+                sout << "\t\t" << dsolve::EM4_ID_SUP_AMP[i] << ", "
+                     << dsolve::EM4_ID_SUP_LAMBDA[i] << ", "
+                     << dsolve::EM4_ID_SUP_CX[i] << ", "
+                     << dsolve::EM4_ID_SUP_CY[i] << ", "
+                     << dsolve::EM4_ID_SUP_CZ[i] << std::endl;
+        }
 
         // NOTE: the enum starts at -1, so we add one for the array
         sout << "\tdsolve::SOLVER_DERIV_TYPE: "
@@ -998,6 +1042,8 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << dsolve::SOLVER_DENDRO_AMR_FAC << std::endl;
         sout << "\tdsolve::SOLVER_INIT_GRID_ITER: "
              << dsolve::SOLVER_INIT_GRID_ITER << std::endl;
+        sout << "\tdsolve::SOLVER_INIT_GRID_UNIFORM_REFINE: "
+             << dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE << std::endl;
         sout << "\tdsolve::SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME: "
              << dsolve::SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME << std::endl;
         sout << "\tdsolve::SOLVER_REFINE_BUFFER_LAYERS: "

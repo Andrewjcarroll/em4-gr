@@ -54,6 +54,10 @@ option(EM4_COMPUTE_ANALYTICAL
 option(EM4_ENABLE_COMPACT_DERIVS
        "Swaps the RHS functionality to run compact finite differences" ON)
 
+option(EM4_REFINE_BUFFER
+       "Enables refinement buffer layers (needs a dendrolib with ot::Mesh::setRefineBufferLayers, e.g. the wide-prolongation branch)"
+       OFF)
+
 option(EM4_DEBUG_COMPACT_DERIVS
        "Enables some debug checks (like nan checking) in CFDs" ON)
 
@@ -149,6 +153,10 @@ endif()
 
 if(EM4_COMPUTE_ANALYTICAL)
   add_definitions(-DEM4_COMPUTE_ANALYTICAL)
+endif()
+
+if(EM4_REFINE_BUFFER)
+  add_definitions(-DEM4_REFINE_BUFFER)
 endif()
 
 if(EM4_ENABLE_COMPACT_DERIVS)

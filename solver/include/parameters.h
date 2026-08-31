@@ -86,6 +86,14 @@ extern double EM4_ID_AMP1;
 extern double EM4_ID_LAMBDA1;
 // plane-wave (SOLVER_ID_TYPE=1) wavenumber: E_y = B_z = AMP1 * sin(KWAVE*(x-t))
 extern double EM4_ID_KWAVE;
+// superposed dipole pulses (SOLVER_ID_TYPE=2): per-pulse amplitude, lambda,
+// and center. All five vectors must have the same length. Exact solution is
+// the sum of translated single-dipole solutions (Maxwell is linear).
+extern std::vector<double> EM4_ID_SUP_AMP;
+extern std::vector<double> EM4_ID_SUP_LAMBDA;
+extern std::vector<double> EM4_ID_SUP_CX;
+extern std::vector<double> EM4_ID_SUP_CY;
+extern std::vector<double> EM4_ID_SUP_CZ;
 
 extern double SOLVER_ETA_CONST;
 extern double SOLVER_ETA_R0;
@@ -202,6 +210,14 @@ extern double SOLVER_DENDRO_AMR_FAC;
 
 /** @brief: Number of grid iterations untill the grid converges */
 extern unsigned int SOLVER_INIT_GRID_ITER;
+
+/** @brief: Uniform refinement rounds applied to the initial octree AFTER
+ * function2Octree, for fixed-structure convergence sweeps. When k > 0 the
+ * wavelet ceiling passed to function2Octree is lowered by k so the base
+ * structure is identical across a sweep; every octant is then refined k
+ * levels. Use with SOLVER_REFINEMENT_MODE = 1 (REFINE_MODE_NONE) so the
+ * structure stays frozen through the evolution. */
+extern unsigned int SOLVER_INIT_GRID_UNIFORM_REFINE;
 
 extern bool SOLVER_INIT_GRID_REINITIALIZE_EACH_TIME;
 

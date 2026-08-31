@@ -814,6 +814,44 @@ int SOLVERCtx::initialize() {
               newGridPoints_g != oldGridPoints_g) &&
              (iterCount < max_iter));
 
+    // fixed-structure convergence sweeps: uniformly refine the settled base
+    // mesh k times THROUGH the mesh's own remesh machinery, so balancing and
+    // block regularization are applied consistently and the refined mesh is
+    // exactly the base structure with h halved (element count must be 8^k x
+    // the base -- checked below). Refining the raw octree before createMesh
+    // instead lets the regularizer land extra splits differently per k.
+    for (unsigned int r = 0; r < dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE;
+         r++) {
+        DendroIntL preElements = m_uiMesh->getNumLocalMeshElements(),
+                   preElements_g;
+        par::Mpi_Allreduce(&preElements, &preElements_g, 1, MPI_SUM, gcomm);
+
+        std::vector<unsigned int> refFlags(
+            m_uiMesh->getNumLocalMeshElements(), OCT_SPLIT);
+        m_uiMesh->setMeshRefinementFlags(refFlags);
+
+        ot::Mesh *newMesh =
+            this->remesh(dsolve::SOLVER_DENDRO_GRAIN_SZ,
+                         dsolve::SOLVER_LOAD_IMB_TOL, dsolve::SOLVER_SPLIT_FIX);
+        this->grid_transfer(newMesh);
+        std::swap(m_uiMesh, newMesh);
+        delete newMesh;
+
+        DendroIntL postElements = m_uiMesh->getNumLocalMeshElements(),
+                   postElements_g;
+        par::Mpi_Allreduce(&postElements, &postElements_g, 1, MPI_SUM, gcomm);
+        if (!rank_global) {
+            std::cout << "[solverCtx] uniform refine round " << (r + 1) << "/"
+                      << dsolve::SOLVER_INIT_GRID_UNIFORM_REFINE << " : "
+                      << preElements_g << " -> " << postElements_g
+                      << " elements"
+                      << ((postElements_g == 8 * preElements_g)
+                              ? " (exact 8x)"
+                              : " (NOT 8x -- structure not frozen!)")
+                      << std::endl;
+        }
+    }
+
     // initialize the grid!
     this->init_grid();
 
