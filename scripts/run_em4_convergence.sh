@@ -60,10 +60,10 @@ for sch in $SCHEMES; do
     par="$OUTDIR/${label}_k${k}.param.toml"
     md=$((BASE_MAXDEPTH + k))
     freq=$((4 ** k))
-    # dt in main is CFL*dx(base lmax) -- refinement happens later in ctx init
-    # -- so CFL/4^k gives dt_k = dt_0/4^k: aligned output times at freq 4^k,
-    # and RK4 error ~ dt^4 ~ h^8, below the h^6 target
-    cfl=$(python3 -c "print($BASE_CFL / 4**$k)")
+    # dt ends up CFL*dx(refined lmax), i.e. dx already halves per k, so
+    # CFL/2^k gives dt_k = dt_0/4^k: aligned output times at freq 4^k, and
+    # RK4 error ~ dt^4 ~ h^8, below the h^6 target
+    cfl=$(python3 -c "print($BASE_CFL / 2**$k)")
     sed -e "s|^SOLVER_DERIVTYPE_FIRST = .*|SOLVER_DERIVTYPE_FIRST = \"$deriv\"|" \
         -e "s|^\"dsolve::SOLVER_MAXDEPTH\" = .*|\"dsolve::SOLVER_MAXDEPTH\" = $md|" \
         -e "s|^\"dsolve::SOLVER_CFL_FACTOR\" = .*|\"dsolve::SOLVER_CFL_FACTOR\" = $cfl|" \
