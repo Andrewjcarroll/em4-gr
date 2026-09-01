@@ -108,6 +108,14 @@ void analyticalSolEM4(const double xx, const double yy, const double zz,
 void initDataEM4(const double x, const double y, const double z,
               double* var);
 
+// NATE ADDITION
+void initDataEM4Quadrupole(const double x, const double y, const double z,
+		double* var);
+void initDataEM4Octupole(const double x, const double y, const double z,
+		double* var);
+
+
+
 /**
  * @brief calculate and set the initial data for superposed boosted kerr-sen
  * @param xx1 : x coord, GRIDX format

@@ -56,6 +56,13 @@ double EM4_NOISE_AMPLITUDE                  = 0.0;
 double EM4_ID_AMP1                          = 5.0;
 double EM4_ID_LAMBDA1                       = 0.05;
 
+// NATE ADDITION
+double EM4_ID_AMP2 = 5.0;
+double EM4_ID_LAMBDA2 = 0.05;
+double EM4_ID_AMP3 = 5.0;
+double EM4_ID_LAMBDA3 = 0.05;
+
+
 double SOLVER_ETA_CONST                     = 2.0;
 double SOLVER_ETA_DAMPING_EXP               = 2.0;
 double SOLVER_ETA_R0                        = 30.0;
@@ -174,6 +181,23 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     if (file.contains("dsolve::EM4_ID_LAMBDA1")) {
         dsolve::EM4_ID_LAMBDA1 = file["dsolve::EM4_ID_LAMBDA1"].as_floating();
     }
+
+    // NATE ADDITION
+    if (file.contains("dsolve::EM4_ID_AMP2")) {
+        dsolve::EM4_ID_AMP2 = file["dsolve::EM4_ID_AMP2"].as_floating();
+    }
+    if (file.contains("dsolve::EM4_ID_LAMBDA2")) {
+        dsolve::EM4_ID_LAMBDA2 = file["dsolve::EM4_ID_LAMBDA2"].as_floating();
+    }
+    if (file.contains("dsolve::EM4_ID_AMP3")) {
+        dsolve::EM4_ID_AMP3 = file["dsolve::EM4_ID_AMP3"].as_floating();
+    }
+    if (file.contains("dsolve::EM4_ID_LAMBDA3")) {
+        dsolve::EM4_ID_LAMBDA3 = file["dsolve::EM4_ID_LAMBDA3"].as_floating();
+    }
+
+
+
     if (file.contains("dsolve::SOLVER_ETA_CONST")) {
         dsolve::SOLVER_ETA_CONST =
             file["dsolve::SOLVER_ETA_CONST"].as_floating();

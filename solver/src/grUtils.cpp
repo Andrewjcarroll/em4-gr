@@ -34,6 +34,14 @@ void initDataFuncToPhysCoords(const double xx1, const double yy1,
 
             initDataEM4(xx, yy, zz, var);
             break;
+	// NATE ADDITION
+	case 1:
+	    initDataEM4Quadrupole(xx, yy, zz, var);
+	    break;
+	case 2:
+	    initDataEM4Octupole(xx, yy, zz, var);
+	    break;
+
 
         default:
             std::cout << "Unknown ID type: " << dsolve::SOLVER_ID_TYPE
@@ -81,6 +89,44 @@ void initDataEM4(const double x, const double y, const double z, double *var) {
     var[VAR::U_PSI] = Psi;
 
 }
+
+// NATE ADDITION
+void initDataEM4Quadrupole(const double x, const double y, const double z, double *var) {
+    const double amp2 = dsolve::EM4_ID_AMP2;
+    const double lambda2 = dsolve::EM4_ID_LAMBDA2;
+
+    const double r = sqrt(x*x + y*y + z*z);
+    const double g2 = -8.0*amp2*lambda2*lambda2*exp(-lambda2*r*r);
+
+    var[VAR::U_E0] = 3.0*y*z*g2;
+    var[VAR::U_E1] = -3.0*x*z*g2;
+    var[VAR::U_E2] = 0.0;
+    var[VAR::U_B0] = 0.0;
+    var[VAR::U_B1] = 0.0;
+    var[VAR::U_B2] = 0.0;
+    var[VAR::U_PHI] = 0.0;
+    var[VAR::U_PSI] = 0.0;
+}
+
+void initDataEM4Octupole(const double x, const double y, const double z, double *var) {
+    const double amp3 = dsolve::EM4_ID_AMP3;
+    const double lambda3 = dsolve::EM4_ID_LAMBDA3;
+
+    const double r = sqrt(x*x + y*y + z*z);
+    const double g3 = -8.0*amp3*lambda3*lambda3*exp(-lambda3*r*r);
+    const double poly = 4.0*z*z - x*x - y*y;
+
+    var[VAR::U_E0] = 1.5*y*poly*g3;
+    var[VAR::U_E1] = -1.5*x*poly*g3;
+    var[VAR::U_E2] = 0.0;
+    var[VAR::U_B0] = 0.0;
+    var[VAR::U_B1] = 0.0;
+    var[VAR::U_B2] = 0.0;
+    var[VAR::U_PHI] = 0.0;
+    var[VAR::U_PSI] = 0.0;
+}
+
+
 
 double CalTolHelper(const double t, const double r, const double rad[],
                     const double eps[], const double toffset) {

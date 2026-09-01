@@ -85,6 +85,12 @@ extern double EM4_NOISE_AMPLITUDE;
 extern double EM4_ID_AMP1;
 extern double EM4_ID_LAMBDA1;
 
+// NATE ADDITION
+extern double EM4_ID_AMP2;
+extern double EM4_ID_LAMBDA2;
+extern double EM4_ID_AMP3;
+extern double EM4_ID_LAMBDA3;
+
 extern double SOLVER_ETA_CONST;
 extern double SOLVER_ETA_R0;
 extern double SOLVER_ETA_DAMPING_EXP;
