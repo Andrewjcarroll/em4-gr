@@ -89,6 +89,13 @@ option(DENDRO_ENABLE_GHOST_COMPRESSION
 option(DVEC_ZERO_ALLOC "Make the memory allocation of dvec on CPU initialize as zeros" OFF)
 
 option(DENDRO_USE_NEW_DERIVS "Use the new derivs" ON)
+# DENDRO_WIDE_PADDING: prototype, one extra ghost ring per block face with
+# fine-face fallback (see dendrolib include/dendro_padding.h). The option is
+# shared with the dendrolib subdirectory through the CMake cache; the solver
+# needs the define too (rhs.cpp, parameters.cpp, dataUtils.cpp).
+option(DENDRO_WIDE_PADDING
+       "Prototype: block padding eleOrder/2+1 with fine-face fallback (dendrolib + solver)"
+       OFF)
 
 
 # option(KWAY "K parameter for alltoallv_kway" 128)
@@ -105,6 +112,10 @@ set(NUM_NPES_THRESHOLD
 # ghost compression needs to be defined outside dendrolib as well
 if(DENDRO_ENABLE_GHOST_COMPRESSION)
   add_definitions(-DDENDRO_ENABLE_GHOST_COMPRESSION)
+endif()
+
+if (DENDRO_WIDE_PADDING)
+  add_definitions(-DDENDRO_WIDE_PADDING)
 endif()
 
 if (DENDRO_USE_NEW_DERIVS)

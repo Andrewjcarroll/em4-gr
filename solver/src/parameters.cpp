@@ -1,4 +1,5 @@
 
+#include "dendro_padding.h"
 #include "parameters.h"
 
 #include "compact_derivs.h"
@@ -71,7 +72,11 @@ double SOLVER_ETA_R0                        = 30.0;
 unsigned int SOLVER_PROFILE_OUTPUT_FREQ     = 1;
 
 unsigned int SOLVER_ELE_ORDER               = 6;
+#ifdef DENDRO_WIDE_PADDING
+unsigned int SOLVER_PADDING_WIDTH = DENDRO_PAD_WIDTH_FOR_ORDER(SOLVER_ELE_ORDER);
+#else
 unsigned int SOLVER_PADDING_WIDTH           = SOLVER_ELE_ORDER >> 1u;
+#endif
 double SOLVER_COMPD_MIN[3]                  = {-50.0, -50.0, -50.0};
 double SOLVER_COMPD_MAX[3]                  = {50.0, 50.0, 50.0};
 double SOLVER_OCTREE_MIN[3]                 = {0.0, 0.0, 0.0};
@@ -282,7 +287,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     // padding width is half the element order
     // TODO: could potentially make it so element order is double, but
     // whatever
+#ifdef DENDRO_WIDE_PADDING
+    dsolve::SOLVER_PADDING_WIDTH =
+        DENDRO_PAD_WIDTH_FOR_ORDER(dsolve::SOLVER_ELE_ORDER);
+#else
     dsolve::SOLVER_PADDING_WIDTH = dsolve::SOLVER_ELE_ORDER >> 1u;
+#endif
 
     if (file.contains("dsolve::SOLVER_IO_OUTPUT_FREQ")) {
         dsolve::SOLVER_IO_OUTPUT_FREQ =
@@ -853,7 +863,12 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
     std::cout << "ENABLE_BLOCK_ADAPTIVITY: "
               << dsolve::SOLVER_ENABLE_BLOCK_ADAPTIVITY << std::endl;
 
+#ifdef DENDRO_WIDE_PADDING
+    dsolve::SOLVER_PADDING_WIDTH =
+        DENDRO_PAD_WIDTH_FOR_ORDER(dsolve::SOLVER_ELE_ORDER);
+#else
     dsolve::SOLVER_PADDING_WIDTH = dsolve::SOLVER_ELE_ORDER >> 1u;
+#endif
 
     // establish the dendro derivatives class, this should always be built,
     // should also establish KO of the "proper" order automatically

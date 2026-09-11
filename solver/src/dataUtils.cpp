@@ -2,6 +2,7 @@
 // Created by milinda on 1/16/19.
 //
 
+#include "dendro_padding.h"
 #include "dataUtils.h"
 
 namespace dsolve {
@@ -61,7 +62,11 @@ bool isReMeshWAMR(
         for (unsigned int blk = 0; blk < blkList.size(); blk++) {
             const unsigned int pw = blkList[blk].get1DPadWidth();
             const unsigned int bflag = blkList[blk].getBlkNodeFlag();
+#ifdef DENDRO_WIDE_PADDING
+            assert(pw == DENDRO_PAD_WIDTH_FOR_ORDER(eOrder));
+#else
             assert(pw == (eOrder >> 1u));
+#endif
 
             for (unsigned int ele = blkList[blk].getLocalElementBegin();
                  ele < blkList[blk].getLocalElementEnd(); ele++) {
