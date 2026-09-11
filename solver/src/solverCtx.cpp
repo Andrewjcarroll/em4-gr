@@ -10,6 +10,7 @@
  *
  */
 
+#include "dendro_padding.h"
 #include "solverCtx.h"
 
 #include <stdlib.h>
@@ -206,8 +207,17 @@ void SOLVERCtx::compute_constraints() {
             ptmax[2] = GRIDZ_TO_Z(blkList[blk].getBlockNode().maxZ()) + PW * dz;
 
 #ifdef EM4_ENABLE_COMPACT_DERIVS
+#ifdef DENDRO_WIDE_PADDING
+            // same fine-face bits as the RHS (rhs.cpp) so the constraint
+            // derivatives use the trimmed operator on fine faces too
+            physical_constraints_compact_derivs(
+                consUnzipVar, evolUnzipVar, offset, ptmin, ptmax, sz,
+                bflag | (blkList[blk].getBlkFineFaceFlag()
+                         << DENDRO_FINE_FACE_SHIFT));
+#else
             physical_constraints_compact_derivs(
                 consUnzipVar, evolUnzipVar, offset, ptmin, ptmax, sz, bflag);
+#endif
 #else
             physical_constraints(consUnzipVar,
                                  (const DendroScalar **)evolUnzipVar, offset,
@@ -1773,7 +1783,48 @@ int SOLVERCtx::interface_norms() {
     const double t = m_uiTinfo._m_uiT;
     DendroScalar exact[dsolve::SOLVER_NUM_VARS];
 
+    // block-face census: every local block face classified as
+    //   B  physical boundary
+    //   C  some element on the face has a COARSER neighbour (pad prolongated)
+    //   F  else some element on the face has a FINER neighbour (pad = eO/2)
+    //   S  otherwise (all same level: full element ring available)
+    // The compact-vs-explicit advantage lives on S and F faces only (see the
+    // vault note "Face-type accuracy map"), so this census is what decides
+    // whether wide padding can pay on a given mesh. Counted once per call and
+    // printed at the end; cheap (reuses the e2e walk below).
+    constexpr int NT = 4;  // S, C, F, B
+    std::vector<long> census(NL * NT, 0);
+    long nBlk1 = 0, nBlkK = 0;  // one-element vs multi-element blocks
+
     for (size_t b = 0; b < blks.size(); b++) {
+        {
+            const unsigned int lev_c = blks[b].getRegularGridLev();
+            const unsigned int bfl   = blks[b].getBlkNodeFlag();
+            if (blks[b].getElemSz1D() == 1) nBlk1++; else nBlkK++;
+            if (lev_c < (unsigned int)NL) {
+                bool coarser[6] = {false, false, false, false, false, false};
+                bool finer[6]   = {false, false, false, false, false, false};
+                for (DendroIntL e = blks[b].getLocalElementBegin();
+                     e < blks[b].getLocalElementEnd(); e++)
+                    for (int d = 0; d < 6; d++) {
+                        const unsigned int nb = e2e[(size_t)e * nd + FAC[d]];
+                        if (nb == LOOK_UP_TABLE_DEFAULT || nb >= AE.size())
+                            continue;
+                        if (AE[nb].getLevel() < AE[e].getLevel())
+                            coarser[d] = true;
+                        else if (AE[nb].getLevel() > AE[e].getLevel())
+                            finer[d] = true;
+                    }
+                for (int d = 0; d < 6; d++) {
+                    int ty;
+                    if (bfl & (1u << FAC[d]))  ty = 3;       // B
+                    else if (coarser[d])       ty = 1;       // C
+                    else if (finer[d])         ty = 2;       // F
+                    else                       ty = 0;       // S
+                    census[lev_c * NT + ty]++;
+                }
+            }
+        }
         if (blks[b].getBlkNodeFlag()) continue;  // domain-boundary pad unset
         const ot::TreeNode bn  = blks[b].getBlockNode();
         const unsigned int pW  = blks[b].get1DPadWidth();
@@ -1864,7 +1915,35 @@ int SOLVERCtx::interface_norms() {
     MPI_Allreduce(&nLocEl, &nGlbEl, 1, MPI_LONG, MPI_SUM, comm);
     static const double wall0 = MPI_Wtime();
 
+    std::vector<long> gcensus(NL * NT);
+    MPI_Allreduce(census.data(), gcensus.data(), NL * NT, MPI_LONG, MPI_SUM,
+                  comm);
+    long blkc[2] = {nBlk1, nBlkK}, gblkc[2] = {0, 0};
+    MPI_Allreduce(blkc, gblkc, 2, MPI_LONG, MPI_SUM, comm);
+
     if (!m_uiMesh->getMPIRank()) {
+        // face census (once per step it is called; identical on a frozen mesh)
+        long tot[NT] = {0, 0, 0, 0};
+        std::printf("[census] block faces by type (S same-level, C coarser "
+                    "nbr, F finer nbr, B physical); blocks: %ld single-elem, "
+                    "%ld multi-elem\n", gblkc[0], gblkc[1]);
+        for (int l = 0; l < NL; l++) {
+            long n_l = 0;
+            for (int ty = 0; ty < NT; ty++) n_l += gcensus[l * NT + ty];
+            if (!n_l) continue;
+            std::printf("[census] lvl %2d | S %ld | C %ld | F %ld | B %ld | "
+                        "S+F %.1f%%\n", l, gcensus[l * NT + 0],
+                        gcensus[l * NT + 1], gcensus[l * NT + 2],
+                        gcensus[l * NT + 3],
+                        100.0 * (gcensus[l * NT + 0] + gcensus[l * NT + 2]) /
+                            (double)n_l);
+            for (int ty = 0; ty < NT; ty++) tot[ty] += gcensus[l * NT + ty];
+        }
+        const long n_all = tot[0] + tot[1] + tot[2] + tot[3];
+        if (n_all)
+            std::printf("[census] all    | S %ld | C %ld | F %ld | B %ld | "
+                        "S+F %.1f%%\n", tot[0], tot[1], tot[2], tot[3],
+                        100.0 * (tot[0] + tot[2]) / (double)n_all);
         const char *nm[NB] = {"d1", "d2", "d3", "d>=4", "none"};
         std::printf(
             "[ifc] step %lu t %.5f elems %ld wall %.2f (rms, max, (count); "
