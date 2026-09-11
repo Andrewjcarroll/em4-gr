@@ -3,9 +3,9 @@
 #SBATCH --partition=physics2
 #SBATCH --qos=physics
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=128
 #SBATCH --exclusive
-#SBATCH --mem-per-cpu=6G
+#SBATCH --mem=0
 #SBATCH --time=03:00:00
 #SBATCH --output=%x-%j.out
 #
