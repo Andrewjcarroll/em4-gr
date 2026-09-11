@@ -9,9 +9,11 @@
 #include <iostream>
 // toml needs to be in the path (or included via submodule)
 #include <memory>
+#include <optional>
 #include <toml.hpp>
 
 #include "derivatives.h"
+#include "derivatives/compact_ko.h"
 
 // dendro only includes
 #include "dendro.h"
@@ -57,11 +59,13 @@ extern unsigned int SOLVER_CURRENT_RK_STEP;
 
 extern double* SOLVER_DERIV_WORKSPACE;
 
-// NATE ADDITION
-extern unsigned int SOLVER_KO_DISS_ORDER;
-extern bool SOLVER_KO_DISS_ORDER_SET;
-extern unsigned int SOLVER_HERMITE_KO_VARIANT;
-extern unsigned int SOLVER_FD_DERIV_ORDER;
+// Dissipation configuration is parsed by EM4; numerical operators live in Dendro.
+enum class DissipationMethod { ExplicitKO, CompactKO, None };
+// Unset preserves the existing method of each RHS path.
+extern std::optional<DissipationMethod> SOLVER_DISSIPATION_METHOD;
+extern std::optional<unsigned int> SOLVER_EXPLICIT_KO_ORDER;
+extern dendroderivs::CompactKOScheme SOLVER_COMPACT_KO_SCHEME;
+extern unsigned int SOLVER_FD_ORDER;
 
 // number of derivatives, the greater between the RHS and Constraint
 // TODO: this needs to be automated!!!!!!!!! ESPECIALLY WITH ADVANCED

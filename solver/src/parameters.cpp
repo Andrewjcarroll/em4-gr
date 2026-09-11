@@ -4,7 +4,6 @@
 #include "compact_derivs.h"
 #include "derivatives.h"
 #include "parUtils.h"
-#include "rhs.h"
 #define PRPL "\033[95m"
 
 /**
@@ -127,11 +126,11 @@ double SOLVER_BLK_MAX_Y                        = 6.0;
 double SOLVER_BLK_MAX_Z                        = 1.0;
 double KO_DISS_SIGMA                           = 0.4;
 
-//NATE ADDITION
-unsigned int SOLVER_KO_DISS_ORDER = 4;
-bool SOLVER_KO_DISS_ORDER_SET = false;
-unsigned int SOLVER_HERMITE_KO_VARIANT = 1;
-unsigned int SOLVER_FD_DERIV_ORDER = 6;
+std::optional<DissipationMethod> SOLVER_DISSIPATION_METHOD;
+std::optional<unsigned int> SOLVER_EXPLICIT_KO_ORDER;
+dendroderivs::CompactKOScheme SOLVER_COMPACT_KO_SCHEME =
+    dendroderivs::CompactKOScheme::Radius1;
+unsigned int SOLVER_FD_ORDER = 6;
 
 unsigned int SOLVER_ID_TYPE                    = 0;
 double SOLVER_GRID_MIN_X                       = -400.0;
@@ -652,21 +651,73 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
             file["dsolve::SOLVER_BLK_MAX_Z"].as_floating();
     }
 
-//NATE ADDITION
-if (file.contains("dsolve::SOLVER_KO_DISS_ORDER")) {
-    dsolve::SOLVER_KO_DISS_ORDER = file["dsolve::SOLVER_KO_DISS_ORDER"].as_integer();
-    dsolve::SOLVER_KO_DISS_ORDER_SET = true;
-}
-if (file.contains("dsolve::SOLVER_HERMITE_KO_VARIANT")) {
-    dsolve::SOLVER_HERMITE_KO_VARIANT =
-        file["dsolve::SOLVER_HERMITE_KO_VARIANT"].as_integer();
-}
-if (file.contains("dsolve::SOLVER_FD_DERIV_ORDER")) {
-    dsolve::SOLVER_FD_DERIV_ORDER = file["dsolve::SOLVER_FD_DERIV_ORDER"].as_integer();
-}
-
-
-
+    // Deprecated names are parser-only aliases, never Dendro API symbols.
+    const auto config_key = [&](const char* current, const char* old) {
+        if (file.contains(current) && file.contains(old))
+            throw std::invalid_argument(std::string("Specify only one of ") +
+                                        current + " and " + old);
+        if (file.contains(old)) {
+            if (rank == 0)
+                std::cerr << "Deprecated parameter " << old << "; use "
+                          << current << " instead.\n";
+            return old;
+        }
+        return current;
+    };
+    SOLVER_EXPLICIT_KO_ORDER.reset();
+    const auto explicit_key = config_key("dsolve::SOLVER_EXPLICIT_KO_ORDER",
+                                         "dsolve::SOLVER_KO_DISS_ORDER");
+    if (file.contains(explicit_key)) {
+        const auto order = file[explicit_key].as_integer();
+        if (order != 2 && order != 4 && order != 6 && order != 8)
+            throw std::invalid_argument(
+                "SOLVER_EXPLICIT_KO_ORDER must be 2, 4, 6, or 8");
+        SOLVER_EXPLICIT_KO_ORDER = static_cast<unsigned int>(order);
+    }
+    SOLVER_FD_ORDER = 6;
+    const auto fd_key =
+        config_key("dsolve::SOLVER_FD_ORDER", "dsolve::SOLVER_FD_DERIV_ORDER");
+    if (file.contains(fd_key)) {
+        const auto order = file[fd_key].as_integer();
+        if (order != 4 && order != 6 && order != 8)
+            throw std::invalid_argument("SOLVER_FD_ORDER must be 4, 6, or 8");
+        SOLVER_FD_ORDER = static_cast<unsigned int>(order);
+    }
+    SOLVER_COMPACT_KO_SCHEME = dendroderivs::CompactKOScheme::Radius1;
+    const auto scheme_key    = config_key("dsolve::SOLVER_COMPACT_KO_SCHEME",
+                                          "dsolve::SOLVER_HERMITE_KO_VARIANT");
+    if (file.contains(scheme_key)) {
+        if (std::string(scheme_key) == "dsolve::SOLVER_COMPACT_KO_SCHEME") {
+            if (file[scheme_key].as_string() != "radius1")
+                throw std::invalid_argument(
+                    "SOLVER_COMPACT_KO_SCHEME supports only radius1");
+        } else if (file[scheme_key].as_integer() != 1) {
+            throw std::invalid_argument(
+                "Only old selector 1 is supported; radius2 is unvalidated");
+        }
+        SOLVER_COMPACT_KO_SCHEME = dendroderivs::CompactKOScheme::Radius1;
+    }
+    (void)dendroderivs::compact_ko_radius(SOLVER_COMPACT_KO_SCHEME);
+    SOLVER_DISSIPATION_METHOD.reset();
+    if (file.contains("dsolve::SOLVER_DISSIPATION_METHOD")) {
+        const auto method =
+            file["dsolve::SOLVER_DISSIPATION_METHOD"].as_string();
+        if (method == "explicit_ko")
+            SOLVER_DISSIPATION_METHOD = DissipationMethod::ExplicitKO;
+        else if (method == "compact_ko")
+            SOLVER_DISSIPATION_METHOD = DissipationMethod::CompactKO;
+        else if (method == "none")
+            SOLVER_DISSIPATION_METHOD = DissipationMethod::None;
+        else
+            throw std::invalid_argument(
+                "SOLVER_DISSIPATION_METHOD must be explicit_ko, compact_ko, or "
+                "none");
+    }
+#ifdef SOLVER_ENABLE_CUDA
+    if (SOLVER_DISSIPATION_METHOD || file.contains(scheme_key))
+        throw std::invalid_argument(
+            "Runtime dissipation selection is currently CPU-only");
+#endif
 
     if (file.contains("dsolve::KO_DISS_SIGMA")) {
         if (0.0 > file["dsolve::KO_DISS_SIGMA"].as_floating() ||
@@ -821,11 +872,10 @@ if (file.contains("dsolve::SOLVER_FD_DERIV_ORDER")) {
 
     // establish the dendro derivatives class, this should always be built,
     // should also establish KO of the "proper" order automatically
-// NATE ADDITION
-
-    const std::string ko_filter_str = dsolve::SOLVER_KO_DISS_ORDER_SET
-        ? ("KO" + std::to_string(dsolve::SOLVER_KO_DISS_ORDER))
-	: "default";
+    const std::string explicit_ko_filter_name =
+        SOLVER_EXPLICIT_KO_ORDER
+            ? ("KO" + std::to_string(*SOLVER_EXPLICIT_KO_ORDER))
+            : "default";
 
     SOLVER_DERIVS = std::make_unique<dendroderivs::DendroDerivatives>(
         SOLVER_DERIVTYPE_FIRST, SOLVER_DERIVTYPE_SECOND, SOLVER_ELE_ORDER,
@@ -833,8 +883,7 @@ if (file.contains("dsolve::SOLVER_FD_DERIV_ORDER")) {
         SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID,
         SOLVER_INMATFILT_FIRST, SOLVER_INMATFILT_SECOND,
         SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS,
-	ko_filter_str);
-    set_hermite_ko_variant(SOLVER_HERMITE_KO_VARIANT);
+        explicit_ko_filter_name);
 
     // TODO: COMPD_MIN, COMPD_MAX should be GRID_MIN and GRID_MAX, not settable
     // by user
@@ -1071,6 +1120,24 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << std::endl;
         sout << "\tdsolve::SOLVER_BLK_MAX_Z: " << dsolve::SOLVER_BLK_MAX_Z
              << std::endl;
+        sout << "\tdsolve::SOLVER_EXPLICIT_KO_ORDER: "
+             << (SOLVER_EXPLICIT_KO_ORDER
+                     ? std::to_string(*SOLVER_EXPLICIT_KO_ORDER)
+                     : "automatic")
+             << "\n";
+        sout << "\tdsolve::SOLVER_COMPACT_KO_SCHEME: radius1\n";
+        sout << "\tdsolve::SOLVER_FD_ORDER: " << SOLVER_FD_ORDER << "\n";
+        sout << "\tdsolve::SOLVER_DISSIPATION_METHOD: "
+             << (!SOLVER_DISSIPATION_METHOD
+                     ? "path default (legacy=compact_ko, compact "
+                       "derivatives=explicit_ko)"
+                 : *SOLVER_DISSIPATION_METHOD == DissipationMethod::CompactKO
+                     ? "compact_ko"
+                 : *SOLVER_DISSIPATION_METHOD == DissipationMethod::ExplicitKO
+                     ? "explicit_ko"
+                     : "none")
+             << "\n";
+
         sout << "\tdsolve::KO_DISS_SIGMA: " << dsolve::KO_DISS_SIGMA
              << std::endl;
         sout << "\tdsolve::SOLVER_ID_TYPE: " << dsolve::SOLVER_ID_TYPE

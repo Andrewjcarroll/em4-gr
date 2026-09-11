@@ -24,44 +24,32 @@ using namespace dsolve;
 // EWH uncomment the below and should get lots more information
 // #define SOLVER_DEBUG_RHS_EQNS
 
-// NATE ADDITION
-static inline double hermite_ko_term(const double *const u,
-                                      const double *const gradu,
-                                      const unsigned int pp, const int stride,
-                                      const double h, const double sigma) {
-    return (sigma / (4.0 * h)) *
-               (u[pp - stride] - 2.0 * u[pp] + u[pp + stride]) +
-           (sigma / 8.0) * (gradu[pp - stride] - gradu[pp + stride]);
-}
-
-// a hypothetical second variant, same signature
-static inline double hermite_ko_v2(const double *const u,
-                                    const double *const gradu,
-                                    const unsigned int pp, const int stride,
-                                    const double h, const double sigma) {
-    return -(sigma / (16.0 * h)) *
-               (u[pp - 2*stride] - 4.0*u[pp - stride] + 6.0*u[pp] -
-                4.0*u[pp + stride] + u[pp + 2*stride])
-         + (sigma / 16.0) *
-               (-0.5*gradu[pp - 2*stride] + gradu[pp - stride] -
-                gradu[pp + stride] + 0.5*gradu[pp + 2*stride]);
-}
-
-typedef double (*HermiteKOFn)(const double *, const double *, unsigned int,
-                              int, double, double);
-
-HermiteKOFn active_hermite_ko = hermite_ko_term;   // default choice
-
-void set_hermite_ko_variant(unsigned int variant) {
-    switch (variant) {
-        case 1: active_hermite_ko = hermite_ko_term; break;
-        case 2: active_hermite_ko = hermite_ko_v2; break;
-        default: throw std::runtime_error("Unknown hermite KO variant");
+namespace {
+// EM4 owns field selection; the library owns the numerical operation.
+void add_field_dissipation(double* const* rhs, const double* const* u,
+                           double* const* du_x, double* const* du_y,
+                           double* const* du_z, const unsigned int* sz,
+                           double hx, double hy, double hz, unsigned int pw,
+                           unsigned int bflag, DissipationMethod method) {
+    if (method == DissipationMethod::None || KO_DISS_SIGMA == 0) return;
+    for (unsigned int field = 0; field < 8; ++field) {
+        if (method == DissipationMethod::CompactKO) {
+            // Only interior gradients are guaranteed; no gradient halo
+            // exchange.
+            dendroderivs::add_compact_ko(rhs[field], u[field], du_x[field],
+                                         du_y[field], du_z[field], sz, hx, hy,
+                                         hz, pw, pw, bflag, KO_DISS_SIGMA,
+                                         SOLVER_COMPACT_KO_SCHEME);
+        } else {
+            // Explicit KO owns/overwrites these scratch arrays after RHS/BC
+            // use.
+            SOLVER_DERIVS->filter(u[field], rhs[field], du_x[field],
+                                  du_y[field], du_z[field], hx, hy, hz,
+                                  KO_DISS_SIGMA, sz, bflag);
+        }
     }
 }
-
-
-
+}  // namespace
 
 void solverRHS(double **uzipVarsRHS, double **uZipVars,
                const ot::Block *blkList, unsigned int numBlocks) {
@@ -530,79 +518,20 @@ void solverrhs(double **unzipVarsRHS, const double **uZipVars,
         dsolve::timer::t_bdyc.stop();
     }
 
-    dsolve::timer::t_deriv.start();
-    // TODO: include more types of build options
-
-
-//NATE ADDITION
-dsolve::timer::t_rhs.start();
-const double sigma = KO_DISS_SIGMA;
-const int ko_margin = 2;
-
-for (unsigned int k = PW + ko_margin; k < nz - PW - ko_margin; k++) {
-    for (unsigned int j = PW + ko_margin; j < ny - PW - ko_margin; j++) {
-        for (unsigned int i = PW + ko_margin; i < nx - PW - ko_margin; i++) {
-            const unsigned int pp = i + nx * (j + ny * k);
-
-            E_rhs0[pp] += hermite_ko_term(E0, grad_0_E0, pp, 1,     hx, sigma)
-                        + hermite_ko_term(E0, grad_1_E0, pp, nx,    hy, sigma)
-                        + hermite_ko_term(E0, grad_2_E0, pp, nx*ny, hz, sigma);
-            E_rhs1[pp] += hermite_ko_term(E1, grad_0_E1, pp, 1,     hx, sigma)
-                        + hermite_ko_term(E1, grad_1_E1, pp, nx,    hy, sigma)
-                        + hermite_ko_term(E1, grad_2_E1, pp, nx*ny, hz, sigma);
-            E_rhs2[pp] += hermite_ko_term(E2, grad_0_E2, pp, 1,     hx, sigma)
-                        + hermite_ko_term(E2, grad_1_E2, pp, nx,    hy, sigma)
-                        + hermite_ko_term(E2, grad_2_E2, pp, nx*ny, hz, sigma);
-
-            B_rhs0[pp] += hermite_ko_term(B0, grad_0_B0, pp, 1,     hx, sigma)
-                        + hermite_ko_term(B0, grad_1_B0, pp, nx,    hy, sigma)
-                       + hermite_ko_term(B0, grad_2_B0, pp, nx*ny, hz, sigma);
-            B_rhs1[pp] += hermite_ko_term(B1, grad_0_B1, pp, 1,     hx, sigma)
-                        + hermite_ko_term(B1, grad_1_B1, pp, nx,    hy, sigma)
-                        + hermite_ko_term(B1, grad_2_B1, pp, nx*ny, hz, sigma);
-            B_rhs2[pp] += hermite_ko_term(B2, grad_0_B2, pp, 1,     hx, sigma)
-                        + hermite_ko_term(B2, grad_1_B2, pp, nx,    hy, sigma)
-                        + hermite_ko_term(B2, grad_2_B2, pp, nx*ny, hz, sigma);
-
-            Phi_rhs[pp] += hermite_ko_term(Phi, grad_0_Phi, pp, 1,     hx, sigma)
-                         + hermite_ko_term(Phi, grad_1_Phi, pp, nx,    hy, sigma)
-                         + hermite_ko_term(Phi, grad_2_Phi, pp, nx*ny, hz, sigma);
-            Psi_rhs[pp] += hermite_ko_term(Psi, grad_0_Psi, pp, 1,     hx, sigma)
-                         + hermite_ko_term(Psi, grad_1_Psi, pp, nx,    hy, sigma)
-                         + hermite_ko_term(Psi, grad_2_Psi, pp, nx*ny, hz, sigma);
-        }
-    }
-}
-dsolve::timer::t_rhs.stop();
-
-
-// Explicit KO dissipation
-//dsolve::timer::t_deriv.start();
-//#include "../gencode/solver_rhs_ko_deriv_calc.cpp.inc"
-//dsolve::timer::t_deriv.stop();
-//
-//dsolve::timer::t_rhs.start();
-//const double sigma = KO_DISS_SIGMA;
-//
-//for (unsigned int k = PW; k < nz - PW; k++) {
-//    for (unsigned int j = PW; j < ny - PW; j++) {
-//        for (unsigned int i = PW; i < nx - PW; i++) {
-//            const unsigned int pp = i + nx * (j + ny * k);
-//            E_rhs0[pp] += sigma * (grad_0_E0[pp] + grad_1_E0[pp] + grad_2_E0[pp]);
-//            E_rhs1[pp] += sigma * (grad_0_E1[pp] + grad_1_E1[pp] + grad_2_E1[pp]);
-//            E_rhs2[pp] += sigma * (grad_0_E2[pp] + grad_1_E2[pp] + grad_2_E2[pp]);
-//            B_rhs0[pp] += sigma * (grad_0_B0[pp] + grad_1_B0[pp] + grad_2_B0[pp]);
-//            B_rhs1[pp] += sigma * (grad_0_B1[pp] + grad_1_B1[pp] + grad_2_B1[pp]);
-//            B_rhs2[pp] += sigma * (grad_0_B2[pp] + grad_1_B2[pp] + grad_2_B2[pp]);
-//            Phi_rhs[pp] += sigma * (grad_0_Phi[pp] + grad_1_Phi[pp] + grad_2_Phi[pp]);
-//            Psi_rhs[pp] += sigma * (grad_0_Psi[pp] + grad_1_Psi[pp] + grad_2_Psi[pp]);
-//        }
-//    }
-//}
-//dsolve::timer::t_rhs.stop();
-
-
-
+    dsolve::timer::t_rhs.start();
+    const double* fields[] = {E0, E1, E2, B0, B1, B2, Phi, Psi};
+    double* rhs_fields[]   = {E_rhs0, E_rhs1, E_rhs2,  B_rhs0,
+                              B_rhs1, B_rhs2, Phi_rhs, Psi_rhs};
+    double* du_0[]         = {grad_0_E0, grad_0_E1, grad_0_E2,  grad_0_B0,
+                              grad_0_B1, grad_0_B2, grad_0_Phi, grad_0_Psi};
+    double* du_1[]         = {grad_1_E0, grad_1_E1, grad_1_E2,  grad_1_B0,
+                              grad_1_B1, grad_1_B2, grad_1_Phi, grad_1_Psi};
+    double* du_2[]         = {grad_2_E0, grad_2_E1, grad_2_E2,  grad_2_B0,
+                              grad_2_B1, grad_2_B2, grad_2_Phi, grad_2_Psi};
+    add_field_dissipation(
+        rhs_fields, fields, du_0, du_1, du_2, sz, hx, hy, hz, PW, bflag,
+        SOLVER_DISSIPATION_METHOD.value_or(DissipationMethod::CompactKO));
+    dsolve::timer::t_rhs.stop();
 
     dsolve::timer::t_deriv.start();
     // clang-format off
@@ -691,8 +620,11 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     double *Phi_cpy = (double *)Phi;
     double *Psi_cpy = (double *)Psi;
 
+    const auto dissipation_method = SOLVER_DISSIPATION_METHOD.value_or(
+        DissipationMethod::ExplicitKO);
     // make sure we only trigger this filtering if it's a filter designed for it
-    if (SOLVER_DERIVS->do_filter_before()) {
+    if (dissipation_method == DissipationMethod::ExplicitKO &&
+        SOLVER_DERIVS->do_filter_before()) {
         // for each of the variables, we'll copy it over to the memory stored
         // for it in the copy then it will be filtered. The filtered variables
         // will then feed ONLY into the derivatives. We might want to use the
@@ -836,37 +768,22 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
         dsolve::timer::t_bdyc.stop();
     }
 
-    if (!SOLVER_DERIVS->do_filter_before()) {
-        dsolve::timer::t_deriv.start();
-        // TODO: include more types of build options
-
-        // TODO: support for CFD calculation of explicit KO derivs
-#include "../gencode/solver_rhs_ko_deriv_calc.cpp.inc"
-        dsolve::timer::t_deriv.stop();
-
+    if (dissipation_method != DissipationMethod::ExplicitKO ||
+        !SOLVER_DERIVS->do_filter_before()) {
         dsolve::timer::t_rhs.start();
-
-        const double sigma = KO_DISS_SIGMA;
-
-        SOLVER_DERIVS->filter(E0, E_rhs0, grad_0_E0, grad_1_E0, grad_2_E0, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(E1, E_rhs1, grad_0_E1, grad_1_E1, grad_2_E1, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(E2, E_rhs2, grad_0_E2, grad_1_E2, grad_2_E2, hx,
-                              hy, hz, sigma, sz, bflag);
-
-        SOLVER_DERIVS->filter(B0, B_rhs0, grad_0_B0, grad_1_B0, grad_2_B0, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(B1, B_rhs1, grad_0_B1, grad_1_B1, grad_2_B1, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(B2, B_rhs2, grad_0_B2, grad_1_B2, grad_2_B2, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(Phi, Phi_rhs, grad_0_Phi, grad_1_Phi, grad_2_Phi, hx,
-                              hy, hz, sigma, sz, bflag);
-        SOLVER_DERIVS->filter(Psi, Psi_rhs, grad_0_Psi, grad_1_Psi, grad_2_Psi, hx,
-                              hy, hz, sigma, sz, bflag);
-
+        const double* fields[] = {E0, E1, E2, B0, B1, B2, Phi, Psi};
+        double* rhs_fields[]   = {E_rhs0, E_rhs1, E_rhs2,  B_rhs0,
+                                  B_rhs1, B_rhs2, Phi_rhs, Psi_rhs};
+        double* du_0[]         = {grad_0_E0, grad_0_E1, grad_0_E2,  grad_0_B0,
+                                  grad_0_B1, grad_0_B2, grad_0_Phi, grad_0_Psi};
+        double* du_1[]         = {grad_1_E0, grad_1_E1, grad_1_E2,  grad_1_B0,
+                                  grad_1_B1, grad_1_B2, grad_1_Phi, grad_1_Psi};
+        double* du_2[]         = {grad_2_E0, grad_2_E1, grad_2_E2,  grad_2_B0,
+                                  grad_2_B1, grad_2_B2, grad_2_Phi, grad_2_Psi};
+        add_field_dissipation(rhs_fields, fields, du_0, du_1, du_2, sz, hx, hy,
+                              hz, PW, bflag, dissipation_method);
         dsolve::timer::t_rhs.stop();
+
     }
 
     dsolve::timer::t_deriv.start();

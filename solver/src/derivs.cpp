@@ -28,9 +28,9 @@ void (*ko_deriv_y)(double *const, const double *const, const double,
 void (*ko_deriv_z)(double *const, const double *const, const double,
                    const unsigned int *, unsigned);
 
-// NATE ADDITION
+// Runtime legacy FD selection (independent of Compact KO).
 void set_appropriate_derivs(const unsigned pw) {
-    const unsigned int order = dsolve::SOLVER_FD_DERIV_ORDER;
+    const unsigned int order = dsolve::SOLVER_FD_ORDER;
 
     if (order == 4) {
         if (pw == 2) {
@@ -111,7 +111,7 @@ void set_appropriate_derivs(const unsigned pw) {
                 "padding region that is not 4 or 5!");
         }
     } else {
-        throw std::runtime_error("SOLVER_FD_DERIV_ORDER must be 4, 6, or 8.");
+        throw std::runtime_error("SOLVER_FD_ORDER must be 4, 6, or 8.");
     }
 }
 }      	// namespace dendro_derivs
