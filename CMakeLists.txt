@@ -322,6 +322,29 @@ FetchContent_MakeAvailable(toml11)
 
 add_subdirectory(lib)
 
+# ==========================
+# CPU ARCHITECTURE
+# ==========================
+# dendrolib only applies DENDRO_CPU_ARCH when it is the top-level project; as
+# a subdirectory it expects the parent to set the arch flags. Without this the
+# whole solver is legacy-SSE code while libxsmm JITs AVX kernels, and the
+# SSE/AVX transition penalty halves IPC process-wide (measured 2026-09-10).
+# Same option name and strings as dendrolib so scripts can pass one flag.
+set(DENDRO_CPU_ARCH "native" CACHE STRING "Target CPU architecture (native, x86-64-v3, znver3, ...; nosimd for a scalar baseline)")
+set(DENDRO_CPU_ARCH_STRINGS "native" "nosimd" "znver1" "znver2" "znver3" "znver4"
+    "haswell" "broadwell" "skylake-avx512" "cascadelake" "icelake-server" "generic_avx2" "x86-64-v3")
+set_property(CACHE DENDRO_CPU_ARCH PROPERTY STRINGS ${DENDRO_CPU_ARCH_STRINGS})
+if(DENDRO_CPU_ARCH STREQUAL "nosimd")
+  add_compile_options(-march=x86-64 -mno-avx -mno-avx2 -mno-avx512f -fno-tree-vectorize)
+elseif(DENDRO_CPU_ARCH STREQUAL "generic_avx2")
+  add_compile_options(-mavx2 -mfma)
+elseif(DENDRO_CPU_ARCH IN_LIST DENDRO_CPU_ARCH_STRINGS)
+  add_compile_options(-march=${DENDRO_CPU_ARCH})
+else()
+  message(FATAL_ERROR "Unknown DENDRO_CPU_ARCH: ${DENDRO_CPU_ARCH}")
+endif()
+message(STATUS "EM4: target arch ${DENDRO_CPU_ARCH} (applied to the solver and the dendrolib subdirectory)")
+
 # dendrolib source location -- settable with -DDENDRO_dendrolib_DIR=/path
 # (mirrors dendrogr's CMake). Defaults to the sibling dendrolib_dfvk_copy
 # checkout; if that path is not a directory, fall back to fetching from git.

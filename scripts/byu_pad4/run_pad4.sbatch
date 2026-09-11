@@ -5,6 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=32
 #SBATCH --exclusive
+#SBATCH --mem-per-cpu=6G
 #SBATCH --time=03:00:00
 #SBATCH --output=%x-%j.out
 #
@@ -18,11 +19,10 @@
 #   ARM=wide  sbatch --dependency=afterany:<jobid> scripts/byu_pad4/run_pad4.sbatch
 #
 # Needs: em4-gr and dendrolib checkouts on branch pad4-prototype (EM4, DL).
-# Builds in-job with -march=znver3 passed through CMAKE_C/CXX_FLAGS: dendrolib
-# as a subdirectory sets no arch flags and em4 sets none, so DENDRO_CPU_ARCH is
-# ignored and the default build is legacy-SSE code; mixed with the AVX libxsmm
-# JIT kernels that halves IPC process-wide (2026-09-10, docs/WIDE_PADDING.md).
-# Profile counters ON so the ctx timers and *_im.prof are written.  Runs E6 (control: must be identical across arms) and
+# Builds in-job with DENDRO_CPU_ARCH=znver3 (now honoured by em4's own
+# CMakeLists and applied to the dendrolib subdirectory; the script asserts a
+# -march flag reached the solver's compile line). Profile counters ON so the
+# ctx timers and *_im.prof are written.  Runs E6 (control: must be identical across arms) and
 # BYU_A6_1ST_R060_OP5 at k = KLIST uniform refinements of the frozen mesh,
 # with the [ifc] interface bins and the [census] face census printed.
 set -uo pipefail
@@ -46,13 +46,14 @@ git -C "$EM4" log --oneline -1; git -C "$DL" log --oneline -1
 
 cmake -S "$EM4" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release \
   -DDENDRO_dendrolib_DIR="$DL" -DDENDRO_WIDE_PADDING=$FLAG \
-  -DCMAKE_C_FLAGS="-march=${ARCH:-znver3}" -DCMAKE_CXX_FLAGS="-march=${ARCH:-znver3}" \
+  -DDENDRO_CPU_ARCH=${ARCH:-znver3} \
   -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran \
   -DEM4_COMPUTE_ANALYTICAL=ON -DSOLVER_COMPUTE_CONSTRAINTS=ON -DEM4_ENABLE_COMPACT_DERIVS=ON \
   -DENABLE_DENDRO_PROFILE_COUNTERS=ON -DSOLVER_PROFILE_HUMAN_READABLE=ON \
   -DDENDRO_HYBRID_OMP=OFF -DDENDRO_UNZIP_OMP=OFF -DDENDRO_UNZIP_SPEEDUP=OFF \
   > "$OUTDIR/cfg.log" 2>&1 || { echo "configure failed"; tail -30 "$OUTDIR/cfg.log"; exit 1; }
-grep -E '^DENDRO_WIDE_PADDING:|^CMAKE_CXX_FLAGS:|^ENABLE_DENDRO_PROFILE_COUNTERS:|^DENDRO_UNZIP_SPEEDUP:' "$BUILD/CMakeCache.txt"
+grep -E '^DENDRO_WIDE_PADDING:|^DENDRO_CPU_ARCH:|^ENABLE_DENDRO_PROFILE_COUNTERS:|^DENDRO_UNZIP_SPEEDUP:' "$BUILD/CMakeCache.txt"
+grep -q -- '-march=' "$BUILD/solver/CMakeFiles/em4Solver.dir/flags.make" || { echo "ERROR: no -march in the solver compile flags"; exit 1; }
 grep -q "Manually-specified variables were not used" "$OUTDIR/cfg.log" && { echo "ERROR: a -D flag was ignored"; grep -A5 "Manually-specified" "$OUTDIR/cfg.log"; exit 1; }
 cmake --build "$BUILD" -j 32 --target em4Solver > "$OUTDIR/build.log" 2>&1 || { echo "build failed"; grep -n ' error' "$OUTDIR/build.log" | head; exit 1; }
 BIN="$BUILD/solver/em4Solver"
