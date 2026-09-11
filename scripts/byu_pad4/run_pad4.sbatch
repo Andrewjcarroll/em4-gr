@@ -18,7 +18,9 @@
 #   ARM=stock sbatch scripts/byu_pad4/run_pad4.sbatch
 #   ARM=wide  sbatch --dependency=afterany:<jobid> scripts/byu_pad4/run_pad4.sbatch
 #
-# Needs: em4-gr and dendrolib checkouts on branch pad4-prototype (EM4, DL).
+# Needs: em4-gr and dendrolib checkouts on branch pad4-prototype (EM4, DL),
+# and one configure of each build dir on the LOGIN node beforehand (network
+# for FetchContent):  cmake -S . -B build_pad4_<arm> <same -D flags as below>
 # Builds in-job with DENDRO_CPU_ARCH=znver3 (now honoured by em4's own
 # CMakeLists and applied to the dendrolib subdirectory; the script asserts a
 # -march flag reached the solver's compile line). Profile counters ON so the
@@ -44,7 +46,10 @@ lscpu | grep -E 'Model name|^CPU\(s\)|NUMA node\(s\)'
 git -C "$EM4" log --oneline -1; git -C "$DL" log --oneline -1
 [[ $ARM == wide ]] && FLAG=ON || FLAG=OFF
 
-cmake -S "$EM4" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release \
+# compute nodes have no network: the login-node configure (see header) must
+# have populated _deps already; FETCHCONTENT_FULLY_DISCONNECTED reuses it.
+[[ -d "$BUILD/_deps/xsmm-src" ]] || { echo "ERROR: $BUILD/_deps not populated; run the cmake configure on the login node first"; exit 1; }
+cmake -S "$EM4" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
   -DDENDRO_dendrolib_DIR="$DL" -DDENDRO_WIDE_PADDING=$FLAG \
   -DDENDRO_CPU_ARCH=${ARCH:-znver3} \
   -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_Fortran_COMPILER=gfortran \
