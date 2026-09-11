@@ -20,7 +20,9 @@
 #   MODE=paper   the methods-paper EM4 setup (dipole, dynamic wavelet AMR,
 #                KO 0.4, CFL 0.25, t_end 8, wtol 1e-6) at MAXDEPTH 8, 9, 10:
 #                E6 + A6 on stock, E6 + A6 + E8 on wide.  Depth 10 runs on all
-#                128 cores.
+#                128 cores.  Overrides: DEPTHS="8 9", WTOL=1e-7 (wavelet
+#                tolerance), ARMS="stock E6 E6|stock A6 $A6" (arm label deriv,
+#                pipe-separated; $A6 is the compact operator name).
 #
 #   MODE=frozen sbatch scripts/byu_pad4/run_pad4_suite.sbatch
 #   MODE=paper  sbatch --dependency=afterany:<id> scripts/byu_pad4/run_pad4_suite.sbatch
@@ -36,7 +38,7 @@ EM4=${EM4:-$HOME/research/em4-gr-pad4}
 DL=${DL:-$HOME/research/dendrolib_pad4}
 A6=${A6:-BYU_A6_1ST_R060_OP5}
 export OMP_NUM_THREADS=1
-OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}"
+OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}${WTOL:+_wtol$WTOL}"
 mkdir -p "$OUTDIR/vtu" "$OUTDIR/cp"
 echo "job $SLURM_JOB_ID mode $MODE node $(hostname)"
 lscpu | grep -E 'Model name|^CPU\(s\)'
@@ -93,11 +95,13 @@ if [[ $MODE == frozen ]]; then
     report "$log" $rc
   done
 else
-  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1 KOSIG FILTER
+  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1 KOSIG FILTER WTOL
+  ARMS=${ARMS:-"stock E6 E6|stock A6 $A6|wide E6 E6|wide A6 $A6|wide E8 E8"}
   for depth in ${DEPTHS:-8 9 10}; do
     NP=32; [[ $depth -ge 10 ]] && NP=128
     export NP LAUNCH="mpirun --np {NP} --map-by ppr:${NP}:node:pe=1 --bind-to core" MAXDEPTH=$depth
-    for cfg in "stock E6 E6" "stock A6 $A6" "wide E6 E6" "wide A6 $A6" "wide E8 E8"; do
+    IFS="|" read -ra CFGS <<< "$ARMS"
+    for cfg in "${CFGS[@]}"; do
       set -- $cfg; arm=$1; label=$2; deriv=$3; bin=BIN_$arm
       echo "== paper $arm $label depth $depth (NP $NP, t_end $TEND)  $(date)"
       BIN="${!bin}" LABEL="${arm}_${label}_d${depth}" BUFFER=0 DERIV1=$deriv DERIV2=E6 "$EM4/scripts/run_em4_wpx.sh" > "$OUTDIR/driver_${arm}_${label}_d${depth}.log" 2>&1; rc=$?
