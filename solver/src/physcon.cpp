@@ -417,12 +417,12 @@ void physical_constraints_compact_derivs(double **uZipConVars,
     //[[[end]]]
     //
 
-    SOLVER_DERIVS->grad_x(grad_0_E0, E0, hx, sz, bflag);
-    SOLVER_DERIVS->grad_y(grad_1_E1, E1, hy, sz, bflag);
+    SOLVER_DERIVS->grad_x_last(grad_0_E0, E0, hx, sz, bflag);
+    SOLVER_DERIVS->grad_y_last(grad_1_E1, E1, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_E2, E2, hz, sz, bflag);
 
-    SOLVER_DERIVS->grad_x(grad_0_B0, B0, hx, sz, bflag);
-    SOLVER_DERIVS->grad_y(grad_1_B1, B1, hy, sz, bflag);
+    SOLVER_DERIVS->grad_x_last(grad_0_B0, B0, hx, sz, bflag);
+    SOLVER_DERIVS->grad_y_last(grad_1_B1, B1, hy, sz, bflag);
     SOLVER_DERIVS->grad_z(grad_2_B2, B2, hz, sz, bflag);
 
     double *rho_e = deriv_base + 24 * BLK_SZ;

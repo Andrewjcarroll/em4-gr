@@ -691,36 +691,36 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     }
 
     // calculate the derivatives, on the copies if necessary
-    SOLVER_DERIVS->grad_x(grad_0_E0, E0_cpy, hx, sz, dflag);
-    SOLVER_DERIVS->grad_y(grad_1_E0, E0_cpy, hy, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_x_last(grad_0_E0, E0_cpy, hx, sz, dflag);
+    SOLVER_DERIVS->grad_y_last(grad_1_E0, E0_cpy, hy, sz, dflag);  // needed
     SOLVER_DERIVS->grad_z(grad_2_E0, E0_cpy, hz, sz, dflag);  // needed
 
-    SOLVER_DERIVS->grad_x(grad_0_E1, E1_cpy, hx, sz, dflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_E1, E1_cpy, hy, sz, dflag);
+    SOLVER_DERIVS->grad_x_last(grad_0_E1, E1_cpy, hx, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_y_last(grad_1_E1, E1_cpy, hy, sz, dflag);
     SOLVER_DERIVS->grad_z(grad_2_E1, E1_cpy, hz, sz, dflag);  // needed
 
-    SOLVER_DERIVS->grad_x(grad_0_E2, E2_cpy, hx, sz, dflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_E2, E2_cpy, hy, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_x_last(grad_0_E2, E2_cpy, hx, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_y_last(grad_1_E2, E2_cpy, hy, sz, dflag);  // needed
     SOLVER_DERIVS->grad_z(grad_2_E2, E2_cpy, hz, sz, dflag);
 
-    SOLVER_DERIVS->grad_x(grad_0_B0, B0_cpy, hx, sz, dflag);
-    SOLVER_DERIVS->grad_y(grad_1_B0, B0_cpy, hy, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_x_last(grad_0_B0, B0_cpy, hx, sz, dflag);
+    SOLVER_DERIVS->grad_y_last(grad_1_B0, B0_cpy, hy, sz, dflag);  // needed
     SOLVER_DERIVS->grad_z(grad_2_B0, B0_cpy, hz, sz, dflag);  // needed
 
-    SOLVER_DERIVS->grad_x(grad_0_B1, B1_cpy, hx, sz, dflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_B1, B1_cpy, hy, sz, dflag);
+    SOLVER_DERIVS->grad_x_last(grad_0_B1, B1_cpy, hx, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_y_last(grad_1_B1, B1_cpy, hy, sz, dflag);
     SOLVER_DERIVS->grad_z(grad_2_B1, B1_cpy, hz, sz, dflag);  // needed
 
-    SOLVER_DERIVS->grad_x(grad_0_B2, B2_cpy, hx, sz, dflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_B2, B2_cpy, hy, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_x_last(grad_0_B2, B2_cpy, hx, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_y_last(grad_1_B2, B2_cpy, hy, sz, dflag);  // needed
     SOLVER_DERIVS->grad_z(grad_2_B2, B2_cpy, hz, sz, dflag);
 
-    SOLVER_DERIVS->grad_x(grad_0_Phi, Phi_cpy, hx, sz, dflag);  // needed
-    SOLVER_DERIVS->grad_y(grad_1_Phi, Phi_cpy, hy, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_x_last(grad_0_Phi, Phi_cpy, hx, sz, dflag);  // needed
+    SOLVER_DERIVS->grad_y_last(grad_1_Phi, Phi_cpy, hy, sz, dflag);  // needed
     SOLVER_DERIVS->grad_z(grad_2_Phi, Phi_cpy, hz, sz, dflag);
 
-    SOLVER_DERIVS->grad_x(grad_0_Psi, Psi_cpy, hx, sz, dflag);
-    SOLVER_DERIVS->grad_y(grad_1_Psi, Psi_cpy, hy, sz, dflag);
+    SOLVER_DERIVS->grad_x_last(grad_0_Psi, Psi_cpy, hx, sz, dflag);
+    SOLVER_DERIVS->grad_y_last(grad_1_Psi, Psi_cpy, hy, sz, dflag);
     SOLVER_DERIVS->grad_z(grad_2_Psi, Psi_cpy, hz, sz, dflag);
 
 
