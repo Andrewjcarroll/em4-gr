@@ -799,13 +799,10 @@ void solverrhs_compact_derivs(double **unzipVarsRHS, double **uZipVars,
     }
 
     if (!SOLVER_DERIVS->do_filter_before()) {
-        dsolve::timer::t_deriv.start();
-        // TODO: include more types of build options
-
-        // TODO: support for CFD calculation of explicit KO derivs
-#include "../gencode/solver_rhs_ko_deriv_calc.cpp.inc"
-        dsolve::timer::t_deriv.stop();
-
+        // SOLVER_DERIVS->filter() computes its own dissipation term into the
+        // grad_* workspaces (KO stencils or the compact Pade filter), so the
+        // legacy per-axis KO pass that used to be included here was wasted
+        // work (~15 % of the RHS in the perf profile) and is gone.
         dsolve::timer::t_rhs.start();
 
         const double sigma = KO_DISS_SIGMA;

@@ -44,6 +44,7 @@ setkey() { SEDX+=(-e "s|^\"dsolve::$1\" = .*|\"dsolve::$1\" = $2|"); }
 [[ -n "${REMESH_FREQ:-}" ]] && setkey SOLVER_REMESH_TEST_FREQ "$REMESH_FREQ"
 [[ -n "${CFL:-}" ]]         && setkey SOLVER_CFL_FACTOR "$CFL"
 [[ -n "${KOSIG:-}" ]]       && setkey KO_DISS_SIGMA "$KOSIG"
+[[ -n "${FILTER:-}" ]]      && setkey SOLVER_POSTRHS_FILTER "\"$FILTER\""
 # derivative scheme strings (top-of-file keys, e.g. DERIV1=JTT6 DERIV2=JTT6)
 [[ -n "${DERIV1:-}" ]] && SEDX+=(-e "s|^SOLVER_DERIVTYPE_FIRST = .*|SOLVER_DERIVTYPE_FIRST = \"$DERIV1\"|")
 [[ -n "${DERIV2:-}" ]] && SEDX+=(-e "s|^SOLVER_DERIVTYPE_SECOND = .*|SOLVER_DERIVTYPE_SECOND = \"$DERIV2\"|")

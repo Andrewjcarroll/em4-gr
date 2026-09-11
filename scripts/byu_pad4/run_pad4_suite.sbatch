@@ -36,7 +36,7 @@ EM4=${EM4:-$HOME/research/em4-gr-pad4}
 DL=${DL:-$HOME/research/dendrolib_pad4}
 A6=${A6:-BYU_A6_1ST_R060_OP5}
 export OMP_NUM_THREADS=1
-OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}"
+OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}"
 mkdir -p "$OUTDIR/vtu" "$OUTDIR/cp"
 echo "job $SLURM_JOB_ID mode $MODE node $(hostname)"
 lscpu | grep -E 'Model name|^CPU\(s\)'
@@ -93,7 +93,7 @@ if [[ $MODE == frozen ]]; then
     report "$log" $rc
   done
 else
-  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1
+  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1 KOSIG FILTER
   for depth in ${DEPTHS:-8 9 10}; do
     NP=32; [[ $depth -ge 10 ]] && NP=128
     export NP LAUNCH="mpirun --np {NP} --map-by ppr:${NP}:node:pe=1 --bind-to core" MAXDEPTH=$depth

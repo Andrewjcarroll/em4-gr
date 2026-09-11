@@ -166,6 +166,7 @@ std::string SOLVER_INMATFILT_FIRST             = "none";
 std::string SOLVER_INMATFILT_SECOND            = "none";
 std::vector<double> SOLVER_INMATFILT_FIRST_COEFFS              = {};
 std::vector<double> SOLVER_INMATFILT_SECOND_COEFFS             = {};
+std::string SOLVER_POSTRHS_FILTER                              = "default";
 
 // default initialization
 // this *MUST* be initialized
@@ -842,6 +843,10 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
             file, "SOLVER_INMATFILT_FIRST_COEFFS");
     }
 
+    if (file.contains("dsolve::SOLVER_POSTRHS_FILTER")) {
+        SOLVER_POSTRHS_FILTER =
+            file["dsolve::SOLVER_POSTRHS_FILTER"].as_string();
+    }
     if (file.contains("SOLVER_INMATFILT_SECOND_COEFFS")) {
         SOLVER_INMATFILT_SECOND_COEFFS = toml::find<std::vector<double>>(
             file, "SOLVER_INMATFILT_SECOND_COEFFS");
@@ -877,7 +882,8 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         SOLVER_DERIV_FIRST_COEFFS, SOLVER_DERIV_SECOND_COEFFS,
         SOLVER_DERIV_FIRST_MATID, SOLVER_DERIV_SECOND_MATID,
         SOLVER_INMATFILT_FIRST, SOLVER_INMATFILT_SECOND,
-        SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS);
+        SOLVER_INMATFILT_FIRST_COEFFS, SOLVER_INMATFILT_SECOND_COEFFS,
+        SOLVER_POSTRHS_FILTER);
 
     // TODO: COMPD_MIN, COMPD_MAX should be GRID_MIN and GRID_MAX, not settable
     // by user
@@ -1180,6 +1186,8 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
         for (const auto& val : SOLVER_INMATFILT_FIRST_COEFFS) sout << val << " ";
         sout << NRM << std::endl;
 
+        sout << PRPL << "\t SOLVER_POSTRHS_FILTER: " << SOLVER_POSTRHS_FILTER
+             << NRM << std::endl;
         sout << PRPL << "\t SOLVER_INMATFILT_SECOND_COEFFS: ";
         for (const auto& val : SOLVER_INMATFILT_SECOND_COEFFS) sout << val << " ";
         sout << NRM << std::endl;

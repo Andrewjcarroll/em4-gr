@@ -346,6 +346,9 @@ extern std::vector<double> SOLVER_DERIV_FIRST_COEFFS;
 extern std::vector<double> SOLVER_DERIV_SECOND_COEFFS;
 extern unsigned int SOLVER_DERIV_FIRST_MATID;
 extern unsigned int SOLVER_DERIV_SECOND_MATID;
+/** post-RHS dissipation filter passed to DendroDerivatives: "default" = KO by
+ * element order, "KIMF" = compact Pade filter as a dissipation term */
+extern std::string SOLVER_POSTRHS_FILTER;
 
 }  // namespace dsolve
 

@@ -214,6 +214,9 @@ SOLVER_INMATFILT_SECOND_COEFFS = [0.5]
 # param type: semivariant | data type: double | default: 0.4 | min: 0.0 | max: 0.8
 "dsolve::KO_DISS_SIGMA" = 0.4
 
+# @brief: post-RHS dissipation filter: "default" (KO by element order) or "KIMF" (compact Pade filter)
+"dsolve::SOLVER_POSTRHS_FILTER" = "default"
+
 # ========
 # === DENDRO SETUP AND COMPUTATION-SPECIFIC PARAMETERS
 # ========
