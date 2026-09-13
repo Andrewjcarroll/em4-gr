@@ -210,6 +210,11 @@ SOLVER_INMATFILT_SECOND_COEFFS = [0.5]
 # param type: semivariant | data type: unsigned int | default: 1 | min: 0 | max: 3
 "dsolve::SOLVER_RK_TYPE" = 1
 
+# Compact KO selection (independent of the first-derivative implementation)
+"dsolve::SOLVER_DISSIPATION_METHOD" = "compact_ko"
+"dsolve::SOLVER_COMPACT_KO_SCHEME" = "radius1"
+"dsolve::SOLVER_FD_ORDER" = 6
+
 # @brief: Sigma value for Kreiss-Oliger dissipation
 # param type: semivariant | data type: double | default: 0.4 | min: 0.0 | max: 0.8
 "dsolve::KO_DISS_SIGMA" = 0.4

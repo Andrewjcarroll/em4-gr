@@ -312,10 +312,10 @@ FetchContent_MakeAvailable(toml11)
 add_subdirectory(lib)
 
 # Allow developers to use a local dendrolib checkout.  Otherwise, fetch the
-# experimental branch automatically, following the same pattern as emda-gr.
+# CKO branch automatically, following the same pattern as emda-gr.
 set(DENDRO_dendrolib_DIR "" CACHE PATH
     "Path to a local dendrolib source directory (optional)")
-set(DENDRO_dendrolib_GIT_TAG "experimental" CACHE STRING
+set(DENDRO_dendrolib_GIT_TAG "CKO" CACHE STRING
     "Git tag, branch, or commit hash to fetch for dendrolib")
 
 if(IS_DIRECTORY "${DENDRO_dendrolib_DIR}")

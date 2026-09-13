@@ -9,7 +9,25 @@ Select Compact KO independently of the first-derivative implementation:
 "dsolve::SOLVER_FD_ORDER" = 6
 ```
 
-`SOLVER_DISSIPATION_METHOD` also accepts `explicit_ko` and `none`. If omitted,
+`compact_ko` uses the new Compact KO implementation; `explicit_ko` uses
+Dendro's existing explicit KO filters; `none` disables KO dissipation.
+`radius1` is currently the only supported Compact KO scheme. Radius2 is not
+supported. `KO_DISS_SIGMA` controls the dissipation strength.
+
+To select explicit KO instead, replace the Compact KO selection with:
+
+```toml
+"dsolve::SOLVER_DISSIPATION_METHOD" = "explicit_ko"
+"dsolve::SOLVER_EXPLICIT_KO_ORDER" = 6
+"dsolve::KO_DISS_SIGMA" = 0.4
+```
+
+The existing explicit KO6 filter requires padding width 4 or 5 (for example,
+element order 8 supplies padding width 4). The simplified Compact KO example
+uses element order 6 and padding width 3, so selecting explicit KO6 there also
+requires a compatible element order.
+
+If `SOLVER_DISSIPATION_METHOD` is omitted,
 each CPU RHS path preserves its previous method: `solverrhs` uses Compact KO,
 and `solverrhs_compact_derivs` uses explicit KO. The latter is normally selected
 by `EM4_ENABLE_COMPACT_DERIVS=ON`. CUDA does not support these runtime overrides.
@@ -49,7 +67,8 @@ Full normal dissipation there requires computing/exchanging valid first-
 derivative halos, with a consistent AMR transfer policy. The library supports
 that via a smaller `gradient_padding_width`; this refactor does not introduce
 a new MPI gradient exchange or assume interpolated field ghosts are gradients.
-Block-decomposition-independent AMR stability remains to be validated.
+Full AMR-interface accuracy, decomposition independence, and long-time
+stability remain unvalidated.
 
 ## Legacy finite differences
 
