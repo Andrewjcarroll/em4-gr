@@ -15,7 +15,8 @@
 #   TSOUT[1] (terminal output freq), OUTDIR[scripts/em4_wpx_results],
 #   TEND / MAXDEPTH / WTOL / LAMBDA / AMP / REMESH_FREQ (override the
 #   template's RK_TIME_END / SOLVER_MAXDEPTH / SOLVER_WAVELET_TOL /
-#   EM4_ID_LAMBDA1 / EM4_ID_AMP1 / SOLVER_REMESH_TEST_FREQ when set).
+#   EM4_ID_LAMBDA1 / EM4_ID_AMP1 / SOLVER_REMESH_TEST_FREQ when set),
+#   AMRFAC (SOLVER_DENDRO_AMR_FAC, the coarsen factor; solver clamps to [0, 0.2]).
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
@@ -42,6 +43,7 @@ setkey() { SEDX+=(-e "s|^\"dsolve::$1\" = .*|\"dsolve::$1\" = $2|"); }
 [[ -n "${LAMBDA:-}" ]]      && setkey EM4_ID_LAMBDA1 "$LAMBDA"
 [[ -n "${AMP:-}" ]]         && setkey EM4_ID_AMP1 "$AMP"
 [[ -n "${REMESH_FREQ:-}" ]] && setkey SOLVER_REMESH_TEST_FREQ "$REMESH_FREQ"
+[[ -n "${AMRFAC:-}" ]]      && setkey SOLVER_DENDRO_AMR_FAC "$AMRFAC"
 [[ -n "${CFL:-}" ]]         && setkey SOLVER_CFL_FACTOR "$CFL"
 [[ -n "${KOSIG:-}" ]]       && setkey KO_DISS_SIGMA "$KOSIG"
 [[ -n "${FILTER:-}" ]]      && setkey SOLVER_POSTRHS_FILTER "\"$FILTER\""

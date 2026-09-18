@@ -22,7 +22,11 @@
 #                E6 + A6 on stock, E6 + A6 + E8 on wide.  Depth 10 runs on all
 #                128 cores.  Overrides: DEPTHS="8 9", WTOL=1e-7 (wavelet
 #                tolerance), CFL=0.125, REMESH_FREQ=20, ARMS="stock E6 E6|stock A6 $A6" (arm label deriv,
-#                pipe-separated; $A6 is the compact operator name).
+#                pipe-separated; $A6 is the compact operator name), AMRFAC=0.004
+#                (wavelet coarsen factor; 1/128 is the child/parent wavelet ratio for
+#                a degree-6 interpolant, so the default 0.1 flip-flops), DL=<other
+#                dendrolib clone> with BUILD_SUFFIX=_x (separate build dirs, configure
+#                them on the login node first).
 #
 #   MODE=frozen sbatch scripts/byu_pad4/run_pad4_suite.sbatch
 #   MODE=paper  sbatch --dependency=afterany:<id> scripts/byu_pad4/run_pad4_suite.sbatch
@@ -38,7 +42,7 @@ EM4=${EM4:-$HOME/research/em4-gr-pad4}
 DL=${DL:-$HOME/research/dendrolib_pad4}
 A6=${A6:-BYU_A6_1ST_R060_OP5}
 export OMP_NUM_THREADS=1
-OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}${WTOL:+_wtol$WTOL}${CFL:+_cfl$CFL}${REMESH_FREQ:+_rm$REMESH_FREQ}"
+OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}${WTOL:+_wtol$WTOL}${CFL:+_cfl$CFL}${REMESH_FREQ:+_rm$REMESH_FREQ}${AMRFAC:+_af$AMRFAC}${BUILD_SUFFIX:-}"
 mkdir -p "$OUTDIR/vtu" "$OUTDIR/cp"
 echo "job $SLURM_JOB_ID mode $MODE node $(hostname)"
 lscpu | grep -E 'Model name|^CPU\(s\)'
@@ -46,7 +50,7 @@ git -C "$EM4" log --oneline -1; git -C "$DL" log --oneline -1
 
 build_arm() {  # $1 = stock|wide
   local arm=$1 flag=OFF; [[ $arm == wide ]] && flag=ON
-  local B="$EM4/build_pad4_$arm"
+  local B="$EM4/build_pad4_${arm}${BUILD_SUFFIX:-}"
   [[ -d "$B/_deps/xsmm-src" ]] || { echo "ERROR: $B not configured on the login node"; exit 1; }
   cmake -S "$EM4" -B "$B" -DCMAKE_BUILD_TYPE=Release -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
     -DDENDRO_dendrolib_DIR="$DL" -DDENDRO_WIDE_PADDING=$flag -DDENDRO_CPU_ARCH=${ARCH:-znver3} \
@@ -61,7 +65,7 @@ build_arm() {  # $1 = stock|wide
   grep -E '^DENDRO_WIDE_PADDING:|^DENDRO_UNZIP_SPEEDUP:|^DENDRO_CPU_ARCH:' "$B/CMakeCache.txt" | tr '\n' ' '; echo
 }
 build_arm stock; build_arm wide
-BIN_stock="$EM4/build_pad4_stock/solver/em4Solver"; BIN_wide="$EM4/build_pad4_wide/solver/em4Solver"
+BIN_stock="$EM4/build_pad4_stock${BUILD_SUFFIX:-}/solver/em4Solver"; BIN_wide="$EM4/build_pad4_wide${BUILD_SUFFIX:-}/solver/em4Solver"
 
 report() {  # $1 = log
   local log=$1
@@ -95,7 +99,7 @@ if [[ $MODE == frozen ]]; then
     report "$log" $rc
   done
 else
-  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1 KOSIG FILTER WTOL CFL REMESH_FREQ
+  export TEND=${TEND:-8} TSOUT=${TSOUT:-4} OUTDIR TS_MODE=1 KOSIG FILTER WTOL CFL REMESH_FREQ AMRFAC
   ARMS=${ARMS:-"stock E6 E6|stock A6 $A6|wide E6 E6|wide A6 $A6|wide E8 E8"}
   for depth in ${DEPTHS:-8 9 10}; do
     NP=32; [[ $depth -ge 10 ]] && NP=128
