@@ -29,6 +29,9 @@
 # this comparison). Binaries must be built first -- x4_pad4_build.sbatch.
 set -uo pipefail
 source ~/gr_env.sh >/dev/null 2>&1
+# A compact arm that fails to construct dumps one core per rank: 0.5 GB x 1024
+# ranks filled the home filesystem on the first attempt (2026-09-18).
+ulimit -c 0
 R=$HOME/research
 EM4=${EM4:-$R/em4-gr-pad4}
 CB=$R/cfd_bench
@@ -58,10 +61,14 @@ grep -E '^DENDRO_WIDE_PADDING:' "$EM4"/build_pad4_{stock,wide}/CMakeCache.txt
 # changed per arm.  maxdepth 13, wtol 1e-8, CFL 0.25, KO 0.4, ele_order 6,
 # five steps -- a fixed micro-run, so mesh construction dominates the walltime
 # and the per-phase timers are what we read.
+# Second derivatives: the registry has no 2ND variant under the A6 name, and
+# the EM4 right-hand side takes no second derivatives at all, so every arm
+# keeps E6 there -- as the pad4 suite does.  Setting it to the compact name
+# aborts every rank with "Failed to create Derivs object".
 mk_par() {  # $1 = arm label, $2 = deriv name
   local par="$RUN_ROOT/params_$1.toml"
   sed -e "s|^SOLVER_DERIVTYPE_FIRST = .*|SOLVER_DERIVTYPE_FIRST = \"$2\"|" \
-      -e "s|^SOLVER_DERIVTYPE_SECOND = .*|SOLVER_DERIVTYPE_SECOND = \"$2\"|" \
+      -e "s|^SOLVER_DERIVTYPE_SECOND = .*|SOLVER_DERIVTYPE_SECOND = \"E6\"|" \
       -e "s|^\"dsolve::SOLVER_PROFILE_FILE_PREFIX\" = .*|\"dsolve::SOLVER_PROFILE_FILE_PREFIX\" = \"prof_$1\"|" \
       -e "s|^\"dsolve::SOLVER_VTU_FILE_PREFIX\" = .*|\"dsolve::SOLVER_VTU_FILE_PREFIX\" = \"vtu/x4_$1\"|" \
       "$CB/params_E6.toml" > "$par"
