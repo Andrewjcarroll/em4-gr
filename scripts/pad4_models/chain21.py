@@ -30,7 +30,7 @@ Pi=[beta,alpha,1.0,alpha,beta]; Qi=[-a3,-a2,-a1,0.0,a1,a2,a3]
 def kim_coeff(kc):
     AF=30-5*np.cos(kc)+10*np.cos(2*kc)-3*np.cos(3*kc)
     return AF, -(30*np.cos(kc)+2*np.cos(3*kc))/AF, (18+9*np.cos(kc)+6*np.cos(2*kc)-np.cos(3*kc))/(2*AF)
-def kim_filter(kc_factor=0.88, eps=0.25):
+def kim_filter(kc_factor=0.88, eps=0.0):   # branch default since 2026-09-18 (was 0.25)
     kc=kc_factor*np.pi
     t2,t3,t6=np.sin(np.pi/2),np.sin(np.pi/3),np.sin(np.pi/6)
     c0=kim_coeff(kc); cd=kim_coeff(kc*(1-eps*t6**2)); cdd=kim_coeff(kc*(1-eps*t3**2)); cddd=kim_coeff(kc*(1-eps*t2**2))
