@@ -4,7 +4,7 @@ blocks. Reports spectral radius of the RK4 amplification matrix, its 500-step 2-
 and max Re(lambda) of the semi-discrete operator, per scheme / pad / sigma / CFL."""
 import numpy as np, csv, chain21 as C, pulse21 as P
 rows=[]
-cfgs=[('E6',3,None),('A6',3,None),('A6',4,None),('A6',4,3)]
+cfgs=[('E6',3,None),('JTT6',3,None),('JTT6',4,None),('JTT6',4,3),('A6',3,None),('A6',4,None),('A6',4,3)]
 for kind,pad,cfp in cfgs:
     for twoone in (False,True):
         for s in (0.0,0.05,0.1,0.4):

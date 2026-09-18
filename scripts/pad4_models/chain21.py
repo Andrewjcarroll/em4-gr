@@ -26,6 +26,15 @@ Qb=[[-3.808406462522949,-12.682808564359744,11.83255901885571,5.605057071042739,
     [-0.06601399450496159,-0.6065930112130826,-0.4441938708782771,0.738100604540617,0.36835328297217473,0.010664600236306922,-0.00031761115278566637]]
 Pi=[beta,alpha,1.0,alpha,beta]; Qi=[-a3,-a2,-a1,0.0,a1,a2,a3]
 
+# ---- JTT6 (Tyler tridiagonal, 6th order) ----------------------------------
+# dendrolib src/derivatives/impl_jonathantyler.cpp, createJTT6DiagonalsFirstOrder().
+# Two closure rows rather than A6's three; same band() layout (bnd[i][i] is the
+# diagonal, entries counted from column 0).
+JPb=[[1.0,5.0,0.0],[1.0/8.0,1.0,3.0/4.0]]
+JQb=[[-197.0/60.0,-5.0/12.0,5.0,-5.0/3.0,5.0/12.0,-1.0/20.0],
+     [-43.0/96.0,-5.0/6.0,9.0/8.0,1.0/6.0,-1.0/96.0,0.0]]
+JPi=[1.0/3.0,1.0,1.0/3.0]; JQi=[-1.0/36.0,-7.0/9.0,0.0,7.0/9.0,1.0/36.0]
+
 # ---- Kim filter (filt_inmat_kim.h), sigma=1, kc_factor 0.88, eps 0.25 ------
 def kim_coeff(kc):
     AF=30-5*np.cos(kc)+10*np.cos(2*kc)-3*np.cos(3*kc)
@@ -72,6 +81,8 @@ def block_op(n, kind, pl, pr):
     pad index 0 when the pad on that side is only 3 in a pad-4 build: we model that by just using pl/pr."""
     if kind=='A6':
         P=band(n,Pi,Pb,+1.0); Q=band(n,Qi,Qb,-1.0); return np.linalg.solve(P,Q)
+    if kind=='JTT6':
+        P=band(n,JPi,JPb,+1.0); Q=band(n,JQi,JQb,-1.0); return np.linalg.solve(P,Q)
     if kind=='E6':
         c=np.array([-1,9,-45,0,45,-9,1])/60.0; M=np.zeros((n,n))
         for i in range(3,n-3): M[i,i-3:i+4]=c
@@ -150,12 +161,12 @@ def run(kind, pad, sigma, cfl=0.25, nsteps=500, twoone=True, m=24):
     return rho, nrm, mx
 
 if __name__=='__main__':
-    for kind in ['E6','A6']:
+    for kind in ['E6','A6','JTT6']:
         D,x,L=build(kind,3,3,6,24); u=np.sin(2*np.pi*3*x/L); du=2*np.pi*3/L*np.cos(2*np.pi*3*x/L)
         err=np.abs(D@u-du); Nc=72
         print(f"consistency {kind}: max err coarse {err[:Nc].max():.2e} fine {err[Nc:].max():.2e}  near-face coarse {err[Nc-8:Nc].max():.2e} fine {err[Nc:Nc+8].max():.2e}")
     print("kind pad sigma 2:1 | rho(G) ||G^500||  max Re(lambda_A)  (units 1/h, dt=0.25h)")
-    for kind in ['E6','A6']:
+    for kind in ['E6','A6','JTT6']:
         for pad in ([3] if kind=='E6' else [3,4]):
             for sigma in [0.0,0.05,0.1,0.4]:
                 for twoone in [False,True]:
