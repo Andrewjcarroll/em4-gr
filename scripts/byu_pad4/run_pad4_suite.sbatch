@@ -26,7 +26,8 @@
 #                (wavelet coarsen factor; 1/128 is the child/parent wavelet ratio for
 #                a degree-6 interpolant, so the default 0.1 flip-flops), DL=<other
 #                dendrolib clone> with BUILD_SUFFIX=_x (separate build dirs, configure
-#                them on the login node first).
+#                them on the login node first), TAG=x (result-dir suffix), MPI_X="-x VAR"
+#                (forward an env var, e.g. DENDRO_WIDE_PADDING_TRIM_COARSE=1, to the ranks).
 #
 #   MODE=frozen sbatch scripts/byu_pad4/run_pad4_suite.sbatch
 #   MODE=paper  sbatch --dependency=afterany:<id> scripts/byu_pad4/run_pad4_suite.sbatch
@@ -42,7 +43,7 @@ EM4=${EM4:-$HOME/research/em4-gr-pad4}
 DL=${DL:-$HOME/research/dendrolib_pad4}
 A6=${A6:-BYU_A6_1ST_R060_OP5}
 export OMP_NUM_THREADS=1
-OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}${WTOL:+_wtol$WTOL}${CFL:+_cfl$CFL}${REMESH_FREQ:+_rm$REMESH_FREQ}${AMRFAC:+_af$AMRFAC}${BUILD_SUFFIX:-}"
+OUTDIR="$EM4/scripts/em4_pad4_results/${SLURM_JOB_ID}_${MODE}${FILTER:+_$FILTER}${KOSIG:+_ko$KOSIG}${WTOL:+_wtol$WTOL}${CFL:+_cfl$CFL}${REMESH_FREQ:+_rm$REMESH_FREQ}${AMRFAC:+_af$AMRFAC}${BUILD_SUFFIX:-}${TAG:+_$TAG}"
 mkdir -p "$OUTDIR/vtu" "$OUTDIR/cp"
 echo "job $SLURM_JOB_ID mode $MODE node $(hostname)"
 lscpu | grep -E 'Model name|^CPU\(s\)'
@@ -103,7 +104,7 @@ else
   ARMS=${ARMS:-"stock E6 E6|stock A6 $A6|wide E6 E6|wide A6 $A6|wide E8 E8"}
   for depth in ${DEPTHS:-8 9 10}; do
     NP=32; [[ $depth -ge 10 ]] && NP=128
-    export NP LAUNCH="mpirun --np {NP} --map-by ppr:${NP}:node:pe=1 --bind-to core" MAXDEPTH=$depth
+    export NP LAUNCH="mpirun ${MPI_X:-} --np {NP} --map-by ppr:${NP}:node:pe=1 --bind-to core" MAXDEPTH=$depth
     IFS="|" read -ra CFGS <<< "$ARMS"
     for cfg in "${CFGS[@]}"; do
       set -- $cfg; arm=$1; label=$2; deriv=$3; bin=BIN_$arm

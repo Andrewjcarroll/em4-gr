@@ -74,7 +74,7 @@ void solverRHS(double **uzipVarsRHS, double **uZipVars,
         // face" bits; the derivative dispatch reads both, everything else in
         // the RHS masks back to the physical bits (see dendro_padding.h)
         const unsigned int bflag_deriv =
-            bflag | (blkList[blk].getBlkFineFaceFlag() << DENDRO_FINE_FACE_SHIFT);
+            bflag | (blkList[blk].getBlkTrimFaceFlag() << DENDRO_FINE_FACE_SHIFT);
         solverrhs_compact_derivs(uzipVarsRHS, uZipVars, offset, ptmin, ptmax,
                                  sz, bflag_deriv);
 #else

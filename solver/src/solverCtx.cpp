@@ -212,7 +212,7 @@ void SOLVERCtx::compute_constraints() {
             // derivatives use the trimmed operator on fine faces too
             physical_constraints_compact_derivs(
                 consUnzipVar, evolUnzipVar, offset, ptmin, ptmax, sz,
-                bflag | (blkList[blk].getBlkFineFaceFlag()
+                bflag | (blkList[blk].getBlkTrimFaceFlag()
                          << DENDRO_FINE_FACE_SHIFT));
 #else
             physical_constraints_compact_derivs(
