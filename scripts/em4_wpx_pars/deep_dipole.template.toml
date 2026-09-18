@@ -316,6 +316,9 @@ SOLVER_INMATFILT_SECOND_COEFFS = [0.5]
 # param type: semivariant | data type: unsigned int | default: 4 | min: 0 | max: SOLVER_NUM_VARS
 "dsolve::SOLVER_ASYNC_COMM_K" = 1
 
+# @brief: DENDRO_WIDE_PADDING builds: trimmed compact closure also on faces with a coarser neighbour
+"dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE" = true
+
 # @brief: Dendro load imbalance tolerance for flexible partitioning
 # param type: semivariant | data type: double | default: 0.1 | min: 0.0 | max: 0.2
 "dsolve::SOLVER_LOAD_IMB_TOL" = 0.1

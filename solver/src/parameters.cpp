@@ -123,6 +123,7 @@ unsigned int SOLVER_DISSIPATION_S                  = 0;
 unsigned int SOLVER_LTS_TS_OFFSET                  = 0;
 bool SOLVER_VTU_Z_SLICE_ONLY                       = true;
 unsigned int SOLVER_ASYNC_COMM_K                   = 4;
+bool SOLVER_WIDE_PADDING_TRIM_COARSE               = true;
 double SOLVER_LOAD_IMB_TOL                         = 0.1;
 unsigned int SOLVER_DIM                            = 3;
 unsigned int SOLVER_MAXDEPTH                       = 16;
@@ -535,6 +536,14 @@ void readParamFile(const char* inFile, MPI_Comm comm) {
         dsolve::SOLVER_ASYNC_COMM_K =
             file["dsolve::SOLVER_ASYNC_COMM_K"].as_integer();
     }
+
+    if (file.contains("dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE")) {
+        dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE =
+            file["dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE"].as_boolean();
+    }
+#ifdef DENDRO_WIDE_PADDING
+    dendro::setWidePaddingTrimCoarse(dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE);
+#endif
 
     if (file.contains("dsolve::SOLVER_LOAD_IMB_TOL")) {
         if (0.0 > as_double(file["dsolve::SOLVER_LOAD_IMB_TOL"]) ||
@@ -1095,6 +1104,8 @@ void dumpParamFile(std::ostream& sout, int root, MPI_Comm comm) {
              << dsolve::SOLVER_LTS_TS_OFFSET << std::endl;
         sout << "\tdsolve::SOLVER_VTU_Z_SLICE_ONLY: "
              << dsolve::SOLVER_VTU_Z_SLICE_ONLY << std::endl;
+        sout << "\tdsolve::SOLVER_WIDE_PADDING_TRIM_COARSE: "
+             << dsolve::SOLVER_WIDE_PADDING_TRIM_COARSE << std::endl;
         sout << "\tdsolve::SOLVER_ASYNC_COMM_K: " << dsolve::SOLVER_ASYNC_COMM_K
              << std::endl;
         sout << "\tdsolve::SOLVER_LOAD_IMB_TOL: " << dsolve::SOLVER_LOAD_IMB_TOL

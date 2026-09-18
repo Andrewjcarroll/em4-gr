@@ -277,6 +277,10 @@ extern bool SOLVER_VTU_Z_SLICE_ONLY;
  * async communication. (Upper bound should be SOLVER_NUM_VARS) */
 extern unsigned int SOLVER_ASYNC_COMM_K;
 
+/**@brief DENDRO_WIDE_PADDING builds only: use the trimmed compact closure on
+ * block faces whose neighbour is coarser as well as finer (default true). */
+extern bool SOLVER_WIDE_PADDING_TRIM_COARSE;
+
 /** @brief: Dendro load imbalance tolerance for flexible partitioning */
 extern double SOLVER_LOAD_IMB_TOL;
 
